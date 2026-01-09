@@ -7,6 +7,11 @@ pub mod orbit_macros;
 pub mod zos_system;
 pub mod automorphic_bootstrap;
 pub mod rust_soul_eigenmatrix;
+pub mod feature_lattice;
+pub mod feature_tracer;
+pub mod execution_trace_analyzer;
+pub mod compiler_band_pass;
+pub mod compiler_polyfill_system;
 
 // Core plugins only
 pub mod plugins;
