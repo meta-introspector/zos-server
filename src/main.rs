@@ -17,12 +17,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .ok_or("Usage: zos_server llm-improve <prompt>")?;
 
                 println!("🤖 Starting LLM-Compiler improvement loop...");
-                let service = LLMCompilerService::new();
+                let mut service = LLMCompilerService::new();
 
-                match service.improve_code(prompt).await {
-                    Ok(final_code) => {
-                        println!("🎉 Final working code:");
-                        println!("{}", final_code);
+                match service
+                    .improve_code(prompt, "user", vec!["ai-generated".to_string()])
+                    .await
+                {
+                    Ok(task_id) => {
+                        println!("🎉 Task completed! ID: {}", task_id);
+                        if let Some(task) = service.get_task(task_id) {
+                            println!("Final code:\n{}", task.final_code);
+                        }
                     }
                     Err(e) => {
                         eprintln!("❌ Failed to improve code: {}", e);

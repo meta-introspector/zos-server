@@ -18,6 +18,7 @@ pub mod llm_compiler_service;
 pub mod self_build_cli;
 #[cfg(feature = "self-build")]
 pub mod self_builder;
+pub mod task_registry;
 
 #[cfg(feature = "notebooklm")]
 pub mod notebooklm_cli;
