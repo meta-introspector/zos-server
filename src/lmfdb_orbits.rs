@@ -1,8 +1,10 @@
 // LMFDB Orbit System - All instances are mathematical orbits
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 /// LMFDB Orbit - Every system instance is a mathematical orbit
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LmfdbOrbit {
     pub label: String,          // LMFDB label like "11.a1"
     pub level: u64,             // Conductor/Level
@@ -14,7 +16,8 @@ pub struct LmfdbOrbit {
 }
 
 /// System Arguments as LMFDB Enum Orbits
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum SystemArg {
     // Core system orbits (Level 11 - first prime > 10)
     Posix(LmfdbOrbit), // 11.a1 - POSIX system calls

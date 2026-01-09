@@ -1,0 +1,1782 @@
+{
+  "timestamp": "2026-01-09T08:05:00.614688",
+  "job_type": "gap-detect",
+  "slice_pattern": "auto",
+  "total_slices": 47,
+  "slices": [
+    {
+      "slice_id": "slice_0",
+      "items": [
+        {
+          "coordinate": "L0.0.1.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=0 -C panic=abort -C lto=off",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.0.1.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=0 -C panic=abort -C lto=off",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.0.1.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=0 -C panic=abort -C lto=off",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.0.1.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=0 -C panic=abort -C lto=thin",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.0.1.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=0 -C panic=abort -C lto=thin",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_1",
+      "items": [
+        {
+          "coordinate": "L0.0.1.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=0 -C panic=abort -C lto=thin",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.0.1.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=0 -C panic=abort -C lto=thin",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.0.1.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=0 -C panic=abort -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.0.1.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=0 -C panic=abort -C lto=fat",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.0.1.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=0 -C panic=abort -C lto=fat",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_2",
+      "items": [
+        {
+          "coordinate": "L0.0.1.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=0 -C panic=abort -C lto=fat",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.0.1.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=0 -C panic=abort -C lto=fat",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.0.1.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=0 -C panic=abort -C lto=fat",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.0.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=unwind -C lto=off",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.0.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=unwind -C lto=off",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_3",
+      "items": [
+        {
+          "coordinate": "L0.1.0.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=unwind -C lto=off",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.0.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=unwind -C lto=off",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.0.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=unwind -C lto=off",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.0.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=unwind -C lto=thin",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.0.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=unwind -C lto=thin",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_4",
+      "items": [
+        {
+          "coordinate": "L0.1.0.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=unwind -C lto=thin",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.0.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=unwind -C lto=thin",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.0.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=unwind -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.0.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=unwind -C lto=fat",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.0.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=unwind -C lto=fat",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_5",
+      "items": [
+        {
+          "coordinate": "L0.1.0.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=unwind -C lto=fat",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.0.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=unwind -C lto=fat",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.0.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=unwind -C lto=fat",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.1.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=abort -C lto=off",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.1.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=abort -C lto=off",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_6",
+      "items": [
+        {
+          "coordinate": "L0.1.1.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=abort -C lto=off",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.1.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=abort -C lto=off",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.1.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=abort -C lto=off",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.1.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=abort -C lto=thin",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.1.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=abort -C lto=thin",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_7",
+      "items": [
+        {
+          "coordinate": "L0.1.1.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=abort -C lto=thin",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.1.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=abort -C lto=thin",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.1.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=abort -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.1.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=abort -C lto=fat",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.1.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=abort -C lto=fat",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_8",
+      "items": [
+        {
+          "coordinate": "L0.1.1.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=abort -C lto=fat",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.1.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=abort -C lto=fat",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.1.1.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=1 -C panic=abort -C lto=fat",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.0.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=unwind -C lto=off",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.0.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=unwind -C lto=off",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_9",
+      "items": [
+        {
+          "coordinate": "L0.2.0.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=unwind -C lto=off",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.0.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=unwind -C lto=off",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.0.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=unwind -C lto=off",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.0.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=unwind -C lto=thin",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.0.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=unwind -C lto=thin",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_10",
+      "items": [
+        {
+          "coordinate": "L0.2.0.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=unwind -C lto=thin",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.0.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=unwind -C lto=thin",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.0.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=unwind -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.0.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=unwind -C lto=fat",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.0.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=unwind -C lto=fat",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_11",
+      "items": [
+        {
+          "coordinate": "L0.2.0.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=unwind -C lto=fat",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.0.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=unwind -C lto=fat",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.0.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=unwind -C lto=fat",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.1.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=abort -C lto=off",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.1.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=abort -C lto=off",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_12",
+      "items": [
+        {
+          "coordinate": "L0.2.1.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=abort -C lto=off",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.1.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=abort -C lto=off",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.1.0",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=abort -C lto=off",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.1.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=abort -C lto=thin",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.1.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=abort -C lto=thin",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_13",
+      "items": [
+        {
+          "coordinate": "L0.2.1.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=abort -C lto=thin",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.1.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=abort -C lto=thin",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.1.1",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=abort -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.1.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=abort -C lto=fat",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.1.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=abort -C lto=fat",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_14",
+      "items": [
+        {
+          "coordinate": "L0.2.1.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=abort -C lto=fat",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.1.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=abort -C lto=fat",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L0.2.1.2",
+          "rustflags": "-C opt-level=0 -C debuginfo=2 -C panic=abort -C lto=fat",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.0.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=unwind -C lto=off",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.0.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=unwind -C lto=off",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 21.666666666666668,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_15",
+      "items": [
+        {
+          "coordinate": "L1.0.0.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=unwind -C lto=off",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.0.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=unwind -C lto=off",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.0.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=unwind -C lto=off",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.0.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=unwind -C lto=thin",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.0.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=unwind -C lto=thin",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_16",
+      "items": [
+        {
+          "coordinate": "L1.0.0.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=unwind -C lto=thin",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.0.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=unwind -C lto=thin",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.0.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=unwind -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.0.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=unwind -C lto=fat",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.0.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=unwind -C lto=fat",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_17",
+      "items": [
+        {
+          "coordinate": "L1.0.0.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=unwind -C lto=fat",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.0.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=unwind -C lto=fat",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.0.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=unwind -C lto=fat",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.1.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=abort -C lto=off",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.1.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=abort -C lto=off",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_18",
+      "items": [
+        {
+          "coordinate": "L1.0.1.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=abort -C lto=off",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.1.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=abort -C lto=off",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.1.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=abort -C lto=off",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.1.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=abort -C lto=thin",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.1.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=abort -C lto=thin",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_19",
+      "items": [
+        {
+          "coordinate": "L1.0.1.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=abort -C lto=thin",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.1.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=abort -C lto=thin",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.1.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=abort -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.1.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=abort -C lto=fat",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.1.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=abort -C lto=fat",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_20",
+      "items": [
+        {
+          "coordinate": "L1.0.1.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=abort -C lto=fat",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.1.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=abort -C lto=fat",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.0.1.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=0 -C panic=abort -C lto=fat",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.0.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=unwind -C lto=off",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.0.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=unwind -C lto=off",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_21",
+      "items": [
+        {
+          "coordinate": "L1.1.0.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=unwind -C lto=off",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.0.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=unwind -C lto=off",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.0.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=unwind -C lto=off",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.0.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=unwind -C lto=thin",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.0.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=unwind -C lto=thin",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_22",
+      "items": [
+        {
+          "coordinate": "L1.1.0.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=unwind -C lto=thin",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.0.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=unwind -C lto=thin",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.0.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=unwind -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.0.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=unwind -C lto=fat",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.0.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=unwind -C lto=fat",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_23",
+      "items": [
+        {
+          "coordinate": "L1.1.0.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=unwind -C lto=fat",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.0.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=unwind -C lto=fat",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.0.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=unwind -C lto=fat",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.1.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=abort -C lto=off",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.1.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=abort -C lto=off",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_24",
+      "items": [
+        {
+          "coordinate": "L1.1.1.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=abort -C lto=off",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.1.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=abort -C lto=off",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.1.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=abort -C lto=off",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.1.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=abort -C lto=thin",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.1.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=abort -C lto=thin",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_25",
+      "items": [
+        {
+          "coordinate": "L1.1.1.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=abort -C lto=thin",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.1.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=abort -C lto=thin",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.1.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=abort -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.1.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=abort -C lto=fat",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.1.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=abort -C lto=fat",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_26",
+      "items": [
+        {
+          "coordinate": "L1.1.1.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=abort -C lto=fat",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.1.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=abort -C lto=fat",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.1.1.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=1 -C panic=abort -C lto=fat",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.0.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=unwind -C lto=off",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.0.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=unwind -C lto=off",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_27",
+      "items": [
+        {
+          "coordinate": "L1.2.0.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=unwind -C lto=off",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.0.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=unwind -C lto=off",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.0.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=unwind -C lto=off",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.0.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=unwind -C lto=thin",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.0.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=unwind -C lto=thin",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_28",
+      "items": [
+        {
+          "coordinate": "L1.2.0.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=unwind -C lto=thin",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.0.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=unwind -C lto=thin",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.0.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=unwind -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.0.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=unwind -C lto=fat",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.0.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=unwind -C lto=fat",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_29",
+      "items": [
+        {
+          "coordinate": "L1.2.0.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=unwind -C lto=fat",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.0.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=unwind -C lto=fat",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.0.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=unwind -C lto=fat",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.1.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=abort -C lto=off",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.1.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=abort -C lto=off",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_30",
+      "items": [
+        {
+          "coordinate": "L1.2.1.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=abort -C lto=off",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.1.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=abort -C lto=off",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.1.0",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=abort -C lto=off",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.1.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=abort -C lto=thin",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.1.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=abort -C lto=thin",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_31",
+      "items": [
+        {
+          "coordinate": "L1.2.1.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=abort -C lto=thin",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.1.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=abort -C lto=thin",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.1.1",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=abort -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.1.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=abort -C lto=fat",
+          "features": "default",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.1.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=abort -C lto=fat",
+          "features": "all-plugins",
+          "profile": "dev"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_32",
+      "items": [
+        {
+          "coordinate": "L1.2.1.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=abort -C lto=fat",
+          "features": "self-build",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.1.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=abort -C lto=fat",
+          "features": "core-only",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L1.2.1.2",
+          "rustflags": "-C opt-level=1 -C debuginfo=2 -C panic=abort -C lto=fat",
+          "features": "extra-plugins",
+          "profile": "dev"
+        },
+        {
+          "coordinate": "L2.0.0.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=unwind -C lto=off",
+          "features": "default",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.0.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=unwind -C lto=off",
+          "features": "all-plugins",
+          "profile": "release"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 21.666666666666668,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_33",
+      "items": [
+        {
+          "coordinate": "L2.0.0.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=unwind -C lto=off",
+          "features": "self-build",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.0.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=unwind -C lto=off",
+          "features": "core-only",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.0.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=unwind -C lto=off",
+          "features": "extra-plugins",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.0.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=unwind -C lto=thin",
+          "features": "default",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.0.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=unwind -C lto=thin",
+          "features": "all-plugins",
+          "profile": "release"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_34",
+      "items": [
+        {
+          "coordinate": "L2.0.0.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=unwind -C lto=thin",
+          "features": "self-build",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.0.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=unwind -C lto=thin",
+          "features": "core-only",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.0.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=unwind -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.0.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=unwind -C lto=fat",
+          "features": "default",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.0.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=unwind -C lto=fat",
+          "features": "all-plugins",
+          "profile": "release"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_35",
+      "items": [
+        {
+          "coordinate": "L2.0.0.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=unwind -C lto=fat",
+          "features": "self-build",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.0.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=unwind -C lto=fat",
+          "features": "core-only",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.0.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=unwind -C lto=fat",
+          "features": "extra-plugins",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.1.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=abort -C lto=off",
+          "features": "default",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.1.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=abort -C lto=off",
+          "features": "all-plugins",
+          "profile": "release"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_36",
+      "items": [
+        {
+          "coordinate": "L2.0.1.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=abort -C lto=off",
+          "features": "self-build",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.1.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=abort -C lto=off",
+          "features": "core-only",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.1.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=abort -C lto=off",
+          "features": "extra-plugins",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.1.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=abort -C lto=thin",
+          "features": "default",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.1.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=abort -C lto=thin",
+          "features": "all-plugins",
+          "profile": "release"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_37",
+      "items": [
+        {
+          "coordinate": "L2.0.1.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=abort -C lto=thin",
+          "features": "self-build",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.1.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=abort -C lto=thin",
+          "features": "core-only",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.1.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=abort -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.1.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=abort -C lto=fat",
+          "features": "default",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.1.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=abort -C lto=fat",
+          "features": "all-plugins",
+          "profile": "release"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_38",
+      "items": [
+        {
+          "coordinate": "L2.0.1.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=abort -C lto=fat",
+          "features": "self-build",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.1.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=abort -C lto=fat",
+          "features": "core-only",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.0.1.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=0 -C panic=abort -C lto=fat",
+          "features": "extra-plugins",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.0.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=unwind -C lto=off",
+          "features": "default",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.0.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=unwind -C lto=off",
+          "features": "all-plugins",
+          "profile": "release"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_39",
+      "items": [
+        {
+          "coordinate": "L2.1.0.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=unwind -C lto=off",
+          "features": "self-build",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.0.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=unwind -C lto=off",
+          "features": "core-only",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.0.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=unwind -C lto=off",
+          "features": "extra-plugins",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.0.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=unwind -C lto=thin",
+          "features": "default",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.0.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=unwind -C lto=thin",
+          "features": "all-plugins",
+          "profile": "release"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_40",
+      "items": [
+        {
+          "coordinate": "L2.1.0.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=unwind -C lto=thin",
+          "features": "self-build",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.0.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=unwind -C lto=thin",
+          "features": "core-only",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.0.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=unwind -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.0.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=unwind -C lto=fat",
+          "features": "default",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.0.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=unwind -C lto=fat",
+          "features": "all-plugins",
+          "profile": "release"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_41",
+      "items": [
+        {
+          "coordinate": "L2.1.0.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=unwind -C lto=fat",
+          "features": "self-build",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.0.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=unwind -C lto=fat",
+          "features": "core-only",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.0.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=unwind -C lto=fat",
+          "features": "extra-plugins",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.1.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=abort -C lto=off",
+          "features": "default",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.1.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=abort -C lto=off",
+          "features": "all-plugins",
+          "profile": "release"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_42",
+      "items": [
+        {
+          "coordinate": "L2.1.1.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=abort -C lto=off",
+          "features": "self-build",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.1.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=abort -C lto=off",
+          "features": "core-only",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.1.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=abort -C lto=off",
+          "features": "extra-plugins",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.1.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=abort -C lto=thin",
+          "features": "default",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.1.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=abort -C lto=thin",
+          "features": "all-plugins",
+          "profile": "release"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_43",
+      "items": [
+        {
+          "coordinate": "L2.1.1.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=abort -C lto=thin",
+          "features": "self-build",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.1.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=abort -C lto=thin",
+          "features": "core-only",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.1.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=abort -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.1.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=abort -C lto=fat",
+          "features": "default",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.1.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=abort -C lto=fat",
+          "features": "all-plugins",
+          "profile": "release"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_44",
+      "items": [
+        {
+          "coordinate": "L2.1.1.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=abort -C lto=fat",
+          "features": "self-build",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.1.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=abort -C lto=fat",
+          "features": "core-only",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.1.1.2",
+          "rustflags": "-C opt-level=2 -C debuginfo=1 -C panic=abort -C lto=fat",
+          "features": "extra-plugins",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.2.0.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=2 -C panic=unwind -C lto=off",
+          "features": "default",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.2.0.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=2 -C panic=unwind -C lto=off",
+          "features": "all-plugins",
+          "profile": "release"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_45",
+      "items": [
+        {
+          "coordinate": "L2.2.0.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=2 -C panic=unwind -C lto=off",
+          "features": "self-build",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.2.0.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=2 -C panic=unwind -C lto=off",
+          "features": "core-only",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.2.0.0",
+          "rustflags": "-C opt-level=2 -C debuginfo=2 -C panic=unwind -C lto=off",
+          "features": "extra-plugins",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.2.0.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=2 -C panic=unwind -C lto=thin",
+          "features": "default",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.2.0.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=2 -C panic=unwind -C lto=thin",
+          "features": "all-plugins",
+          "profile": "release"
+        }
+      ],
+      "estimated_time": 300.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    },
+    {
+      "slice_id": "slice_46",
+      "items": [
+        {
+          "coordinate": "L2.2.0.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=2 -C panic=unwind -C lto=thin",
+          "features": "self-build",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.2.0.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=2 -C panic=unwind -C lto=thin",
+          "features": "core-only",
+          "profile": "release"
+        },
+        {
+          "coordinate": "L2.2.0.1",
+          "rustflags": "-C opt-level=2 -C debuginfo=2 -C panic=unwind -C lto=thin",
+          "features": "extra-plugins",
+          "profile": "release"
+        }
+      ],
+      "estimated_time": 180.0,
+      "priority": 11.666666666666666,
+      "worker_assignment": "worker_0"
+    }
+  ]
+}
