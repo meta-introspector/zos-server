@@ -61,21 +61,10 @@ tonic-build = "0.10"
 prost-build = "0.12"
 
 [features]
-default = ["all-plugins"]
-all-plugins = [
-    "foundation-plugins",
-    "governance-plugins", 
-    "regulatory-plugins",
-    "zk-plugins",
-    "system-plugins",
-    "format-plugins"
-]
-foundation-plugins = []
-governance-plugins = []
-regulatory-plugins = []
-zk-plugins = [] # ["coq-sys", "lean4-sys"]
-system-plugins = []
-format-plugins = []
+default = ["core-only"]
+core-only = []
+extra-plugins = []
+all-plugins = ["extra-plugins"]
 
 [profile.release]
 opt-level = 3
