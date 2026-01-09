@@ -1,0 +1,32 @@
+name: 🚀 No External Actions Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 📥 Checkout code
+      run: |
+        git clone https://github.com/meta-introspector/zos-server.git .
+        git checkout ${{ github.sha }}
+
+    - name: 🦀 Install Rust
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source ~/.cargo/env
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        rustup component add rustfmt clippy
+
+    - name: 🔨 Build and test
+      run: |
+        source ~/.cargo/env
+        cargo build --all-features
+        cargo test --all-features
+        cargo build --features self-build
+        ./target/debug/zos_server --help
+        echo "✅ ZOS Server built and runs successfully!"
