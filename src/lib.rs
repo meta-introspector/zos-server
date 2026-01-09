@@ -12,6 +12,7 @@ pub mod feature_tracer;
 pub mod execution_trace_analyzer;
 pub mod compiler_band_pass;
 pub mod compiler_polyfill_system;
+pub mod godel_emoji_tapestry;
 
 // Core plugins only
 pub mod plugins;

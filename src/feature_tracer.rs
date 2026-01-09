@@ -15,8 +15,13 @@ impl FeatureTracer {
     pub fn trace_all_features(&mut self) -> Result<String, String> {
         println!("🔬 Tracing execution of all feature flags...");
         
+        // Create tapestry weaver for Gödel emoji encoding
+        let weaver = crate::godel_emoji_tapestry::ExecutionTapestryWeaver::new();
+        
         let mut results = String::new();
         results.push_str("# Feature Flag Orbit Warp Analysis\n\n");
+        
+        let mut all_functions = Vec::new();
         
         for feature in self.lattice.features.clone() {
             println!("📡 Tracing feature: {}", feature);
@@ -25,6 +30,9 @@ impl FeatureTracer {
             let build_result = self.build_with_feature(&feature)?;
             results.push_str(&format!("## Feature: {}\n", feature));
             results.push_str(&format!("Build result: {}\n", build_result));
+            
+            // Add to function trace for tapestry
+            all_functions.push(format!("feature_{}", feature));
             
             // Trace orbit warp
             match self.lattice.trace_feature_execution(&feature) {
@@ -37,6 +45,16 @@ impl FeatureTracer {
             }
             results.push_str("\n");
         }
+        
+        // Generate Gödel emoji tapestry
+        let tapestry = weaver.weave_execution_tapestry(&all_functions);
+        let tapestry_story = weaver.read_tapestry_story(&tapestry);
+        let compressed = weaver.compress_tapestry(&tapestry);
+        
+        results.push_str("# 🎭 Gödel Emoji Tapestry\n\n");
+        results.push_str(&format!("**Compressed Tapestry**: {}\n\n", compressed));
+        results.push_str(&tapestry_story);
+        results.push_str("\n");
         
         // Generate mathematical proof
         results.push_str(&self.lattice.prove_orbit_warping());
