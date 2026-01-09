@@ -39,12 +39,3 @@ repos:
         language: system
         files: \.sh$
         pass_filenames: false
-
-      - id: auto-commit-push
-        name: auto commit and push
-        entry: bash
-        args: ['-c', 'if git diff --cached --quiet; then echo "No changes to commit"; else echo "🚀 Auto-committing changes..."; git commit -m "🤖 Auto-commit: $(date -Iseconds)" || true; echo "📤 Auto-pushing to origin..."; git push origin $(git branch --show-current) || echo "⚠️ Push failed - may need manual intervention"; fi']
-        language: system
-        always_run: true
-        pass_filenames: false
-        stages: [commit]
