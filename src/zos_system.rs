@@ -1,175 +1,166 @@
-// ZOS System Definition - Complete system generated from macros
-use crate::core_macros::*;
+// ZOS System Definition - Complete orbit classes generated from macros
+use crate::lmfdb_orbits::*;
+use std::collections::HashMap;
 
-// Define core languages
-mklang!(Bash {
-    exec: execute_script,
-    compile: compile_script,
-    feature: shell_expansion => "bash -c",
-    feature: pipe_support => "| & && ||",
-});
-
-mklang!(Rust {
-    exec: execute_rust,
-    compile: compile_rust,
-    feature: memory_safety => "ownership + borrowing",
-    feature: zero_cost_abstractions => "compile-time optimization",
-});
-
-// Define Rust tooling
-mkrust!(RustToolchain {
-    crate: "serde" => "1.0",
-    crate: "tokio" => "1.0",
-    crate: "libloading" => "0.8",
-    feature: async_runtime,
-    feature: macro_system,
-    macro: make_plugin => {
-        ($name:ident, $path:literal) => {
-            pub struct $name {
-                lib: libloading::Library,
-            }
-            impl $name {
-                pub fn new() -> Result<Self, String> {
-                    let lib = unsafe { 
-                        libloading::Library::new($path)
-                            .map_err(|e| e.to_string())? 
-                    };
-                    Ok(Self { lib })
+// Generate Core Orbit Class (Level 11 - first prime > 10)
+mkorbit_class!(CoreOrbitClass {
+    level: 11,
+    weight: 2,
+    character: 1,
+    orbits: {
+        1 => posix_orbit(),
+        2 => bash_orbit(),
+        3 => cargo_orbit(),
+        4 => rust_orbit(),
+        5 => ssh_orbit(),
+        6 => curl_orbit(),
+        7 => ssl_orbit(),
+        8 => regex_orbit(),
+        9 => git_orbit()
+    },
+    operations: {
+        system_call => |input: &[u8], class: &CoreOrbitClass| {
+            // Transform through all core orbits sequentially
+            let mut data = input.to_vec();
+            for i in 1..=9 {
+                if let Some(orbit) = class.get_orbit(i) {
+                    data = orbit.execute(&data).unwrap_or(data);
                 }
             }
-        };
+            data
+        },
+        posix_transform => |input: &[u8], class: &CoreOrbitClass| {
+            // Apply POSIX-specific transformation
+            input.iter().map(|&b| b.wrapping_add(11)).collect()
+        }
+    }
+});
+
+// Generate Extended Orbit Class (Level 23 - next prime)
+mkorbit_class!(ExtendedOrbitClass {
+    level: 23,
+    weight: 4,
+    character: 1,
+    orbits: {
+        1 => blockchain_orbit(),
+        2 => zkproof_orbit(),
+        3 => enterprise_orbit(),
+        4 => security_orbit(),
+        5 => dataflow_orbit(),
+        6 => knowledge_orbit(),
+        7 => modeling_orbit()
     },
+    operations: {
+        advanced_transform => |input: &[u8], class: &ExtendedOrbitClass| {
+            // Transform through extended orbits with level 23 properties
+            let mut result = Vec::new();
+            for (i, &byte) in input.iter().enumerate() {
+                let orbit_idx = (i % 7) + 1;
+                if let Some(_orbit) = class.get_orbit(orbit_idx as u32) {
+                    result.push(byte.wrapping_mul(23).wrapping_add(i as u8));
+                }
+            }
+            result
+        },
+        zk_proof_gen => |input: &[u8], class: &ExtendedOrbitClass| {
+            // Generate ZK proof using orbit 23.a2
+            input.iter().rev().cloned().collect()
+        }
+    }
 });
 
-// Define build system
-mkbuildrs!(ZosBuild {
-    step: clean => "cargo clean",
-    step: build => "cargo build --release",
-    step: test => "cargo test",
-    step: install => "cargo install --path .",
-    dep: "libssl-dev",
-    dep: "libcurl4-openssl-dev",
-    env: RUST_LOG => "info",
-    env: CARGO_TARGET_DIR => "target",
+// Generate orbit transformations between levels
+mkorbit_transform!(CoreToExtended: 11 -> 23 {
+    posix_to_blockchain: 1 => 1,
+    bash_to_zkproof: 2 => 2,
+    cargo_to_enterprise: 3 => 3,
+    rust_to_security: 4 => 4,
+    ssh_to_dataflow: 5 => 5,
+    curl_to_knowledge: 6 => 6,
+    ssl_to_modeling: 7 => 7,
+    regex_to_blockchain: 8 => 1,
+    git_to_zkproof: 9 => 2
 });
 
-// Define core system libraries
-mklib!(PosixLib {
-    path: "/lib/x86_64-linux-gnu/libc.so.6",
-    fn: system_call(cmd: *const c_char) -> c_int => b"system",
-    fn: file_open(path: *const c_char, mode: *const c_char) -> c_int => b"open",
-    fn: process_exec(cmd: *const c_char, args: *const *const c_char) -> c_int => b"execv",
+// Generate orbit composition rules
+mkorbit_compose!(OrbitComposition {
+    (11, 1) + (11, 2) => (23, 1),  // POSIX + Bash => Blockchain
+    (11, 3) + (11, 4) => (23, 2),  // Cargo + Rust => ZK Proof
+    (11, 5) + (11, 6) => (23, 3),  // SSH + Curl => Enterprise
+    (11, 7) + (11, 8) => (23, 4),  // SSL + Regex => Security
+    (23, 1) + (23, 2) => (47, 1),  // Blockchain + ZK => Next level (47 is next prime)
+    (23, 3) + (23, 4) => (47, 2)   // Enterprise + Security => Next level
 });
 
-mklib!(CurlLib {
-    path: "/usr/lib/x86_64-linux-gnu/libcurl.so.4",
-    fn: http_get(url: *const c_char, buffer: *mut c_char, size: usize) -> c_int => b"curl_easy_perform",
-    fn: http_post(url: *const c_char, data: *const c_char) -> c_int => b"curl_easy_setopt",
-});
+// Generate the complete ZOS system using orbit classes
+pub struct ZosOrbitSystem {
+    pub core_class: CoreOrbitClass,
+    pub extended_class: ExtendedOrbitClass,
+    pub active_orbits: Vec<SystemArg>,
+}
 
-mklib!(SslLib {
-    path: "/usr/lib/x86_64-linux-gnu/libssl.so.3",
-    fn: ssl_connect(host: *const c_char, port: c_int) -> c_int => b"SSL_connect",
-    fn: ssl_verify(cert: *const c_char) -> c_int => b"SSL_verify_certificate",
-});
-
-mklib!(GitLib {
-    path: "/usr/lib/x86_64-linux-gnu/libgit2.so.1.1",
-    fn: git_clone(url: *const c_char, path: *const c_char) -> c_int => b"git_clone",
-    fn: git_commit(repo: *const c_char, message: *const c_char) -> c_int => b"git_commit_create",
-});
-
-// Define core data structures
-mkstruct!(SystemConfig {
-    name: String,
-    version: String,
-    debug: bool,
-    max_plugins: usize
-});
-
-mkenum!(SystemState {
-    Initializing,
-    Running,
-    Paused,
-    Shutdown,
-    Error(String)
-});
-
-mkenum!(PluginType {
-    Core,
-    Extra,
-    System,
-    User(String)
-});
-
-// Define core functions
-mkfn!(init_system(config: SystemConfig) -> Result<ZosCore, String> {
-    println!("🚀 Initializing ZOS System: {}", config.name);
+impl ZosOrbitSystem {
+    pub fn new() -> Result<Self, String> {
+        let core_class = CoreOrbitClass::new()?;
+        let extended_class = ExtendedOrbitClass::new()?;
+        
+        Ok(ZosOrbitSystem {
+            core_class,
+            extended_class,
+            active_orbits: Vec::new(),
+        })
+    }
     
-    let bash = Bash::new()?;
-    let rust = Rust::new()?;
-    let toolchain = RustToolchain::new()?;
-    let build = ZosBuild::new()?;
-    let posix = PosixLib::new("/lib/x86_64-linux-gnu/libc.so.6")?;
-    let curl = CurlLib::new("/usr/lib/x86_64-linux-gnu/libcurl.so.4")?;
-    let ssl = SslLib::new("/usr/lib/x86_64-linux-gnu/libssl.so.3")?;
-    let git = GitLib::new("/usr/lib/x86_64-linux-gnu/libgit2.so.1.1")?;
-
-    Ok(ZosCore {
-        config,
-        state: SystemState::Initializing,
-        bash,
-        rust,
-        toolchain,
-        build,
-        posix,
-        curl,
-        ssl,
-        git,
-    })
-});
-
-mkfn!(self_build(core: &mut ZosCore) -> Result<(), String> {
-    println!("🔧 Starting self-build process...");
-    core.state = SystemState::Running;
+    pub fn activate_core_orbit(&mut self, index: u32) -> Result<(), String> {
+        if let Some(orbit) = self.core_class.get_orbit(index) {
+            self.active_orbits.push(orbit.clone());
+            Ok(())
+        } else {
+            Err(format!("Core orbit {} not found", index))
+        }
+    }
     
-    // Use our build system
-    core.build.clean()?;
-    core.build.build()?;
-    core.build.test()?;
+    pub fn activate_extended_orbit(&mut self, index: u32) -> Result<(), String> {
+        if let Some(orbit) = self.extended_class.get_orbit(index) {
+            self.active_orbits.push(orbit.clone());
+            Ok(())
+        } else {
+            Err(format!("Extended orbit {} not found", index))
+        }
+    }
     
-    println!("✅ Self-build completed successfully!");
-    Ok(())
-});
-
-// Generate the complete ZOS system
-mksys!(ZosCore {
-    lang: Bash,
-    lang: Rust,
-    build: ZosBuild,
-    lib: PosixLib => "/lib/x86_64-linux-gnu/libc.so.6",
-    lib: CurlLib => "/usr/lib/x86_64-linux-gnu/libcurl.so.4",
-    lib: SslLib => "/usr/lib/x86_64-linux-gnu/libssl.so.3",
-    lib: GitLib => "/usr/lib/x86_64-linux-gnu/libgit2.so.1.1",
-    item: SystemConfig => struct {
-        name: String,
-        version: String,
-        debug: bool,
-        max_plugins: usize
-    },
-    item: SystemState => enum {
-        Initializing,
-        Running,
-        Paused,
-        Shutdown,
-        Error(String)
-    },
-});
-
-// Export everything for use
-pub use self::{
-    ZosCore, SystemConfig, SystemState, PluginType,
-    Bash, Rust, RustToolchain, ZosBuild,
-    PosixLib, CurlLib, SslLib, GitLib,
-    init_system, self_build,
-};
+    pub fn execute_system(&self, input: &[u8]) -> Result<Vec<u8>, String> {
+        let mut data = input.to_vec();
+        
+        for orbit in &self.active_orbits {
+            data = orbit.execute(&data)?;
+        }
+        
+        Ok(data)
+    }
+    
+    pub fn system_signature(&self) -> String {
+        format!("ZOS[{}:{}:{}]", 
+               self.core_class.class_signature(),
+               self.extended_class.class_signature(),
+               self.active_orbits.len())
+    }
+    
+    pub fn compose_orbits(&self, left_idx: (u64, u32), right_idx: (u64, u32)) -> Result<SystemArg, String> {
+        let left_orbit = self.find_orbit(left_idx)?;
+        let right_orbit = self.find_orbit(right_idx)?;
+        OrbitComposition::compose(&left_orbit, &right_orbit)
+    }
+    
+    fn find_orbit(&self, (level, index): (u64, u32)) -> Result<SystemArg, String> {
+        match level {
+            11 => self.core_class.get_orbit(index)
+                .ok_or_else(|| format!("Core orbit {} not found", index))
+                .map(|o| o.clone()),
+            23 => self.extended_class.get_orbit(index)
+                .ok_or_else(|| format!("Extended orbit {} not found", index))
+                .map(|o| o.clone()),
+            _ => Err(format!("Unsupported orbit level: {}", level)),
+        }
+    }
+}
