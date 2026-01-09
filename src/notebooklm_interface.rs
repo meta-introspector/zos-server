@@ -55,8 +55,8 @@ impl NotebookLMInterface {
 
         let chunk = IntelligentChunk {
             id: chunk_id.clone(),
-            content,
             size_bytes: content.len(),
+            content,
             metadata: ChunkMetadata {
                 topic,
                 complexity_score,

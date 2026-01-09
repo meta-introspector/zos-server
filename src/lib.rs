@@ -1,22 +1,25 @@
 // ZOS Server - Zero Ontology System
 // LMFDB Orbit-based system
 
-#[macro_use]
-pub mod core_macros;
 pub mod lmfdb_orbits;
 #[macro_use] 
 pub mod orbit_macros;
 pub mod zos_system;
+pub mod automorphic_bootstrap;
+pub mod rust_soul_eigenmatrix;
 
 // Core plugins only
 pub mod plugins;
 
-// Self-building system
+// Optional modules for extended functionality
+#[cfg(feature = "self-build")]
 pub mod self_builder;
+#[cfg(feature = "self-build")]
 pub mod self_build_cli;
 
-// NotebookLM integration
+#[cfg(feature = "notebooklm")]
 pub mod notebooklm_interface;
+#[cfg(feature = "notebooklm")]
 pub mod notebooklm_cli;
 
 // Re-export orbit system

@@ -76,7 +76,7 @@ pub fn handle_notebooklm_command(args: &[String]) -> Result<(), String> {
     match args.get(0).map(|s| s.as_str()) {
         Some("import") => {
             let file_path = args.get(1).ok_or("Missing file path")?;
-            let topic = args.get(2).unwrap_or(&"general".to_string());
+            let topic = args.get(2).unwrap_or(&"general".to_string()).as_str();
             let chunk_id = cli.import_file(file_path, topic)?;
             println!("✅ Imported as chunk: {}", chunk_id);
         },

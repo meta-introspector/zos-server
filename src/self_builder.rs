@@ -3,7 +3,7 @@ use std::process::{Command, Stdio};
 use serde::{Deserialize, Serialize};
 use std::fs;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompileError {
     pub file: String,
     pub line: u32,
@@ -84,7 +84,7 @@ impl SelfBuilder {
         } else {
             // Save error log for analysis
             let stderr = String::from_utf8_lossy(&output.stderr);
-            fs::write(format!("{}/build_errors.log", self.project_root), &stderr)
+            fs::write(format!("{}/build_errors.log", self.project_root), stderr.as_bytes())
                 .map_err(|e| format!("Failed to write error log: {}", e))?;
             Ok(false)
         }

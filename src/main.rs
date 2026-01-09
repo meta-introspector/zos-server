@@ -1,4 +1,4 @@
-// ZOS Main - LMFDB Orbit System
+// ZOS Main - Automorphic Bootstrap System
 use zos_server::*;
 use std::env;
 
@@ -9,13 +9,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Handle CLI commands
     if args.len() > 1 {
         match args[1].as_str() {
-            "self-build" => {
-                return self_build_cli::handle_self_build_command(&args[2..]).await
-                    .map_err(|e| e.into());
+            "bootstrap" => {
+                return handle_bootstrap_command(&args[2..]).await;
             }
-            "notebooklm" => {
-                return notebooklm_cli::handle_notebooklm_command(&args[2..])
-                    .map_err(|e| e.into());
+            "soul" => {
+                return handle_soul_command(&args[2..]).await;
             }
             "orbit" => {
                 return handle_orbit_command(&args[2..]).await;
@@ -24,41 +22,87 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    // Initialize LMFDB Orbit System
-    println!("🌌 Starting ZOS Server - LMFDB Orbit System");
+    // Initialize Automorphic Bootstrap System
+    println!("🌌 Starting ZOS Server - Automorphic Bootstrap System");
     
-    // Create core system (Level 11 orbits)
+    let mut improvement = automorphic_bootstrap::AutomorphicImprovement::new()?;
+    println!("✅ {}", improvement.bootstrap.status());
+    
+    // Show what we can build
+    let available = improvement.bootstrap.available_features();
+    println!("🔧 Available features to bootstrap: {:?}", available);
+    
+    // Test basic orbit functionality
+    let test_data = b"Bootstrap test";
     let core = SystemInstance::core_system()?;
-    println!("✅ Core system initialized: {}", core.signature());
+    let result = core.execute_all(test_data)?;
+    println!("🧪 Core orbit test: {} -> {} bytes", test_data.len(), result.len());
     
-    // Create extended system (Level 11 + 23 orbits)  
-    let extended = SystemInstance::extended_system()?;
-    println!("✅ Extended system initialized: {}", extended.signature());
-    
-    // Test orbit execution
-    let test_data = b"Hello ZOS Orbit System!";
-    println!("🧪 Testing orbit execution...");
-    
-    let core_result = core.execute_all(test_data)?;
-    println!("🔄 Core orbit result: {} bytes", core_result.len());
-    
-    let extended_result = extended.execute_all(test_data)?;
-    println!("🔄 Extended orbit result: {} bytes", extended_result.len());
-    
-    // Test orbit enums
-    let posix_orbit = CoreOrbit::from_label("11.a1")?;
-    let blockchain_orbit = ExtendedOrbit::from_label("23.a1")?;
-    
-    println!("🎯 POSIX orbit: {}", posix_orbit.orbit().label);
-    println!("🎯 Blockchain orbit: {}", blockchain_orbit.orbit().label);
-    
-    println!("🎉 ZOS Orbit System ready!");
+    println!("🎉 ZOS Bootstrap System ready!");
     println!("💡 Available commands:");
+    println!("  ./zos_server bootstrap status     - Show bootstrap status");
+    println!("  ./zos_server bootstrap improve    - Improve system");
+    println!("  ./zos_server soul extract         - Extract Rust soul eigenmatrix");
+    println!("  ./zos_server soul verify          - Verify 3-phase bootstrap proof");
     println!("  ./zos_server orbit core           - Test core orbits");
-    println!("  ./zos_server orbit extended       - Test extended orbits");
-    println!("  ./zos_server orbit compose        - Compose orbits");
-    println!("  ./zos_server self-build build     - Self-build with LLM");
-    println!("  ./zos_server notebooklm import    - Import NotebookLM chunks");
+    
+    Ok(())
+}
+
+async fn handle_bootstrap_command(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    let mut improvement = automorphic_bootstrap::AutomorphicImprovement::new()?;
+    
+    match args.get(0).map(|s| s.as_str()) {
+        Some("status") => {
+            println!("📊 Bootstrap Status:");
+            println!("  {}", improvement.bootstrap.status());
+            println!("  Capability Level: {}", improvement.bootstrap.capability_level());
+            println!("  Tools: {}", improvement.bootstrap.core_tools.len());
+            
+            let available: Vec<String> = improvement.bootstrap.available_features().into_iter()
+                .filter(|f| improvement.bootstrap.can_enable_feature(f))
+                .collect();
+            println!("  Ready features: {:?}", available);
+            
+            let history = improvement.history();
+            if !history.is_empty() {
+                println!("  History: {:?}", history);
+            }
+        },
+        Some("improve") => {
+            let feature = args.get(1).unwrap_or(&"self-build".to_string());
+            println!("🚀 Improving system with feature: {}", feature);
+            
+            match improvement.improve(feature) {
+                Ok(()) => println!("✅ Successfully improved system"),
+                Err(e) => println!("❌ Improvement failed: {}", e),
+            }
+        },
+        Some("path") => {
+            let target_features = vec!["self-build", "networking", "security"];
+            let path = improvement.improvement_path(&target_features);
+            
+            println!("🛤️ Improvement path to reach full capability:");
+            for (i, step) in path.iter().enumerate() {
+                println!("  {}. {}", i + 1, step);
+            }
+        },
+        Some("verify") => {
+            println!("🔍 Verifying system integrity...");
+            match improvement.bootstrap.verify_integrity() {
+                Ok(true) => println!("✅ System integrity verified"),
+                Ok(false) => println!("❌ System integrity check failed"),
+                Err(e) => println!("💥 Verification error: {}", e),
+            }
+        },
+        _ => {
+            println!("Bootstrap Commands:");
+            println!("  status    - Show current bootstrap status");
+            println!("  improve   - Improve system with new feature");
+            println!("  path      - Show improvement path");
+            println!("  verify    - Verify system integrity");
+        }
+    }
     
     Ok(())
 }
@@ -67,37 +111,55 @@ async fn handle_orbit_command(args: &[String]) -> Result<(), Box<dyn std::error:
     match args.get(0).map(|s| s.as_str()) {
         Some("core") => {
             println!("🌌 Testing Core Orbit System (Level 11)");
-            let core = CoreSystem::new()?;
+            let core = SystemInstance::core_system()?;
             let test_data = b"Core orbit test";
-            let result = core.execute(test_data)?;
+            let result = core.execute_all(test_data)?;
             println!("✅ Core execution: {} -> {} bytes", test_data.len(), result.len());
             println!("📊 Signature: {}", core.signature());
-        },
-        Some("extended") => {
-            println!("🌌 Testing Extended Orbit System (Level 23)");
-            let extended = ExtendedSystem::new()?;
-            let test_data = b"Extended orbit test";
-            let result = extended.execute(test_data)?;
-            println!("✅ Extended execution: {} -> {} bytes", test_data.len(), result.len());
-            println!("📊 Signature: {}", extended.signature());
-        },
-        Some("compose") => {
-            println!("🌌 Testing Orbit Composition");
-            let posix = SystemArg::from_lmfdb("11.a1")?;
-            let bash = SystemArg::from_lmfdb("11.a2")?;
-            let composition = compose_orbits(&posix, &bash)?;
-            println!("✅ Composed orbits: {} bytes", composition.len());
-            
-            let core_orbit = SystemArg::from_lmfdb("11.a1")?;
-            let blockchain_orbit = SystemArg::from_lmfdb("23.a1")?;
-            let transform = orbit_transform(&core_orbit, &blockchain_orbit)?;
-            println!("🔄 Orbit transform: {}", transform);
         },
         _ => {
             println!("Orbit Commands:");
             println!("  core      - Test core orbit system");
-            println!("  extended  - Test extended orbit system");
-            println!("  compose   - Test orbit composition");
+        }
+    }
+    
+    Ok(())
+}
+async fn handle_soul_command(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    match args.get(0).map(|s| s.as_str()) {
+        Some("extract") => {
+            println!("🔍 Extracting Rust soul eigenmatrix from Cargo.lock...");
+            
+            let lock_content = match std::fs::read_to_string("Cargo.lock") {
+                Ok(content) => content,
+                Err(_) => {
+                    println!("❌ Cargo.lock not found. Run 'cargo build' first.");
+                    return Ok(());
+                }
+            };
+            
+            let eigenmatrix = rust_soul_eigenmatrix::RustSoulEigenmatrix::extract_from_cargo_lock(&lock_content)?;
+            
+            println!("✅ Rust soul eigenmatrix extracted:");
+            println!("  Soul Eigenvalue: {:.6}", eigenmatrix.soul_eigenvalue());
+            println!("  Trace Signature: {}", eigenmatrix.trace_signature());
+        },
+        Some("verify") => {
+            println!("🔍 Verifying 3-phase bootstrap proof...");
+            
+            let lock_content = std::fs::read_to_string("Cargo.lock").unwrap_or_default();
+            let eigenmatrix = rust_soul_eigenmatrix::RustSoulEigenmatrix::extract_from_cargo_lock(&lock_content)?;
+            
+            match eigenmatrix.verify_bootstrap_proof() {
+                Ok(true) => println!("✅ 3-phase bootstrap proof verified!"),
+                Ok(false) => println!("❌ 3-phase bootstrap proof failed."),
+                Err(e) => println!("💥 Verification error: {}", e),
+            }
+        },
+        _ => {
+            println!("Soul Commands:");
+            println!("  extract   - Extract Rust soul eigenmatrix");
+            println!("  verify    - Verify 3-phase bootstrap proof");
         }
     }
     
