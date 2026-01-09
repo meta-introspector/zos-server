@@ -3,9 +3,18 @@
 
 use zos_server::*;
 use tokio;
+use std::env;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args: Vec<String> = env::args().collect();
+    
+    // Handle NotebookLM commands
+    if args.len() > 1 && args[1] == "notebooklm" {
+        return notebooklm_cli::handle_notebooklm_command(&args[2..])
+            .map_err(|e| e.into());
+    }
+
     println!("🚀 Starting ZOS Server - Zero Ontology System");
     println!("📊 Initializing all plugin layers...");
 

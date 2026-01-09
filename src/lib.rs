@@ -15,6 +15,8 @@ pub mod node_coordinator;
 pub mod blockchain_ingestor;
 pub mod universal_plugin_loader;
 pub mod verified_plugin_loader;
+pub mod notebooklm_interface;
+pub mod notebooklm_cli;
 
 // Re-export commonly used items
 pub use enums::*;
