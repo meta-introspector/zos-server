@@ -1,16 +1,60 @@
+     Locking 44 packages to latest compatible versions
+      Adding asn1-rs v0.6.2
+      Adding asn1-rs-derive v0.5.1
+      Adding asn1-rs-impl v0.2.0
+      Adding attohttpc v0.24.1
+      Adding base64 v0.22.1
+      Adding cfg_aliases v0.2.1
+      Adding der-parser v9.0.0
+      Adding deranged v0.5.5
+      Adding futures-rustls v0.26.0
+      Adding hickory-resolver v0.24.4
+      Adding igd-next v0.14.3
+      Adding ipconfig v0.3.2
+      Adding libp2p-dns v0.41.1
+      Adding libp2p-quic v0.10.3
+      Adding libp2p-tls v0.4.1
+      Adding libp2p-upnp v0.2.2
+      Adding linked-hash-map v0.5.6
+      Adding lru-cache v0.1.2
+      Adding lru-slab v0.1.2
+      Adding num-conv v0.1.0
+      Adding oid-registry v0.7.1
+      Adding pem v3.0.6
+      Adding powerfmt v0.2.0
+      Adding quinn v0.11.9
+      Adding quinn-proto v0.11.13
+      Adding quinn-udp v0.5.14
+      Adding rcgen v0.11.3
+      Adding resolv-conf v0.7.6
+      Adding ring v0.16.20
+      Adding rustc-hash v2.1.1
+      Adding rusticata-macros v4.1.0
+      Adding rustls v0.23.36
+      Adding rustls-pki-types v1.13.2
+      Adding rustls-webpki v0.103.8
+      Adding spin v0.5.2
+      Adding time v0.3.44
+      Adding time-core v0.1.6
+      Adding time-macros v0.2.24
+      Adding untrusted v0.7.1
+      Adding widestring v1.2.1
+      Adding x509-parser v0.16.0
+      Adding xml-rs v0.8.28
+      Adding xmltree v0.10.3
+      Adding yasna v0.5.2
+   Compiling netlink-sys v0.8.7
+   Compiling libp2p-swarm v0.44.2
+   Compiling netlink-proto v0.11.5
+   Compiling rtnetlink v0.13.1
+   Compiling if-watch v3.2.1
+   Compiling libp2p-allow-block-list v0.3.0
+   Compiling libp2p-gossipsub v0.46.1
+   Compiling libp2p-connection-limits v0.3.1
+   Compiling libp2p-mdns v0.45.1
+   Compiling libp2p-tcp v0.41.0
+   Compiling libp2p v0.53.2
    Compiling zos-server v0.1.0 (/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server)
-error: cannot find derive macro `NetworkBehaviour` in this scope
-  --> src/mini_sdf_server.rs:12:10
-   |
-12 | #[derive(NetworkBehaviour)]
-   |          ^^^^^^^^^^^^^^^^
-   |
-note: `NetworkBehaviour` is imported here, but it is only a trait, without a derive macro
-  --> src/mini_sdf_server.rs:6:13
-   |
- 6 |     swarm::{NetworkBehaviour, SwarmEvent},
-   |             ^^^^^^^^^^^^^^^^
-
 error[E0407]: method `export_to_mcp` is not a member of trait `VerbExporter`
   --> src/protocol_exports.rs:8:5
    |
@@ -64,45 +108,6 @@ error[E0407]: method `export_to_rest_routes` is not a member of trait `VerbExpor
 144 | |         Ok(routes)
 145 | |     }
     | |_____^ not a member of trait `VerbExporter`
-
-error[E0433]: failed to resolve: could not find `tokio` in `mdns`
-  --> src/mini_sdf_server.rs:15:21
-   |
-15 |     pub mdns: mdns::tokio::Behaviour,
-   |                     ^^^^^ could not find `tokio` in `mdns`
-   |
-note: found an item that was configured out
-  --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-mdns-0.45.1/src/lib.rs:48:27
-   |
-47 | #[cfg(feature = "tokio")]
-   |       ----------------- the item is gated behind the `tokio` feature
-48 | pub use crate::behaviour::tokio;
-   |                           ^^^^^
-
-error[E0433]: failed to resolve: could not find `tokio` in `mdns`
-  --> src/mini_sdf_server.rs:42:26
-   |
-42 |         let mdns = mdns::tokio::Behaviour::new(mdns::Config::default(), local_peer_id)?;
-   |                          ^^^^^ could not find `tokio` in `mdns`
-   |
-note: found an item that was configured out
-  --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-mdns-0.45.1/src/lib.rs:48:27
-   |
-47 | #[cfg(feature = "tokio")]
-   |       ----------------- the item is gated behind the `tokio` feature
-48 | pub use crate::behaviour::tokio;
-   |                           ^^^^^
-help: consider importing one of these structs
-   |
- 4 + use crate::mini_sdf_server::gossipsub::Behaviour;
-   |
- 4 + use crate::mini_sdf_server::mdns::Behaviour;
-   |
-help: if you import `Behaviour`, refer to it directly
-   |
-42 -         let mdns = mdns::tokio::Behaviour::new(mdns::Config::default(), local_peer_id)?;
-42 +         let mdns = Behaviour::new(mdns::Config::default(), local_peer_id)?;
-   |
 
 warning: unused import: `LibVerb`
  --> src/traits/mod.rs:4:29
@@ -239,9 +244,9 @@ warning: unused import: `crate::enums::P2PVerb`
   |     ^^^^^^^^^^^^^^^^^^^^^
 
 warning: unused imports: `AsyncBufReadExt` and `self`
-  --> src/mini_sdf_server.rs:10:17
+  --> src/mini_sdf_server.rs:11:17
    |
-10 | use tokio::io::{self, AsyncBufReadExt};
+11 | use tokio::io::{self, AsyncBufReadExt};
    |                 ^^^^  ^^^^^^^^^^^^^^^
 
 warning: unused import: `crate::plugins::*`
@@ -291,165 +296,37 @@ error[E0119]: conflicting implementations of trait `VerbExporter` for type `Verb
 36 | impl VerbExporter for VerbExport {
    | -------------------------------- first implementation here
 
-error[E0277]: the trait bound `SdfBehaviour: NetworkBehaviour` is not satisfied
-   --> src/mini_sdf_server.rs:19:12
-    |
- 19 |     swarm: Swarm<SdfBehaviour>,
-    |            ^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
-    |
-help: the trait `NetworkBehaviour` is not implemented for `SdfBehaviour`
-   --> src/mini_sdf_server.rs:13:1
-    |
- 13 | pub struct SdfBehaviour {
-    | ^^^^^^^^^^^^^^^^^^^^^^^
-    = help: the following other types implement trait `NetworkBehaviour`:
-              Toggle<TBehaviour>
-              itertools::Either<L, R>
-              libp2p::libp2p_allow_block_list::Behaviour<S>
-              libp2p::libp2p_connection_limits::Behaviour
-              libp2p::libp2p_gossipsub::Behaviour<C, F>
-              libp2p::libp2p_mdns::Behaviour<P>
-              libp2p::libp2p_swarm::dummy::Behaviour
-note: required by a bound in `Swarm`
-   --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-swarm-0.44.2/src/lib.rs:322:17
-    |
-320 | pub struct Swarm<TBehaviour>
-    |            ----- required by a bound in this struct
-321 | where
-322 |     TBehaviour: NetworkBehaviour,
-    |                 ^^^^^^^^^^^^^^^^ required by this bound in `Swarm`
-
-error[E0599]: no method named `with_tcp` found for struct `SwarmBuilder<Provider, Phase>` in the current scope
-  --> src/mini_sdf_server.rs:47:14
+error[E0599]: no method named `with_tcp` found for struct `SwarmBuilder<NoProviderSpecified, ProviderPhase>` in the current scope
+  --> src/mini_sdf_server.rs:48:14
    |
-46 |           let swarm = libp2p::SwarmBuilder::with_existing_identity(local_key)
+47 |           let swarm = libp2p::SwarmBuilder::with_existing_identity(local_key)
    |  _____________________-
-47 | |             .with_tcp(tcp::Config::default(), noise::Config::new, yamux::Config::default)?
+48 | |             .with_tcp(tcp::Config::default(), noise::Config::new, yamux::Config::default)?
    | |             -^^^^^^^^ method not found in `SwarmBuilder<NoProviderSpecified, ProviderPhase>`
    | |_____________|
    |
    |
-   = note: the full name for the type has been written to '/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/target/debug/deps/zos_server-1508c9af22b3a747.long-type-1408590813443310292.txt'
+   = note: the method was found for
+           - `SwarmBuilder<libp2p::builder::phase::provider::Tokio, libp2p::builder::phase::tcp::TcpPhase>`
+   = note: the full name for the type has been written to '/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/target/debug/deps/zos_server-657dff2d8b868cfe.long-type-2852858726638448140.txt'
    = note: consider using `--verbose` to print the full type name to the console
 
-error[E0277]: the trait bound `SdfBehaviour: NetworkBehaviour` is not satisfied
-   --> src/mini_sdf_server.rs:53:13
-    |
- 53 |             swarm,
-    |             ^^^^^ unsatisfied trait bound
-    |
-help: the trait `NetworkBehaviour` is not implemented for `SdfBehaviour`
-   --> src/mini_sdf_server.rs:13:1
-    |
- 13 | pub struct SdfBehaviour {
-    | ^^^^^^^^^^^^^^^^^^^^^^^
-    = help: the following other types implement trait `NetworkBehaviour`:
-              Toggle<TBehaviour>
-              itertools::Either<L, R>
-              libp2p::libp2p_allow_block_list::Behaviour<S>
-              libp2p::libp2p_connection_limits::Behaviour
-              libp2p::libp2p_gossipsub::Behaviour<C, F>
-              libp2p::libp2p_mdns::Behaviour<P>
-              libp2p::libp2p_swarm::dummy::Behaviour
-note: required by a bound in `Swarm`
-   --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-swarm-0.44.2/src/lib.rs:322:17
-    |
-320 | pub struct Swarm<TBehaviour>
-    |            ----- required by a bound in this struct
-321 | where
-322 |     TBehaviour: NetworkBehaviour,
-    |                 ^^^^^^^^^^^^^^^^ required by this bound in `Swarm`
-
-error[E0599]: the method `listen_on` exists for struct `Swarm<SdfBehaviour>`, but its trait bounds were not satisfied
-   --> src/mini_sdf_server.rs:61:20
-    |
- 13 | pub struct SdfBehaviour {
-    | ----------------------- doesn't satisfy `SdfBehaviour: NetworkBehaviour`
-...
- 61 |         self.swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
-    |                    ^^^^^^^^^ method cannot be called on `Swarm<SdfBehaviour>` due to unsatisfied trait bounds
-    |
-    = note: the following trait bounds were not satisfied:
-            `SdfBehaviour: NetworkBehaviour`
-note: the trait `NetworkBehaviour` must be implemented
-   --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-swarm-0.44.2/src/behaviour.rs:122:1
-    |
-122 | pub trait NetworkBehaviour: 'static {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0599]: the method `behaviour_mut` exists for struct `Swarm<SdfBehaviour>`, but its trait bounds were not satisfied
-   --> src/mini_sdf_server.rs:67:20
-    |
- 13 | pub struct SdfBehaviour {
-    | ----------------------- doesn't satisfy `SdfBehaviour: NetworkBehaviour`
-...
- 67 |         self.swarm.behaviour_mut().gossipsub.subscribe(&sdf_topic)?;
-    |                    ^^^^^^^^^^^^^ method cannot be called on `Swarm<SdfBehaviour>` due to unsatisfied trait bounds
-    |
-    = note: the following trait bounds were not satisfied:
-            `SdfBehaviour: NetworkBehaviour`
-note: the trait `NetworkBehaviour` must be implemented
-   --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-swarm-0.44.2/src/behaviour.rs:122:1
-    |
-122 | pub trait NetworkBehaviour: 'static {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0599]: the method `behaviour_mut` exists for struct `Swarm<SdfBehaviour>`, but its trait bounds were not satisfied
-   --> src/mini_sdf_server.rs:68:20
-    |
- 13 | pub struct SdfBehaviour {
-    | ----------------------- doesn't satisfy `SdfBehaviour: NetworkBehaviour`
-...
- 68 |         self.swarm.behaviour_mut().gossipsub.subscribe(&shell_topic)?;
-    |                    ^^^^^^^^^^^^^ method cannot be called on `Swarm<SdfBehaviour>` due to unsatisfied trait bounds
-    |
-    = note: the following trait bounds were not satisfied:
-            `SdfBehaviour: NetworkBehaviour`
-note: the trait `NetworkBehaviour` must be implemented
-   --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-swarm-0.44.2/src/behaviour.rs:122:1
-    |
-122 | pub trait NetworkBehaviour: 'static {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 error[E0599]: no method named `select_next_some` found for struct `Swarm<TBehaviour>` in the current scope
-  --> src/mini_sdf_server.rs:76:30
-   |
-76 |             match self.swarm.select_next_some().await {
-   |                              ^^^^^^^^^^^^^^^^ method not found in `Swarm<SdfBehaviour>`
-
-error[E0599]: the method `behaviour_mut` exists for struct `Swarm<SdfBehaviour>`, but its trait bounds were not satisfied
-   --> src/mini_sdf_server.rs:83:36
-    |
- 13 | pub struct SdfBehaviour {
-    | ----------------------- doesn't satisfy `SdfBehaviour: NetworkBehaviour`
-...
- 83 |                         self.swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
-    |                                    ^^^^^^^^^^^^^ method cannot be called on `Swarm<SdfBehaviour>` due to unsatisfied trait bounds
-    |
-    = note: the following trait bounds were not satisfied:
-            `SdfBehaviour: NetworkBehaviour`
-note: the trait `NetworkBehaviour` must be implemented
-   --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-swarm-0.44.2/src/behaviour.rs:122:1
-    |
-122 | pub trait NetworkBehaviour: 'static {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0599]: the method `behaviour_mut` exists for struct `Swarm<SdfBehaviour>`, but its trait bounds were not satisfied
-   --> src/mini_sdf_server.rs:121:36
-    |
- 13 | pub struct SdfBehaviour {
-    | ----------------------- doesn't satisfy `SdfBehaviour: NetworkBehaviour`
-...
-121 |         if let Err(e) = self.swarm.behaviour_mut().gossipsub.publish(shell_topic, response_msg.as_bytes()) {
-    |                                    ^^^^^^^^^^^^^ method cannot be called on `Swarm<SdfBehaviour>` due to unsatisfied trait bounds
-    |
-    = note: the following trait bounds were not satisfied:
-            `SdfBehaviour: NetworkBehaviour`
-note: the trait `NetworkBehaviour` must be implemented
-   --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-swarm-0.44.2/src/behaviour.rs:122:1
-    |
-122 | pub trait NetworkBehaviour: 'static {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    --> src/mini_sdf_server.rs:77:30
+     |
+  77 |             match self.swarm.select_next_some().await {
+     |                              ^^^^^^^^^^^^^^^^ method not found in `Swarm<SdfBehaviour>`
+     |
+    ::: /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-util-0.3.31/src/stream/stream/mod.rs:1691:8
+     |
+1691 |     fn select_next_some(&mut self) -> SelectNextSome<'_, Self>
+     |        ---------------- the method is available for `Swarm<SdfBehaviour>` here
+     |
+     = help: items from traits can only be used if the trait is in scope
+help: trait `StreamExt` which provides `select_next_some` is implemented but not in scope; perhaps you want to import it
+     |
+   4 + use libp2p::futures::StreamExt;
+     |
 
 warning: unused variable: `args`
    --> src/node_coordinator.rs:156:55
@@ -489,7 +366,7 @@ help: the trait `Serialize` is not implemented for `BlockData`
                (T0, T1, T2)
                (T0, T1, T2, T3)
                (T0, T1, T2, T3, T4)
-             and 248 others
+             and 138 others
      = note: required for `Vec<BlockData>` to implement `Serialize`
 note: required by a bound in `serde_json::to_string`
     --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/ser.rs:2247:17
@@ -560,7 +437,7 @@ help: the trait `Serialize` is not implemented for `ExecutionPathReview`
                (T0, T1, T2)
                (T0, T1, T2, T3)
                (T0, T1, T2, T3, T4)
-             and 248 others
+             and 138 others
 note: required by a bound in `serde_json::to_string`
     --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/ser.rs:2247:17
      |
@@ -606,7 +483,7 @@ help: the trait `Serialize` is not implemented for `ExecutionPathReview`
                (T0, T1, T2)
                (T0, T1, T2, T3)
                (T0, T1, T2, T3, T4)
-             and 248 others
+             and 138 others
      = note: required for `&ExecutionPathReview` to implement `Serialize`
 note: required by a bound in `serde_json::to_string`
     --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/ser.rs:2247:17
@@ -645,19 +522,6 @@ error[E0277]: `Swarm<libp2p::libp2p_gossipsub::Behaviour>` doesn't implement `De
    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `Swarm<libp2p::libp2p_gossipsub::Behaviour>`
    |
    = help: the trait `Debug` is implemented for `std::option::Option<T>`
-
-error[E0599]: no method named `with_tokio` found for struct `SwarmBuilder<Provider, Phase>` in the current scope
-  --> src/plugins/libp2p_c_interface.rs:30:10
-   |
-29 |       let swarm = libp2p::SwarmBuilder::with_existing_identity(local_key)
-   |  _________________-
-30 | |         .with_tokio()
-   | |         -^^^^^^^^^^ method not found in `SwarmBuilder<NoProviderSpecified, ProviderPhase>`
-   | |_________|
-   |
-   |
-   = note: the full name for the type has been written to '/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/target/debug/deps/zos_server-1508c9af22b3a747.long-type-1408590813443310292.txt'
-   = note: consider using `--verbose` to print the full type name to the console
 
 error[E0277]: the trait bound `Vec<u8>: From<&std::string::String>` is not satisfied
   --> src/plugins/oracle_plugin.rs:38:41
@@ -754,6 +618,18 @@ warning: unreachable expression
     |
     = note: `#[warn(unreachable_code)]` (part of `#[warn(unused)]`) on by default
 
+warning: unused import: `NetworkBehaviour`
+ --> src/mini_sdf_server.rs:6:13
+  |
+6 |     swarm::{NetworkBehaviour, SwarmEvent},
+  |             ^^^^^^^^^^^^^^^^
+
+warning: unused variable: `local_peer_id`
+  --> src/plugins/libp2p_c_interface.rs:14:9
+   |
+14 |     let local_peer_id = PeerId::from(local_key.public());
+   |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_local_peer_id`
+
 warning: unused variable: `msg_slice`
   --> src/plugins/libp2p_c_interface.rs:95:9
    |
@@ -825,25 +701,7 @@ warning: unused variable: `binary`
 308 |     fn create_memory_leak_patch(&self, binary: &[u8]) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     |                                        ^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary`
 
-error[E0433]: failed to resolve: use of undeclared type `SdfBehaviourEvent`
-  --> src/mini_sdf_server.rs:80:39
-   |
-80 |                 SwarmEvent::Behaviour(SdfBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
-   |                                       ^^^^^^^^^^^^^^^^^
-   |                                       |
-   |                                       use of undeclared type `SdfBehaviourEvent`
-   |                                       help: a struct with a similar name exists: `SdfBehaviour`
-
-error[E0433]: failed to resolve: use of undeclared type `SdfBehaviourEvent`
-  --> src/mini_sdf_server.rs:86:39
-   |
-86 |                 SwarmEvent::Behaviour(SdfBehaviourEvent::Gossipsub(gossipsub::Event::Message {
-   |                                       ^^^^^^^^^^^^^^^^^
-   |                                       |
-   |                                       use of undeclared type `SdfBehaviourEvent`
-   |                                       help: a struct with a similar name exists: `SdfBehaviour`
-
-Some errors have detailed explanations: E0119, E0277, E0407, E0433, E0599.
+Some errors have detailed explanations: E0119, E0277, E0407, E0599.
 For more information about an error, try `rustc --explain E0119`.
-warning: `zos-server` (lib) generated 46 warnings
-error: could not compile `zos-server` (lib) due to 33 previous errors; 46 warnings emitted
+warning: `zos-server` (lib) generated 48 warnings
+error: could not compile `zos-server` (lib) due to 20 previous errors; 48 warnings emitted

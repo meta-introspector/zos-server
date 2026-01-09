@@ -6,6 +6,7 @@ use libp2p::{
     swarm::{NetworkBehaviour, SwarmEvent},
     tcp, yamux, PeerId, Swarm,
 };
+use libp2p_swarm_derive::NetworkBehaviour;
 use std::collections::HashMap;
 use tokio::io::{self, AsyncBufReadExt};
 
