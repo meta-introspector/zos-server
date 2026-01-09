@@ -628,7 +628,7 @@ error: future cannot be sent between threads safely
     |
 126 | /         tokio::spawn(async move {
 127 | |             let mut current_block = 0u64;
-128 | |             
+128 | |
 129 | |             loop {
 ...   |
 149 | |         });

@@ -9,7 +9,7 @@ echo ""
 echo "Available bootstrap methods:"
 echo ""
 echo "1. 🦀 Rustup (Beginner)     - Simple rustup installation"
-echo "2. 🐧 Ubuntu (Package Mgr)  - System package manager"  
+echo "2. 🐧 Ubuntu (Package Mgr)  - System package manager"
 echo "3. ❄️ Nix (Reproducible)    - Declarative reproducible builds"
 echo "4. 🔥 Git x.py (From Source) - Build Rust from source"
 echo "5. 🌟 Self-Bootstrap (Expert) - ZOS builds itself mathematically"
@@ -18,7 +18,7 @@ echo ""
 # Auto-detect best method if no argument
 if [ $# -eq 0 ]; then
     echo "🔍 Auto-detecting best bootstrap method..."
-    
+
     if command -v nix &> /dev/null; then
         METHOD=3
         echo "❄️ Nix detected - using reproducible bootstrap"

@@ -1,7 +1,7 @@
 // Self-Building System with LLM Error Fixing
-use std::process::{Command, Stdio};
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::process::{Command, Stdio};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompileError {
@@ -44,10 +44,10 @@ impl SelfBuilder {
 
     pub async fn self_build(&mut self) -> Result<bool, String> {
         println!("🔧 Starting self-build process...");
-        
+
         for iteration in 1..=self.max_iterations {
             println!("🔄 Build iteration {}/{}", iteration, self.max_iterations);
-            
+
             match self.attempt_build().await {
                 Ok(true) => {
                     println!("✅ Build successful after {} iterations!", iteration);
@@ -66,7 +66,7 @@ impl SelfBuilder {
                 }
             }
         }
-        
+
         Ok(false)
     }
 
@@ -84,8 +84,11 @@ impl SelfBuilder {
         } else {
             // Save error log for analysis
             let stderr = String::from_utf8_lossy(&output.stderr);
-            fs::write(format!("{}/build_errors.log", self.project_root), stderr.as_bytes())
-                .map_err(|e| format!("Failed to write error log: {}", e))?;
+            fs::write(
+                format!("{}/build_errors.log", self.project_root),
+                stderr.as_bytes(),
+            )
+            .map_err(|e| format!("Failed to write error log: {}", e))?;
             Ok(false)
         }
     }
@@ -95,10 +98,11 @@ impl SelfBuilder {
         println!("🔍 Found {} compile errors", errors.len());
 
         let mut fixed_any = false;
-        
-        for error in errors.iter().take(3) { // Fix top 3 errors per iteration
+
+        for error in errors.iter().take(3) {
+            // Fix top 3 errors per iteration
             println!("🤖 Asking LLM to fix: {}", error.message);
-            
+
             match self.fix_single_error(error).await {
                 Ok(true) => {
                     println!("✅ Fixed error in {}", error.file);
@@ -122,7 +126,7 @@ impl SelfBuilder {
             .map_err(|e| format!("Failed to read error log: {}", e))?;
 
         let mut errors = Vec::new();
-        
+
         for line in content.lines() {
             if line.contains("error[E") {
                 if let Some(error) = self.parse_error_line(line) {
@@ -137,12 +141,12 @@ impl SelfBuilder {
     fn parse_error_line(&self, line: &str) -> Option<CompileError> {
         // Parse: "error[E0277]: the trait bound `SdfBehaviour: NetworkBehaviour` is not satisfied"
         // and: "  --> src/mini_sdf_server.rs:12:10"
-        
+
         if let Some(start) = line.find("error[") {
             if let Some(end) = line.find("]:") {
-                let error_code = line[start+6..end].to_string();
-                let message = line[end+2..].trim().to_string();
-                
+                let error_code = line[start + 6..end].to_string();
+                let message = line[end + 2..].trim().to_string();
+
                 return Some(CompileError {
                     file: "unknown".to_string(), // Will be updated from next line
                     line: 0,
@@ -153,7 +157,7 @@ impl SelfBuilder {
                 });
             }
         }
-        
+
         None
     }
 
@@ -171,11 +175,11 @@ impl SelfBuilder {
         };
 
         let response = self.query_llm(&request).await?;
-        
+
         if response.confidence > 0.7 {
             fs::write(&file_path, response.fixed_code)
                 .map_err(|e| format!("Failed to write fixed file: {}", e))?;
-            
+
             println!("📝 Applied fix: {}", response.explanation);
             Ok(true)
         } else {
@@ -188,7 +192,7 @@ impl SelfBuilder {
         let lines: Vec<&str> = content.lines().collect();
         let start = error_line.saturating_sub(5);
         let end = (error_line + 5).min(lines.len());
-        
+
         lines[start..end].join("\n")
     }
 
@@ -215,7 +219,9 @@ impl SelfBuilder {
             .await
             .map_err(|e| format!("LLM request failed: {}", e))?;
 
-        let response_text = response.text().await
+        let _response_text = response
+            .text()
+            .await
             .map_err(|e| format!("Failed to read LLM response: {}", e))?;
 
         // Parse LLM response (simplified)

@@ -1,0 +1,12 @@
+src/lib.rs:#[cfg(feature = "self-build")]
+src/lib.rs:#[cfg(feature = "self-build")]
+src/lib.rs:#[cfg(feature = "notebooklm")]
+src/lib.rs:#[cfg(feature = "notebooklm")]
+src/lib.rs:#[cfg(feature = "experimental")]
+src/extras/experimental/execution_trace_analyzer.rs:            filters.push_str("#[cfg(feature = \"minimal-compile\")]\n");
+src/extras/mod.rs:#[cfg(feature = "experimental-advanced")]
+src/extras/mod.rs:#[cfg(feature = "broken-modules")]
+src/main.rs:            let default_feature = "self-build".to_string();
+src/main.rs:            let feature = args.get(1).unwrap_or(&default_feature);
+src/minimal_viable_orbit.rs:        #[cfg(feature = "core-only")]
+src/plugins/mod.rs:#[cfg(feature = "extra-plugins")]

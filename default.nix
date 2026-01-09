@@ -84,7 +84,7 @@ in pkgs.rustPlatform.buildRustPackage rec {
   # Build all plugin layers
   buildPhase = ''
     echo "🏗️  Building ZOS Server with all plugin layers..."
-    
+
     # Layer -4: Advanced ZK
     echo "Building Advanced ZK plugins..."
     cargo build --release --bin rollup_plugin
@@ -92,25 +92,25 @@ in pkgs.rustPlatform.buildRustPackage rec {
     cargo build --release --bin hme_plugin
     cargo build --release --bin metacoq_plugin
     cargo build --release --bin lean4_plugin
-    
+
     # Layer -3: Zero Knowledge
     echo "Building ZK plugins..."
     cargo build --release --bin zksnark_plugin
     cargo build --release --bin zkstark_plugin
     cargo build --release --bin correctness_plugin
-    
+
     # Layer -2: Regulatory
     echo "Building Regulatory plugins..."
     cargo build --release --bin sec_plugin
     cargo build --release --bin quality_plugin
     cargo build --release --bin regulatory_plugin
-    
+
     # Layer -1: Governance
     echo "Building Governance plugins..."
     cargo build --release --bin voting_plugin
     cargo build --release --bin resource_plugin
     cargo build --release --bin odoo_plugin
-    
+
     # Layer 0: Foundation
     echo "Building Foundation plugins..."
     cargo build --release --bin lmfdb_plugin
@@ -118,20 +118,20 @@ in pkgs.rustPlatform.buildRustPackage rec {
     cargo build --release --bin osm_plugin
     cargo build --release --bin archive_plugin
     cargo build --release --bin sdf_plugin
-    
+
     # Layer 1: System plugins (19 plugins)
     echo "Building System plugins..."
     cargo build --release --bin systemd_plugin
     cargo build --release --bin docker_plugin
     cargo build --release --bin kernel_plugin
     # ... all 19 system plugins
-    
+
     # Layer 2: Data format plugins
     echo "Building Data format plugins..."
     cargo build --release --bin parquet_plugin
     cargo build --release --bin huggingface_plugin
     cargo build --release --bin rdf_plugin
-    
+
     # Main ZOS server
     echo "Building main ZOS server..."
     cargo build --release --bin zos_server
@@ -139,14 +139,14 @@ in pkgs.rustPlatform.buildRustPackage rec {
 
   installPhase = ''
     mkdir -p $out/bin $out/lib/zos-plugins
-    
+
     # Install main server
     cp target/release/zos_server $out/bin/
-    
+
     # Install all plugins as shared libraries
     cp target/release/*.so $out/lib/zos-plugins/ || true
     cp target/release/lib*.so $out/lib/zos-plugins/ || true
-    
+
     # Create plugin manifest
     cat > $out/lib/zos-plugins/manifest.json << EOF
     {

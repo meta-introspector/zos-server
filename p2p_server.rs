@@ -36,14 +36,14 @@ pub struct P2PPluginServer {
 
 impl P2PPluginServer {
     pub fn new() -> Self {
-        Self { 
+        Self {
             driver: PluginDriver::new(),
             event_registry: HashMap::new(),
             stored_data: HashMap::new(),
             results: HashMap::new(),
         }
     }
-    
+
     // Execute P2P verbs
     pub async fn execute_verb(&mut self, verb: P2PVerb) -> Result<String, Box<dyn std::error::Error>> {
         match verb {
@@ -51,19 +51,19 @@ impl P2PPluginServer {
                 self.driver.load_plugin(&name, &path)?;
                 Ok(format!("Loaded {}", name))
             },
-            
+
             P2PVerb::RegisterEvent(plugin, event_type) => {
                 self.event_registry.entry(plugin.clone())
                     .or_insert_with(Vec::new)
                     .push(event_type);
                 Ok(format!("Registered {} for event {}", plugin, event_type))
             },
-            
+
             P2PVerb::AttachData(plugin, data) => {
                 self.stored_data.insert(plugin.clone(), data);
                 Ok(format!("Attached data to {}", plugin))
             },
-            
+
             P2PVerb::RunWithFiles(plugin, files) => {
                 for file in files {
                     let data = tokio::fs::read(&file).await?;
@@ -77,25 +77,25 @@ impl P2PPluginServer {
                 }
                 Ok(format!("Ran {} with files", plugin))
             },
-            
+
             P2PVerb::CaptureResult(plugin) => {
                 // Capture result from plugin execution
                 let result = format!("Result from {}", plugin).into_bytes();
                 self.results.insert(plugin.clone(), result.clone());
                 Ok(format!("Captured result: {:?}", String::from_utf8_lossy(&result)))
             },
-            
+
             P2PVerb::CompileSource(name, source) => {
                 let so_path = format!("/tmp/{}.so", name);
                 let rs_path = format!("/tmp/{}.rs", name);
-                
+
                 tokio::fs::write(&rs_path, source).await?;
-                
+
                 let output = Command::new("rustc")
                     .args(&["--crate-type", "cdylib", "-o", &so_path, &rs_path])
                     .output()
                     .await?;
-                    
+
                 if output.status.success() {
                     self.driver.load_plugin(&name, &so_path)?;
                     Ok(format!("Compiled and loaded {}", name))
@@ -103,12 +103,12 @@ impl P2PPluginServer {
                     Err(format!("Compilation failed: {}", String::from_utf8_lossy(&output.stderr)).into())
                 }
             },
-            
+
             P2PVerb::CompileFile(name, file_path) => {
                 let source = tokio::fs::read_to_string(&file_path).await?;
                 self.execute_verb(P2PVerb::CompileSource(name, source)).await
             },
-            
+
             P2PVerb::InvokeFunction(plugin, func_name, param) => {
                 self.driver.execute_plugin(&plugin, &func_name)?;
                 let result = format!("Invoked {}::{} with param {}", plugin, func_name, param);
@@ -116,13 +116,13 @@ impl P2PPluginServer {
             },
         }
     }
-    
+
     // Process verb from network message
     pub async fn process_message(&mut self, msg: &str) -> Result<String, Box<dyn std::error::Error>> {
         let verb = self.parse_verb(msg)?;
         self.execute_verb(verb).await
     }
-    
+
     fn parse_verb(&self, msg: &str) -> Result<P2PVerb, Box<dyn std::error::Error>> {
         let parts: Vec<&str> = msg.split_whitespace().collect();
         match parts[0] {

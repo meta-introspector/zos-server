@@ -84,9 +84,9 @@ impl P2PLibWrapper {
 fn main() {
     println!("🧪 TESTING P2P VERBS (Safe Mode)");
     println!("=================================");
-    
+
     let mut wrapper = P2PLibWrapper::new();
-    
+
     let verbs = vec![
         LibVerb::GetLibInfo,
         LibVerb::ListSymbols,
@@ -95,7 +95,7 @@ fn main() {
         LibVerb::InvokeSymbol("test_function".to_string()),
         LibVerb::SaveResults("verb_test_results.json".to_string()),
     ];
-    
+
     for (i, verb) in verbs.iter().enumerate() {
         println!("\n🔄 Verb {}: {:?}", i + 1, verb);
         match wrapper.execute_verb(verb.clone()) {
@@ -103,6 +103,6 @@ fn main() {
             Err(e) => println!("❌ Error: {}", e),
         }
     }
-    
+
     println!("\n🎯 Safe verb testing complete!");
 }

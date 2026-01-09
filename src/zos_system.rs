@@ -1,6 +1,5 @@
 // ZOS System Definition - Complete orbit classes generated from macros
 use crate::lmfdb_orbits::*;
-use std::collections::HashMap;
 
 // Generate Core Orbit Class (Level 11 - first prime > 10)
 mkorbit_class!(CoreOrbitClass {
@@ -29,7 +28,7 @@ mkorbit_class!(CoreOrbitClass {
             }
             data
         },
-        posix_transform => |input: &[u8], class: &CoreOrbitClass| {
+        posix_transform => |input: &[u8], _class: &CoreOrbitClass| {
             // Apply POSIX-specific transformation
             input.iter().map(|&b| b.wrapping_add(11)).collect()
         }
@@ -62,7 +61,7 @@ mkorbit_class!(ExtendedOrbitClass {
             }
             result
         },
-        zk_proof_gen => |input: &[u8], class: &ExtendedOrbitClass| {
+        zk_proof_gen => |input: &[u8], _class: &ExtendedOrbitClass| {
             // Generate ZK proof using orbit 23.a2
             input.iter().rev().cloned().collect()
         }
@@ -103,14 +102,14 @@ impl ZosOrbitSystem {
     pub fn new() -> Result<Self, String> {
         let core_class = CoreOrbitClass::new()?;
         let extended_class = ExtendedOrbitClass::new()?;
-        
+
         Ok(ZosOrbitSystem {
             core_class,
             extended_class,
             active_orbits: Vec::new(),
         })
     }
-    
+
     pub fn activate_core_orbit(&mut self, index: u32) -> Result<(), String> {
         if let Some(orbit) = self.core_class.get_orbit(index) {
             self.active_orbits.push(orbit.clone());
@@ -119,7 +118,7 @@ impl ZosOrbitSystem {
             Err(format!("Core orbit {} not found", index))
         }
     }
-    
+
     pub fn activate_extended_orbit(&mut self, index: u32) -> Result<(), String> {
         if let Some(orbit) = self.extended_class.get_orbit(index) {
             self.active_orbits.push(orbit.clone());
@@ -128,36 +127,46 @@ impl ZosOrbitSystem {
             Err(format!("Extended orbit {} not found", index))
         }
     }
-    
+
     pub fn execute_system(&self, input: &[u8]) -> Result<Vec<u8>, String> {
         let mut data = input.to_vec();
-        
+
         for orbit in &self.active_orbits {
             data = orbit.execute(&data)?;
         }
-        
+
         Ok(data)
     }
-    
+
     pub fn system_signature(&self) -> String {
-        format!("ZOS[{}:{}:{}]", 
-               self.core_class.class_signature(),
-               self.extended_class.class_signature(),
-               self.active_orbits.len())
+        format!(
+            "ZOS[{}:{}:{}]",
+            self.core_class.class_signature(),
+            self.extended_class.class_signature(),
+            self.active_orbits.len()
+        )
     }
-    
-    pub fn compose_orbits(&self, left_idx: (u64, u32), right_idx: (u64, u32)) -> Result<SystemArg, String> {
+
+    pub fn compose_orbits(
+        &self,
+        left_idx: (u64, u32),
+        right_idx: (u64, u32),
+    ) -> Result<SystemArg, String> {
         let left_orbit = self.find_orbit(left_idx)?;
         let right_orbit = self.find_orbit(right_idx)?;
         OrbitComposition::compose(&left_orbit, &right_orbit)
     }
-    
+
     fn find_orbit(&self, (level, index): (u64, u32)) -> Result<SystemArg, String> {
         match level {
-            11 => self.core_class.get_orbit(index)
+            11 => self
+                .core_class
+                .get_orbit(index)
                 .ok_or_else(|| format!("Core orbit {} not found", index))
                 .map(|o| o.clone()),
-            23 => self.extended_class.get_orbit(index)
+            23 => self
+                .extended_class
+                .get_orbit(index)
                 .ok_or_else(|| format!("Extended orbit {} not found", index))
                 .map(|o| o.clone()),
             _ => Err(format!("Unsupported orbit level: {}", level)),

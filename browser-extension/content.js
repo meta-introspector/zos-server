@@ -28,7 +28,7 @@
           <button id="zos-compliance-check">Check Compliance</button>
         </div>
       `;
-      
+
       widget.style.cssText = `
         position: fixed;
         top: 20px;
@@ -81,7 +81,7 @@
       for (const form of forms) {
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
-        
+
         try {
           const response = await chrome.runtime.sendMessage({
             action: 'executePlugin',
@@ -118,7 +118,7 @@
 
     async checkCompliance() {
       const personalData = this.detectPersonalData();
-      
+
       if (personalData.length > 0) {
         try {
           const response = await chrome.runtime.sendMessage({
@@ -141,11 +141,11 @@
     enhanceMathElements() {
       // Find mathematical expressions and add LMFDB validation
       const mathElements = document.querySelectorAll('math, .math, [class*="equation"]');
-      
+
       mathElements.forEach(element => {
         element.addEventListener('click', async () => {
           const mathText = element.textContent;
-          
+
           try {
             const response = await chrome.runtime.sendMessage({
               action: 'validateMath',
@@ -163,15 +163,15 @@
     enhanceDataElements() {
       // Add proof generation to data tables
       const tables = document.querySelectorAll('table');
-      
+
       tables.forEach(table => {
         const button = document.createElement('button');
         button.textContent = '🔮 Generate ZK Proof';
         button.style.cssText = 'margin: 5px; padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 5px;';
-        
+
         button.onclick = async () => {
           const tableData = this.extractTableData(table);
-          
+
           try {
             const response = await chrome.runtime.sendMessage({
               action: 'generateProof',
@@ -243,7 +243,7 @@
         z-index: 10001;
         max-width: 300px;
       `;
-      
+
       document.body.appendChild(notification);
       setTimeout(() => notification.remove(), 5000);
     }
@@ -260,7 +260,7 @@
         font-size: 12px;
         z-index: 10002;
       `;
-      
+
       element.appendChild(tooltip);
       setTimeout(() => tooltip.remove(), 3000);
     }
@@ -268,13 +268,13 @@
     extractTableData(table) {
       const data = [];
       const rows = table.querySelectorAll('tr');
-      
+
       rows.forEach(row => {
         const cells = row.querySelectorAll('td, th');
         const rowData = Array.from(cells).map(cell => cell.textContent.trim());
         if (rowData.length > 0) data.push(rowData);
       });
-      
+
       return data;
     }
   }

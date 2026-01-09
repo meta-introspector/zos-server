@@ -116,7 +116,7 @@ echo "test intent" | ./target/release/zos_server bootstrap improve || echo "Mira
 echo "🎊 ZOS Bootstrap v5 Complete!"
 echo "================================"
 echo "✅ Self-analysis: Complete"
-echo "✅ Self-improvement: Complete"  
+echo "✅ Self-improvement: Complete"
 echo "✅ Self-compilation: Complete"
 echo "✅ Triple bootstrap: Complete"
 echo "✅ Mathematical verification: Complete"

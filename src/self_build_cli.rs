@@ -19,7 +19,7 @@ pub async fn handle_self_build_command(args: &[String]) -> Result<(), String> {
             } else {
                 println!("😞 Self-build failed after maximum iterations");
             }
-        },
+        }
         Some("config") => {
             if let Some(endpoint) = args.get(1) {
                 builder.set_llm_endpoint(endpoint.clone());
@@ -31,25 +31,26 @@ pub async fn handle_self_build_command(args: &[String]) -> Result<(), String> {
                     println!("🔧 Set max iterations to: {}", max);
                 }
             }
-        },
+        }
         Some("test") => {
             println!("🧪 Testing build without fixes...");
             let output = std::process::Command::new("cargo")
                 .args(&["build", "--release"])
                 .output()
                 .map_err(|e| format!("Failed to run test build: {}", e))?;
-            
+
             if output.status.success() {
                 println!("✅ Build already successful!");
             } else {
                 let stderr = String::from_utf8_lossy(&output.stderr);
-                let error_count = stderr.lines()
+                let error_count = stderr
+                    .lines()
                     .filter(|line| line.contains("error[E"))
                     .count();
                 println!("❌ Found {} compile errors", error_count);
                 println!("Run 'self-build build' to fix them automatically");
             }
-        },
+        }
         _ => {
             println!("Self-Build Commands:");
             println!("  build                     - Start self-build with LLM fixes");

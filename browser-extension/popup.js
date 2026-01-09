@@ -58,7 +58,7 @@ class ZosPopup {
 
   async executeZosPlugin(plugin, args = []) {
     this.setStatus('Processing...', 'info');
-    
+
     try {
       const response = await chrome.runtime.sendMessage({
         action: 'executePlugin',
@@ -106,7 +106,7 @@ class ZosPopup {
 
   async validateMath() {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
+
     // Extract math from page
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
@@ -130,21 +130,21 @@ class ZosPopup {
 
   async gdprCheck() {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
+
     // Extract forms and personal data
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       function: () => {
         const forms = document.querySelectorAll('form');
         const personalData = [];
-        
+
         forms.forEach(form => {
           const inputs = form.querySelectorAll('input[type="email"], input[type="tel"], input[name*="name"]');
           inputs.forEach(input => {
             if (input.value) personalData.push(input.value);
           });
         });
-        
+
         return personalData;
       }
     });
@@ -158,7 +158,7 @@ class ZosPopup {
 
   async secValidate() {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
+
     // Look for financial data
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
@@ -168,15 +168,15 @@ class ZosPopup {
           /revenue|profit|earnings|financial/gi,
           /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g
         ];
-        
+
         const text = document.body.innerText;
         const matches = [];
-        
+
         financialPatterns.forEach(pattern => {
           const found = text.match(pattern);
           if (found) matches.push(...found);
         });
-        
+
         return matches;
       }
     });
@@ -207,7 +207,7 @@ class ZosPopup {
 
   async pluginStatus() {
     const response = await this.executeZosPlugin('system', ['plugin_status']);
-    
+
     // Show plugin status in a new tab
     chrome.tabs.create({
       url: chrome.runtime.getURL('plugin-status.html')
@@ -230,7 +230,7 @@ class ZosPopup {
   setStatus(message, type = 'info') {
     this.statusElement.textContent = message;
     this.statusElement.className = `status ${type}`;
-    
+
     // Auto-clear status after 3 seconds
     setTimeout(() => {
       this.statusElement.textContent = 'Ready';

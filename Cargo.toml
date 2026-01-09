@@ -14,7 +14,6 @@ path = "src/main.rs"
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-libloading = "0.8"
 libp2p = { version = "0.53", features = ["gossipsub", "mdns", "noise", "yamux", "tcp", "tokio"] }
 libp2p-swarm-derive = "0.34"
 reqwest = { version = "0.11", features = ["json"], optional = true }
@@ -56,6 +55,9 @@ prost = "0.12"
 nix = "0.27"
 libc = "0.2"
 
+# Optional dynamic loading
+libloading = { version = "0.8", optional = true }
+
 [build-dependencies]
 tonic-build = "0.10"
 prost-build = "0.12"
@@ -67,6 +69,7 @@ self-build = ["reqwest"]
 notebooklm = ["uuid"]
 extra-plugins = []
 all-plugins = ["extra-plugins", "self-build", "notebooklm"]
+dynamic-loading = ["dep:libloading"]
 
 [profile.release]
 opt-level = 3

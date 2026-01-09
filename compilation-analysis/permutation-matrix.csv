@@ -1,0 +1,129 @@
+Feature,Target,Profile,Trace,Command
+default,x86_64-unknown-linux-gnu,dev,basic,cargo build --target x86_64-unknown-linux-gnu --features default
+default,x86_64-unknown-linux-gnu,dev,strace,cargo build --target x86_64-unknown-linux-gnu --features default
+default,x86_64-unknown-linux-gnu,dev,perf,cargo build --target x86_64-unknown-linux-gnu --features default
+default,x86_64-unknown-linux-gnu,dev,coverage,cargo build --target x86_64-unknown-linux-gnu --features default
+default,x86_64-unknown-linux-gnu,release,basic,cargo build --target x86_64-unknown-linux-gnu --features default --release
+default,x86_64-unknown-linux-gnu,release,strace,cargo build --target x86_64-unknown-linux-gnu --features default --release
+default,x86_64-unknown-linux-gnu,release,perf,cargo build --target x86_64-unknown-linux-gnu --features default --release
+default,x86_64-unknown-linux-gnu,release,coverage,cargo build --target x86_64-unknown-linux-gnu --features default --release
+default,aarch64-unknown-linux-gnu,dev,basic,cargo build --target aarch64-unknown-linux-gnu --features default
+default,aarch64-unknown-linux-gnu,dev,strace,cargo build --target aarch64-unknown-linux-gnu --features default
+default,aarch64-unknown-linux-gnu,dev,perf,cargo build --target aarch64-unknown-linux-gnu --features default
+default,aarch64-unknown-linux-gnu,dev,coverage,cargo build --target aarch64-unknown-linux-gnu --features default
+default,aarch64-unknown-linux-gnu,release,basic,cargo build --target aarch64-unknown-linux-gnu --features default --release
+default,aarch64-unknown-linux-gnu,release,strace,cargo build --target aarch64-unknown-linux-gnu --features default --release
+default,aarch64-unknown-linux-gnu,release,perf,cargo build --target aarch64-unknown-linux-gnu --features default --release
+default,aarch64-unknown-linux-gnu,release,coverage,cargo build --target aarch64-unknown-linux-gnu --features default --release
+all-plugins,x86_64-unknown-linux-gnu,dev,basic,cargo build --target x86_64-unknown-linux-gnu --features all-plugins
+all-plugins,x86_64-unknown-linux-gnu,dev,strace,cargo build --target x86_64-unknown-linux-gnu --features all-plugins
+all-plugins,x86_64-unknown-linux-gnu,dev,perf,cargo build --target x86_64-unknown-linux-gnu --features all-plugins
+all-plugins,x86_64-unknown-linux-gnu,dev,coverage,cargo build --target x86_64-unknown-linux-gnu --features all-plugins
+all-plugins,x86_64-unknown-linux-gnu,release,basic,cargo build --target x86_64-unknown-linux-gnu --features all-plugins --release
+all-plugins,x86_64-unknown-linux-gnu,release,strace,cargo build --target x86_64-unknown-linux-gnu --features all-plugins --release
+all-plugins,x86_64-unknown-linux-gnu,release,perf,cargo build --target x86_64-unknown-linux-gnu --features all-plugins --release
+all-plugins,x86_64-unknown-linux-gnu,release,coverage,cargo build --target x86_64-unknown-linux-gnu --features all-plugins --release
+all-plugins,aarch64-unknown-linux-gnu,dev,basic,cargo build --target aarch64-unknown-linux-gnu --features all-plugins
+all-plugins,aarch64-unknown-linux-gnu,dev,strace,cargo build --target aarch64-unknown-linux-gnu --features all-plugins
+all-plugins,aarch64-unknown-linux-gnu,dev,perf,cargo build --target aarch64-unknown-linux-gnu --features all-plugins
+all-plugins,aarch64-unknown-linux-gnu,dev,coverage,cargo build --target aarch64-unknown-linux-gnu --features all-plugins
+all-plugins,aarch64-unknown-linux-gnu,release,basic,cargo build --target aarch64-unknown-linux-gnu --features all-plugins --release
+all-plugins,aarch64-unknown-linux-gnu,release,strace,cargo build --target aarch64-unknown-linux-gnu --features all-plugins --release
+all-plugins,aarch64-unknown-linux-gnu,release,perf,cargo build --target aarch64-unknown-linux-gnu --features all-plugins --release
+all-plugins,aarch64-unknown-linux-gnu,release,coverage,cargo build --target aarch64-unknown-linux-gnu --features all-plugins --release
+core-only,x86_64-unknown-linux-gnu,dev,basic,cargo build --target x86_64-unknown-linux-gnu --features core-only
+core-only,x86_64-unknown-linux-gnu,dev,strace,cargo build --target x86_64-unknown-linux-gnu --features core-only
+core-only,x86_64-unknown-linux-gnu,dev,perf,cargo build --target x86_64-unknown-linux-gnu --features core-only
+core-only,x86_64-unknown-linux-gnu,dev,coverage,cargo build --target x86_64-unknown-linux-gnu --features core-only
+core-only,x86_64-unknown-linux-gnu,release,basic,cargo build --target x86_64-unknown-linux-gnu --features core-only --release
+core-only,x86_64-unknown-linux-gnu,release,strace,cargo build --target x86_64-unknown-linux-gnu --features core-only --release
+core-only,x86_64-unknown-linux-gnu,release,perf,cargo build --target x86_64-unknown-linux-gnu --features core-only --release
+core-only,x86_64-unknown-linux-gnu,release,coverage,cargo build --target x86_64-unknown-linux-gnu --features core-only --release
+core-only,aarch64-unknown-linux-gnu,dev,basic,cargo build --target aarch64-unknown-linux-gnu --features core-only
+core-only,aarch64-unknown-linux-gnu,dev,strace,cargo build --target aarch64-unknown-linux-gnu --features core-only
+core-only,aarch64-unknown-linux-gnu,dev,perf,cargo build --target aarch64-unknown-linux-gnu --features core-only
+core-only,aarch64-unknown-linux-gnu,dev,coverage,cargo build --target aarch64-unknown-linux-gnu --features core-only
+core-only,aarch64-unknown-linux-gnu,release,basic,cargo build --target aarch64-unknown-linux-gnu --features core-only --release
+core-only,aarch64-unknown-linux-gnu,release,strace,cargo build --target aarch64-unknown-linux-gnu --features core-only --release
+core-only,aarch64-unknown-linux-gnu,release,perf,cargo build --target aarch64-unknown-linux-gnu --features core-only --release
+core-only,aarch64-unknown-linux-gnu,release,coverage,cargo build --target aarch64-unknown-linux-gnu --features core-only --release
+extra-plugins,x86_64-unknown-linux-gnu,dev,basic,cargo build --target x86_64-unknown-linux-gnu --features extra-plugins
+extra-plugins,x86_64-unknown-linux-gnu,dev,strace,cargo build --target x86_64-unknown-linux-gnu --features extra-plugins
+extra-plugins,x86_64-unknown-linux-gnu,dev,perf,cargo build --target x86_64-unknown-linux-gnu --features extra-plugins
+extra-plugins,x86_64-unknown-linux-gnu,dev,coverage,cargo build --target x86_64-unknown-linux-gnu --features extra-plugins
+extra-plugins,x86_64-unknown-linux-gnu,release,basic,cargo build --target x86_64-unknown-linux-gnu --features extra-plugins --release
+extra-plugins,x86_64-unknown-linux-gnu,release,strace,cargo build --target x86_64-unknown-linux-gnu --features extra-plugins --release
+extra-plugins,x86_64-unknown-linux-gnu,release,perf,cargo build --target x86_64-unknown-linux-gnu --features extra-plugins --release
+extra-plugins,x86_64-unknown-linux-gnu,release,coverage,cargo build --target x86_64-unknown-linux-gnu --features extra-plugins --release
+extra-plugins,aarch64-unknown-linux-gnu,dev,basic,cargo build --target aarch64-unknown-linux-gnu --features extra-plugins
+extra-plugins,aarch64-unknown-linux-gnu,dev,strace,cargo build --target aarch64-unknown-linux-gnu --features extra-plugins
+extra-plugins,aarch64-unknown-linux-gnu,dev,perf,cargo build --target aarch64-unknown-linux-gnu --features extra-plugins
+extra-plugins,aarch64-unknown-linux-gnu,dev,coverage,cargo build --target aarch64-unknown-linux-gnu --features extra-plugins
+extra-plugins,aarch64-unknown-linux-gnu,release,basic,cargo build --target aarch64-unknown-linux-gnu --features extra-plugins --release
+extra-plugins,aarch64-unknown-linux-gnu,release,strace,cargo build --target aarch64-unknown-linux-gnu --features extra-plugins --release
+extra-plugins,aarch64-unknown-linux-gnu,release,perf,cargo build --target aarch64-unknown-linux-gnu --features extra-plugins --release
+extra-plugins,aarch64-unknown-linux-gnu,release,coverage,cargo build --target aarch64-unknown-linux-gnu --features extra-plugins --release
+notebooklm,x86_64-unknown-linux-gnu,dev,basic,cargo build --target x86_64-unknown-linux-gnu --features notebooklm
+notebooklm,x86_64-unknown-linux-gnu,dev,strace,cargo build --target x86_64-unknown-linux-gnu --features notebooklm
+notebooklm,x86_64-unknown-linux-gnu,dev,perf,cargo build --target x86_64-unknown-linux-gnu --features notebooklm
+notebooklm,x86_64-unknown-linux-gnu,dev,coverage,cargo build --target x86_64-unknown-linux-gnu --features notebooklm
+notebooklm,x86_64-unknown-linux-gnu,release,basic,cargo build --target x86_64-unknown-linux-gnu --features notebooklm --release
+notebooklm,x86_64-unknown-linux-gnu,release,strace,cargo build --target x86_64-unknown-linux-gnu --features notebooklm --release
+notebooklm,x86_64-unknown-linux-gnu,release,perf,cargo build --target x86_64-unknown-linux-gnu --features notebooklm --release
+notebooklm,x86_64-unknown-linux-gnu,release,coverage,cargo build --target x86_64-unknown-linux-gnu --features notebooklm --release
+notebooklm,aarch64-unknown-linux-gnu,dev,basic,cargo build --target aarch64-unknown-linux-gnu --features notebooklm
+notebooklm,aarch64-unknown-linux-gnu,dev,strace,cargo build --target aarch64-unknown-linux-gnu --features notebooklm
+notebooklm,aarch64-unknown-linux-gnu,dev,perf,cargo build --target aarch64-unknown-linux-gnu --features notebooklm
+notebooklm,aarch64-unknown-linux-gnu,dev,coverage,cargo build --target aarch64-unknown-linux-gnu --features notebooklm
+notebooklm,aarch64-unknown-linux-gnu,release,basic,cargo build --target aarch64-unknown-linux-gnu --features notebooklm --release
+notebooklm,aarch64-unknown-linux-gnu,release,strace,cargo build --target aarch64-unknown-linux-gnu --features notebooklm --release
+notebooklm,aarch64-unknown-linux-gnu,release,perf,cargo build --target aarch64-unknown-linux-gnu --features notebooklm --release
+notebooklm,aarch64-unknown-linux-gnu,release,coverage,cargo build --target aarch64-unknown-linux-gnu --features notebooklm --release
+reqwest,x86_64-unknown-linux-gnu,dev,basic,cargo build --target x86_64-unknown-linux-gnu --features reqwest
+reqwest,x86_64-unknown-linux-gnu,dev,strace,cargo build --target x86_64-unknown-linux-gnu --features reqwest
+reqwest,x86_64-unknown-linux-gnu,dev,perf,cargo build --target x86_64-unknown-linux-gnu --features reqwest
+reqwest,x86_64-unknown-linux-gnu,dev,coverage,cargo build --target x86_64-unknown-linux-gnu --features reqwest
+reqwest,x86_64-unknown-linux-gnu,release,basic,cargo build --target x86_64-unknown-linux-gnu --features reqwest --release
+reqwest,x86_64-unknown-linux-gnu,release,strace,cargo build --target x86_64-unknown-linux-gnu --features reqwest --release
+reqwest,x86_64-unknown-linux-gnu,release,perf,cargo build --target x86_64-unknown-linux-gnu --features reqwest --release
+reqwest,x86_64-unknown-linux-gnu,release,coverage,cargo build --target x86_64-unknown-linux-gnu --features reqwest --release
+reqwest,aarch64-unknown-linux-gnu,dev,basic,cargo build --target aarch64-unknown-linux-gnu --features reqwest
+reqwest,aarch64-unknown-linux-gnu,dev,strace,cargo build --target aarch64-unknown-linux-gnu --features reqwest
+reqwest,aarch64-unknown-linux-gnu,dev,perf,cargo build --target aarch64-unknown-linux-gnu --features reqwest
+reqwest,aarch64-unknown-linux-gnu,dev,coverage,cargo build --target aarch64-unknown-linux-gnu --features reqwest
+reqwest,aarch64-unknown-linux-gnu,release,basic,cargo build --target aarch64-unknown-linux-gnu --features reqwest --release
+reqwest,aarch64-unknown-linux-gnu,release,strace,cargo build --target aarch64-unknown-linux-gnu --features reqwest --release
+reqwest,aarch64-unknown-linux-gnu,release,perf,cargo build --target aarch64-unknown-linux-gnu --features reqwest --release
+reqwest,aarch64-unknown-linux-gnu,release,coverage,cargo build --target aarch64-unknown-linux-gnu --features reqwest --release
+self-build,x86_64-unknown-linux-gnu,dev,basic,cargo build --target x86_64-unknown-linux-gnu --features self-build
+self-build,x86_64-unknown-linux-gnu,dev,strace,cargo build --target x86_64-unknown-linux-gnu --features self-build
+self-build,x86_64-unknown-linux-gnu,dev,perf,cargo build --target x86_64-unknown-linux-gnu --features self-build
+self-build,x86_64-unknown-linux-gnu,dev,coverage,cargo build --target x86_64-unknown-linux-gnu --features self-build
+self-build,x86_64-unknown-linux-gnu,release,basic,cargo build --target x86_64-unknown-linux-gnu --features self-build --release
+self-build,x86_64-unknown-linux-gnu,release,strace,cargo build --target x86_64-unknown-linux-gnu --features self-build --release
+self-build,x86_64-unknown-linux-gnu,release,perf,cargo build --target x86_64-unknown-linux-gnu --features self-build --release
+self-build,x86_64-unknown-linux-gnu,release,coverage,cargo build --target x86_64-unknown-linux-gnu --features self-build --release
+self-build,aarch64-unknown-linux-gnu,dev,basic,cargo build --target aarch64-unknown-linux-gnu --features self-build
+self-build,aarch64-unknown-linux-gnu,dev,strace,cargo build --target aarch64-unknown-linux-gnu --features self-build
+self-build,aarch64-unknown-linux-gnu,dev,perf,cargo build --target aarch64-unknown-linux-gnu --features self-build
+self-build,aarch64-unknown-linux-gnu,dev,coverage,cargo build --target aarch64-unknown-linux-gnu --features self-build
+self-build,aarch64-unknown-linux-gnu,release,basic,cargo build --target aarch64-unknown-linux-gnu --features self-build --release
+self-build,aarch64-unknown-linux-gnu,release,strace,cargo build --target aarch64-unknown-linux-gnu --features self-build --release
+self-build,aarch64-unknown-linux-gnu,release,perf,cargo build --target aarch64-unknown-linux-gnu --features self-build --release
+self-build,aarch64-unknown-linux-gnu,release,coverage,cargo build --target aarch64-unknown-linux-gnu --features self-build --release
+uuid,x86_64-unknown-linux-gnu,dev,basic,cargo build --target x86_64-unknown-linux-gnu --features uuid
+uuid,x86_64-unknown-linux-gnu,dev,strace,cargo build --target x86_64-unknown-linux-gnu --features uuid
+uuid,x86_64-unknown-linux-gnu,dev,perf,cargo build --target x86_64-unknown-linux-gnu --features uuid
+uuid,x86_64-unknown-linux-gnu,dev,coverage,cargo build --target x86_64-unknown-linux-gnu --features uuid
+uuid,x86_64-unknown-linux-gnu,release,basic,cargo build --target x86_64-unknown-linux-gnu --features uuid --release
+uuid,x86_64-unknown-linux-gnu,release,strace,cargo build --target x86_64-unknown-linux-gnu --features uuid --release
+uuid,x86_64-unknown-linux-gnu,release,perf,cargo build --target x86_64-unknown-linux-gnu --features uuid --release
+uuid,x86_64-unknown-linux-gnu,release,coverage,cargo build --target x86_64-unknown-linux-gnu --features uuid --release
+uuid,aarch64-unknown-linux-gnu,dev,basic,cargo build --target aarch64-unknown-linux-gnu --features uuid
+uuid,aarch64-unknown-linux-gnu,dev,strace,cargo build --target aarch64-unknown-linux-gnu --features uuid
+uuid,aarch64-unknown-linux-gnu,dev,perf,cargo build --target aarch64-unknown-linux-gnu --features uuid
+uuid,aarch64-unknown-linux-gnu,dev,coverage,cargo build --target aarch64-unknown-linux-gnu --features uuid
+uuid,aarch64-unknown-linux-gnu,release,basic,cargo build --target aarch64-unknown-linux-gnu --features uuid --release
+uuid,aarch64-unknown-linux-gnu,release,strace,cargo build --target aarch64-unknown-linux-gnu --features uuid --release
+uuid,aarch64-unknown-linux-gnu,release,perf,cargo build --target aarch64-unknown-linux-gnu --features uuid --release
+uuid,aarch64-unknown-linux-gnu,release,coverage,cargo build --target aarch64-unknown-linux-gnu --features uuid --release

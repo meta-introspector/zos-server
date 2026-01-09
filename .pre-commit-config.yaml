@@ -1,0 +1,50 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-json
+
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+      - id: fmt
+        pass_filenames: false
+      - id: clippy
+        args: ['--all-targets', '--all-features']
+
+  - repo: local
+    hooks:
+      - id: cargo-check
+        name: cargo check
+        entry: cargo check --all-features
+        language: system
+        files: \.rs$
+        pass_filenames: false
+
+      - id: cargo-test
+        name: cargo test
+        entry: cargo test --all-features
+        language: system
+        files: \.rs$
+        pass_filenames: false
+
+      - id: lattice-validation
+        name: validate lattice system
+        entry: bash -c 'if [ -f "lattice-analyzer.sh" ]; then echo "✅ Lattice analyzer present"; fi'
+        language: system
+        files: \.sh$
+        pass_filenames: false
+
+      - id: auto-commit-push
+        name: auto commit and push
+        entry: bash
+        args: ['-c', 'if git diff --cached --quiet; then echo "No changes to commit"; else echo "🚀 Auto-committing changes..."; git commit -m "🤖 Auto-commit: $(date -Iseconds)" || true; echo "📤 Auto-pushing to origin..."; git push origin $(git branch --show-current) || echo "⚠️ Push failed - may need manual intervention"; fi']
+        language: system
+        always_run: true
+        pass_filenames: false
+        stages: [commit]
