@@ -5,6 +5,8 @@ use crate::enums::{P2PVerb, LibVerb, NetworkEvent};
 use crate::structs::{PeerInfo, DatasetSeed, LoadedSo};
 use std::collections::HashMap;
 
+pub mod auth_plugin;
+
 pub trait P2PNetwork {
     fn connect_peer(&mut self, peer_id: &str) -> Result<(), String>;
     fn disconnect_peer(&mut self, peer_id: &str) -> Result<(), String>;

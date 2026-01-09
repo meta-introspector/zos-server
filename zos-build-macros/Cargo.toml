@@ -1,0 +1,17 @@
+[package]
+name = "zos-build-macros"
+version = "0.1.0"
+edition = "2021"
+description = "ZOS Build Macros - Zero dependency build-time macros"
+license = "AGPL-3.0"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+# Zero dependencies - pure proc macros only
+
+[features]
+default = []
+broken = []
+experimental = []

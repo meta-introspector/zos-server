@@ -1,0 +1,12 @@
+[package]
+name = "zos-macros"
+version = "0.1.0"
+edition = "2021"
+description = "ZOS Core Macros - Zero dependency macro foundation"
+license = "AGPL-3.0"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+# Zero dependencies - pure proc macros only

@@ -1,0 +1,9 @@
+[package]
+name = "zos-types"
+version = "0.1.0"
+edition = "2021"
+description = "ZOS Core Types - Zero dependency type foundation"
+license = "AGPL-3.0"
+
+[dependencies]
+# Zero dependencies - pure types only

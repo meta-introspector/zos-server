@@ -1,9 +1,25 @@
+[workspace]
+members = [
+    "zos-macros",
+    "zos-traits",
+    "zos-types",
+    "zos-build-macros"
+]
+resolver = "2"
+
+[workspace.dependencies]
+# Zero deps foundation
+zos-macros = { path = "zos-macros" }
+zos-traits = { path = "zos-traits" }
+zos-types = { path = "zos-types" }
+zos-build-macros = { path = "zos-build-macros" }
+
 [package]
 name = "zos-server"
 version = "0.1.0"
 edition = "2021"
 description = "Zero Ontology System - Complete plugin-based computation platform"
-license = "MIT"
+license = "AGPL-3.0"
 repository = "https://github.com/meta-introspector/zos-server"
 
 [[bin]]
@@ -11,40 +27,109 @@ name = "zos_server"
 path = "src/main.rs"
 
 [dependencies]
-# Optional core dependencies
+# Foundation (zero deps)
+zos-macros = { workspace = true }
+zos-traits = { workspace = true }
+zos-types = { workspace = true }
+
+# Optional runtime deps
 serde = { version = "1.0", features = ["derive"], optional = true }
 serde_json = { version = "1.0", optional = true }
 uuid = { version = "1.0", features = ["v4"], optional = true }
-
-# Optional heavy dependencies
 tokio = { version = "1.0", features = ["rt", "macros"], optional = true }
-libp2p = { version = "0.53", features = ["gossipsub", "mdns", "noise", "yamux", "tcp", "tokio"], optional = true }
-libp2p-swarm-derive = { version = "0.34", optional = true }
-reqwest = { version = "0.11", features = ["json"], optional = true }
-axum = { version = "0.7", optional = true }
-tower = { version = "0.4", optional = true }
-tower-http = { version = "0.5", features = ["cors"], optional = true }
-chrono = { version = "0.4", features = ["serde"], optional = true }
 
-# Optional dynamic loading
-libloading = { version = "0.8", optional = true }
+[build-dependencies]
+zos-build-macros = { workspace = true }
 
 [features]
-default = ["core-only"]
+default = []
 slim = []
-core-only = ["dep:serde", "dep:serde_json", "dep:uuid", "dep:tokio", "dep:libp2p", "dep:libp2p-swarm-derive", "dep:chrono"]
-self-build = ["core-only", "reqwest"]
-notebooklm = ["core-only"]
-extra-plugins = ["core-only", "dep:axum", "dep:tower", "dep:tower-http"]
-all-plugins = ["extra-plugins", "self-build", "notebooklm"]
-dynamic-loading = ["dep:libloading"]
+
+# Layer -4: Advanced ZK
+advanced_zk = ["rollups", "lattice_folding", "hme", "metacoq", "lean4"]
+rollups = []
+lattice_folding = []
+hme = []
+metacoq = []
+lean4 = []
+
+# Layer -3: Zero Knowledge
+zk = ["zk_snarks", "zk_starks", "correctness_proofs"]
+zk_snarks = []
+zk_starks = []
+correctness_proofs = []
+
+# Layer -2: Regulatory
+regulatory = ["sec_compliance", "quality_assurance", "gdpr", "hipaa", "sox", "iso"]
+sec_compliance = []
+quality_assurance = []
+gdpr = []
+hipaa = []
+sox = []
+iso = []
+
+# Layer -1: Governance
+governance = ["voting_systems", "resource_management", "erp_integration"]
+voting_systems = []
+resource_management = []
+erp_integration = []
+
+# Layer 0: Foundation
+foundation = ["lmfdb", "wikidata", "openstreetmap", "archive_org", "sdf_org"]
+lmfdb = []
+wikidata = []
+openstreetmap = []
+archive_org = []
+sdf_org = []
+
+# Layer 1: System (19 plugins)
+system = ["systemd", "docker", "compilers", "blockchain", "kernel", "ebpf", "wasm", "runtime_plugins", "storage", "networking", "security", "telemetry", "debug", "bintools", "libp2p", "solana", "oracle", "enterprise", "modeling"]
+systemd = []
+docker = []
+compilers = []
+blockchain = []
+kernel = []
+ebpf = []
+wasm = []
+runtime_plugins = []
+storage = []
+networking = []
+security = []
+telemetry = []
+debug = []
+bintools = []
+libp2p = []
+solana = []
+oracle = []
+enterprise = []
+modeling = []
+
+# Layer 2: Data Formats
+data_formats = ["parquet", "huggingface", "rdf", "sql", "protocols", "dataflow", "knowledge"]
+parquet = []
+huggingface = []
+rdf = []
+sql = []
+protocols = []
+dataflow = []
+knowledge = []
+
+# Layer ∞: Recursive
+recursive = ["infinite_export", "cross_layer_communication", "recursive_verification"]
+infinite_export = []
+cross_layer_communication = []
+recursive_verification = []
+
+# Runtime dependencies (optional)
+serde = ["dep:serde", "dep:serde_json"]
+runtime = ["dep:uuid", "dep:tokio"]
+full = ["serde", "runtime"]
+
+# Complete layer sets
+all_layers = ["advanced_zk", "zk", "regulatory", "governance", "foundation", "system", "data_formats", "recursive"]
 
 [profile.release]
 opt-level = 3
 lto = true
 codegen-units = 1
 panic = "abort"
-
-[profile.dev]
-opt-level = 0
-debug = true
