@@ -1,0 +1,25 @@
+[package]
+name = "zos-oracle"
+version = "0.1.0"
+edition = "2021"
+description = "ZOS Oracle Cloud Plugin - Standalone Oracle integration"
+license = "AGPL-3.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# Zero dependencies for core plugin interface
+serde = { version = "1.0", features = ["derive"], optional = true }
+serde_json = { version = "1.0", optional = true }
+
+# Oracle-specific dependencies (optional)
+rsa = { version = "0.9", optional = true }
+sha2 = { version = "0.10", optional = true }
+base64 = { version = "0.22", optional = true }
+chrono = { version = "0.4", optional = true }
+
+[features]
+default = []
+full = ["serde", "serde_json", "rsa", "sha2", "base64", "chrono"]
+cli = []

@@ -1,0 +1,146 @@
+# ZOS Bootstrap Eigenmatrix v1.0.0
+# This lock file defines the foundational build steps for the self-hosting system
+# Once adopted by DAO vote, this becomes the immutable bootstrap sequence
+
+[eigenmatrix]
+version = "1.0.0"
+bootstrap_hash = "sha256:deadbeef..."
+dao_adoption_block = 0
+immutable = true
+
+# Stage 0: Foundation - Zero dependency base system
+[[stage]]
+name = "foundation"
+order = 0
+dependencies = []
+
+  [[stage.step]]
+  name = "zos-macros"
+  type = "crate_build"
+  path = "zos-macros"
+  output = "libzos_macros.so"
+  features = []
+
+  [[stage.step]]
+  name = "zos-traits"
+  type = "crate_build"
+  path = "zos-traits"
+  output = "libzos_traits.so"
+  features = []
+
+  [[stage.step]]
+  name = "zos-types"
+  type = "crate_build"
+  path = "zos-types"
+  output = "libzos_types.so"
+  features = []
+
+# Stage 1: Build System - Self-hosting compiler infrastructure
+[[stage]]
+name = "build_system"
+order = 1
+dependencies = ["foundation"]
+
+  [[stage.step]]
+  name = "rustc_driver_lock"
+  type = "locked_build"
+  description = "Bootstrap rustc_driver with exact dependency versions"
+  lock_file = "rustc_driver.lock"
+  output = "librustc_driver_bootstrap.so"
+
+    [stage.step.locked_dependencies]
+    rustc_driver = "1.75.0"
+    rustc_interface = "1.75.0"
+    rustc_session = "1.75.0"
+    rustc_ast = "1.75.0"
+    rustc_hir = "1.75.0"
+    rustc_middle = "1.75.0"
+    rustc_codegen_ssa = "1.75.0"
+
+  [[stage.step]]
+  name = "compiler_plugin"
+  type = "plugin_build"
+  source = "src/plugins/compiler.rs"
+  depends_on = ["rustc_driver_lock"]
+  output = "libcompiler_plugin.so"
+
+  [[stage.step]]
+  name = "build_plugin"
+  type = "plugin_build"
+  source = "src/plugins/build.rs"
+  depends_on = ["compiler_plugin"]
+  output = "libbuild_plugin.so"
+
+# Stage 2: Core Services - Essential system services
+[[stage]]
+name = "core_services"
+order = 2
+dependencies = ["build_system"]
+
+  [[stage.step]]
+  name = "plugin_loader"
+  type = "service_build"
+  source = "zos-oracle/src/plugin_loader.rs"
+  output = "libplugin_loader.so"
+
+  [[stage.step]]
+  name = "governance_system"
+  type = "service_build"
+  source = "zos-oracle/src/wallet_auth.rs"
+  output = "libgovernance.so"
+
+  [[stage.step]]
+  name = "libp2p_verbs"
+  type = "service_build"
+  source = "zos-oracle/src/libp2p_verbs.rs"
+  output = "liblibp2p_verbs.so"
+
+# Stage 3: Self-Hosting - System can now rebuild itself
+[[stage]]
+name = "self_hosting"
+order = 3
+dependencies = ["core_services"]
+
+  [[stage.step]]
+  name = "bootstrap_complete"
+  type = "validation"
+  description = "Verify system can rebuild itself using its own tools"
+  test_command = "zos-server rebuild --self-host --verify-eigenmatrix"
+
+  [[stage.step]]
+  name = "eigenmatrix_lock"
+  type = "lock_generation"
+  description = "Generate new eigenmatrix from successful self-build"
+  output = "eigenmatrix_v2.lock"
+
+# Bootstrap Verification - These hashes must match for valid bootstrap
+[verification]
+foundation_hash = "sha256:abc123..."
+build_system_hash = "sha256:def456..."
+core_services_hash = "sha256:789ghi..."
+complete_system_hash = "sha256:jkl012..."
+
+# DAO Governance Rules for Eigenmatrix Updates
+[governance]
+required_votes = 618  # Fibonacci majority (61.8% of 1000 seats)
+voting_period_blocks = 1000
+proposal_deposit = "1000 ZOS"
+emergency_override_seats = [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89] # Fibonacci seats
+
+# Immutable Bootstrap Sequence - Cannot be changed without DAO supermajority
+[immutable_sequence]
+step_1 = "Build foundation crates with zero external dependencies"
+step_2 = "Lock rustc_driver to exact versions for reproducible builds"
+step_3 = "Build compiler plugin using locked rustc_driver"
+step_4 = "Build remaining plugins using self-hosted compiler"
+step_5 = "Verify system can rebuild itself completely"
+step_6 = "Generate next eigenmatrix version"
+
+# Security Properties
+[security]
+deterministic_builds = true
+reproducible_hashes = true
+zero_external_deps_foundation = true
+dao_controlled_updates = true
+fibonacci_governance = true
+self_hosting_verification = true

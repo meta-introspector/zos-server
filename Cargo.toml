@@ -5,7 +5,11 @@ members = [
     "zos-types",
     "zos-build-macros",
     "zos-plan",
-    "zos-deploy"
+    "zos-deploy",
+    "zos-oracle",
+    "zos-unix-accounts",
+    "zos-retro-games",
+    "zos-minimal-server"
 ]
 resolver = "2"
 
@@ -17,6 +21,9 @@ zos-types = { path = "zos-types" }
 zos-build-macros = { path = "zos-build-macros" }
 zos-plan = { path = "zos-plan" }
 zos-deploy = { path = "zos-deploy" }
+zos-oracle = { path = "zos-oracle" }
+zos-unix-accounts = { path = "zos-unix-accounts" }
+zos-retro-games = { path = "zos-retro-games" }
 
 [package]
 name = "zos-server"

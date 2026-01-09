@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZOS Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a0a0a; color: #fff; }
+        .dashboard { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
+        .sidebar { background: #1a1a1a; padding: 20px; border-right: 1px solid #333; }
+        .main-content { padding: 20px; overflow-y: auto; }
+        .user-info { text-align: center; margin-bottom: 30px; }
+        .user-avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(45deg, #ff6b6b, #4ecdc4); margin: 0 auto 10px; }
+        .nav-menu { list-style: none; }
+        .nav-menu li { margin-bottom: 10px; }
+        .nav-menu a { color: #ccc; text-decoration: none; padding: 10px; display: block; border-radius: 5px; transition: all 0.3s; }
+        .nav-menu a:hover, .nav-menu a.active { background: #333; color: #fff; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #1a1a1a; padding: 20px; border-radius: 10px; border: 1px solid #333; }
+        .stat-value { font-size: 2em; font-weight: bold; color: #4ecdc4; }
+        .stat-label { color: #ccc; margin-top: 5px; }
+        .section { background: #1a1a1a; padding: 20px; border-radius: 10px; border: 1px solid #333; margin-bottom: 20px; }
+        .section h3 { margin-bottom: 15px; color: #4ecdc4; }
+        .port-info { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #2a2a2a; border-radius: 8px; margin-bottom: 10px; }
+        .port-status { padding: 5px 10px; border-radius: 15px; font-size: 0.8em; }
+        .port-active { background: #4ecdc4; color: #000; }
+        .port-expiring { background: #ff6b6b; color: #fff; }
+        .progress-bar { width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin: 10px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #4ecdc4, #45b7aa); transition: width 0.3s; }
+        .notification { padding: 15px; background: #2a2a2a; border-left: 4px solid #4ecdc4; margin-bottom: 10px; border-radius: 0 8px 8px 0; }
+        .notification.unread { background: #2a3a2a; border-left-color: #ff6b6b; }
+        .leaderboard { max-height: 300px; overflow-y: auto; }
+        .rank-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #333; }
+        .rank-item.current-user { background: #2a3a2a; }
+        .marketplace-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #2a2a2a; border-radius: 8px; margin-bottom: 10px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; transition: all 0.3s; }
+        .btn-primary { background: #4ecdc4; color: #000; }
+        .btn-secondary { background: #666; color: #fff; }
+        .btn:hover { transform: translateY(-2px); }
+        .live-indicator { display: inline-block; width: 8px; height: 8px; background: #4ecdc4; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="sidebar">
+            <div class="user-info">
+                <div class="user-avatar"></div>
+                <div id="user-name">Loading...</div>
+                <div id="user-tier">Free Tier</div>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#overview" class="active">📊 Overview</a></li>
+                <li><a href="#allocations">🔌 Allocations</a></li>
+                <li><a href="#usage">📈 Usage Stats</a></li>
+                <li><a href="#rewards">🎁 Rewards</a></li>
+                <li><a href="#competitive">🏆 Competitive</a></li>
+                <li><a href="#marketplace">🏪 Marketplace</a></li>
+                <li><a href="#notifications">🔔 Notifications</a></li>
+            </ul>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <h1>ZOS Dashboard</h1>
+                <div>
+                    <span class="live-indicator"></span>
+                    <span>Live</span>
+                    <span id="current-block">Block: 12345</span>
+                </div>
+            </div>
+
+            <div id="overview-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="current-rank">-</div>
+                        <div class="stat-label">Global Rank</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="usage-credits">100</div>
+                        <div class="stat-label">Usage Credits</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="loyalty-points">0</div>
+                        <div class="stat-label">Loyalty Points</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="streak-days">0</div>
+                        <div class="stat-label">Streak Days</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>🔌 Current Allocation</h3>
+                    <div id="current-port">
+                        <div class="port-info">
+                            <div>
+                                <strong>No Active Port</strong><br>
+                                <small>Request allocation to get started</small>
+                            </div>
+                            <button class="btn btn-primary" onclick="allocatePort()">Allocate Port</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>🎯 Quick Actions</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <button class="btn btn-primary" onclick="executeService('pi_calculator')">🥧 Calculate Pi</button>
+                        <button class="btn btn-primary" onclick="executeService('fibonacci_meme')">🐰 Fibonacci Fun</button>
+                        <button class="btn btn-primary" onclick="executeService('prime_poetry')">🎭 Prime Poetry</button>
+                        <button class="btn btn-secondary" onclick="sharePort()">🤝 Share Port</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>🏆 Competitive Status</h3>
+                    <div id="competitive-info">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <strong>Rank:</strong> <span id="comp-rank">Unranked</span><br>
+                                <strong>Value:</strong> <span id="comp-value">0.00</span><br>
+                                <strong>Threat Level:</strong> <span id="threat-level">Safe</span>
+                            </div>
+                            <div>
+                                <strong>Next Target:</strong> <span id="next-target">None</span><br>
+                                <strong>Challenger:</strong> <span id="next-challenger">None</span><br>
+                                <strong>Points to Next:</strong> <span id="points-to-next">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>🔔 Recent Notifications</h3>
+                <div id="notifications-list">
+                    <div class="notification unread">
+                        <strong>Welcome to ZOS!</strong><br>
+                        Complete your profile to earn bonus credits
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userId = 'user_' + Math.random().toString(36).substr(2, 8);
+        let ws = null;
+
+        // Initialize dashboard
+        async function initDashboard() {
+            try {
+                const response = await fetch(`/api/dashboard/${userId}`);
+                const dashboard = await response.json();
+                updateDashboard(dashboard);
+
+                // Connect WebSocket for live updates
+                connectWebSocket();
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+            }
+        }
+
+        function updateDashboard(dashboard) {
+            // Update user info
+            document.getElementById('user-name').textContent = dashboard.user_id.substring(0, 12);
+            document.getElementById('user-tier').textContent = dashboard.current_status.tier;
+
+            // Update stats
+            document.getElementById('current-rank').textContent = dashboard.competitive_status.current_rank || '-';
+            document.getElementById('usage-credits').textContent = dashboard.current_status.usage_credits;
+            document.getElementById('loyalty-points').textContent = dashboard.current_status.loyalty_points;
+            document.getElementById('streak-days').textContent = dashboard.current_status.streak_days;
+
+            // Update current port
+            updateCurrentPort(dashboard.allocations.current_port);
+
+            // Update competitive status
+            updateCompetitiveStatus(dashboard.competitive_status);
+
+            // Update notifications
+            updateNotifications(dashboard.notifications);
+        }
+
+        function updateCurrentPort(port) {
+            const portDiv = document.getElementById('current-port');
+            if (port) {
+                const blocksRemaining = port.blocks_remaining;
+                const timeRemaining = blocksRemaining * 400; // 400ms per block
+
+                portDiv.innerHTML = `
+                    <div class="port-info">
+                        <div>
+                            <strong>Port ${port.port}</strong>
+                            <span class="port-status ${blocksRemaining < 10 ? 'port-expiring' : 'port-active'}">
+                                ${blocksRemaining < 10 ? 'Expiring Soon' : 'Active'}
+                            </span><br>
+                            <small>Expires in ${blocksRemaining} blocks (${Math.round(timeRemaining/1000)}s)</small><br>
+                            <small>Shared with ${port.shared_count} users • Used ${port.usage_count} times</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-secondary" onclick="sharePort()">Share</button>
+                            <button class="btn btn-secondary" onclick="listForSale()">Sell</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                portDiv.innerHTML = `
+                    <div class="port-info">
+                        <div>
+                            <strong>No Active Port</strong><br>
+                            <small>Request allocation to get started</small>
+                        </div>
+                        <button class="btn btn-primary" onclick="allocatePort()">Allocate Port</button>
+                    </div>
+                `;
+            }
+        }
+
+        function updateCompetitiveStatus(status) {
+            document.getElementById('comp-rank').textContent = status.current_rank || 'Unranked';
+            document.getElementById('comp-value').textContent = status.cumulative_value.toFixed(2);
+            document.getElementById('threat-level').textContent = status.threat_level;
+            document.getElementById('next-target').textContent = status.challenge_target || 'None';
+            document.getElementById('next-challenger').textContent = status.next_challenger || 'None';
+            document.getElementById('points-to-next').textContent = status.leaderboard_position.points_to_next_rank.toFixed(2);
+        }
+
+        function updateNotifications(notifications) {
+            const list = document.getElementById('notifications-list');
+            list.innerHTML = notifications.slice(0, 5).map(notif => `
+                <div class="notification ${notif.read ? '' : 'unread'}">
+                    <strong>${notif.title}</strong><br>
+                    ${notif.message}
+                </div>
+            `).join('');
+        }
+
+        function connectWebSocket() {
+            ws = new WebSocket(`ws://localhost:3000/dashboard/${userId}/live`);
+
+            ws.onmessage = (event) => {
+                const update = JSON.parse(event.data);
+                updateDashboard(update);
+            };
+
+            ws.onclose = () => {
+                // Reconnect after 5 seconds
+                setTimeout(connectWebSocket, 5000);
+            };
+        }
+
+        // Action functions
+        async function allocatePort() {
+            try {
+                const response = await fetch('/api/allocate-port', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, service_type: 'Compute' })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert(`Port ${result.port} allocated!`);
+                    initDashboard(); // Refresh
+                }
+            } catch (error) {
+                alert('Failed to allocate port');
+            }
+        }
+
+        async function executeService(serviceName) {
+            try {
+                const response = await fetch('/api/execute-service', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, service: serviceName })
+                });
+                const result = await response.json();
+                alert(`Service Result:\n${result.output}`);
+                initDashboard(); // Refresh
+            } catch (error) {
+                alert('Failed to execute service');
+            }
+        }
+
+        function sharePort() {
+            const friendId = prompt('Enter friend\'s user ID to share port with:');
+            if (friendId) {
+                fetch('/api/share-port', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, share_with: friendId })
+                }).then(() => {
+                    alert('Port shared successfully!');
+                    initDashboard();
+                });
+            }
+        }
+
+        function listForSale() {
+            const price = prompt('Enter sale price in credits:');
+            if (price) {
+                fetch('/api/list-for-sale', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, price: parseInt(price) })
+                }).then(() => {
+                    alert('Port listed for sale!');
+                    initDashboard();
+                });
+            }
+        }
+
+        // Update block number every 400ms
+        setInterval(() => {
+            const blockEl = document.getElementById('current-block');
+            const currentBlock = parseInt(blockEl.textContent.split(': ')[1]) + 1;
+            blockEl.textContent = `Block: ${currentBlock}`;
+        }, 400);
+
+        // Initialize on load
+        initDashboard();
+    </script>
+</body>
+</html>
