@@ -41,6 +41,35 @@ cargo build --release --features all-plugins
 cargo run --features all-plugins
 ```
 
+## 🗺️ Roadmap
+
+### Server Infrastructure
+- **Build Server**: Multi-architecture compilation service
+- **Compile Server**: Distributed compilation with caching
+- **Verification Server**: ZK proof generation and validation
+- **Package Repository**: Docker/dpkg/Nix store server
+- **Binary Repository**: Bintray-compatible artifact storage
+
+### AI-Powered Development
+- **Security Scanner**: Automated vulnerability detection
+- **AI Code Analysis**: Semantic code understanding and optimization
+- **Auto Bug Fixing**: Intelligent patch generation and application
+- **DevOps as a Service**: Complete CI/CD pipeline automation
+
+### Network Services
+- **P2P Build Clusters**: Distributed compilation networks
+- **Rollup Aggregation**: Multi-chain transaction bundling
+- **Proof Marketplace**: ZK proof trading and verification
+
+### Enterprise Services
+- **LLM Routing & Proxy**: Vendor-agnostic AI model access and load balancing
+- **Vector Storage APIs**: Embeddings and semantic search infrastructure
+- **Storage APIs**: Unified object/block/file storage abstraction
+- **ACL & Auth**: Role-based access control and authentication
+- **API Gateway**: Rate limiting, routing, and service mesh
+- **Security & Auditing**: Compliance monitoring (GDPR/HIPAA/SOX/ISO)
+- **Storage Security**: Encryption, key management, and data governance
+
 ## 📦 Plugin System
 
 ### Canonical Plugin Structure
@@ -161,7 +190,9 @@ cargo test --all-features
 
 ## 📄 License
 
-MIT License - see LICENSE file for details.
+AGPLv3 License - see LICENSE file for details.
+
+This ensures that when you run ZOS Server as a network service, you remain part of the collective and any modifications must be shared with users of the service.
 
 ## 🔗 Links
 
