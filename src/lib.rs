@@ -13,6 +13,7 @@ pub mod plugins;
 
 // Optional modules for extended functionality
 pub mod compiler_integration;
+pub mod llm_compiler_service;
 #[cfg(feature = "self-build")]
 pub mod self_build_cli;
 #[cfg(feature = "self-build")]

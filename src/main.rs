@@ -9,6 +9,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Handle CLI commands
     if args.len() > 1 {
         match args[1].as_str() {
+            "llm-improve" => {
+                use zos_server::llm_compiler_service::LLMCompilerService;
+
+                let prompt = args
+                    .get(2)
+                    .ok_or("Usage: zos_server llm-improve <prompt>")?;
+
+                println!("🤖 Starting LLM-Compiler improvement loop...");
+                let service = LLMCompilerService::new();
+
+                match service.improve_code(prompt).await {
+                    Ok(final_code) => {
+                        println!("🎉 Final working code:");
+                        println!("{}", final_code);
+                    }
+                    Err(e) => {
+                        eprintln!("❌ Failed to improve code: {}", e);
+                        std::process::exit(1);
+                    }
+                }
+            }
             "bootstrap" => {
                 return handle_bootstrap_command(&args[2..]).await;
             }
