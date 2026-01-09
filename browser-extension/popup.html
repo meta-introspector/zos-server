@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 350px;
+      padding: 20px;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .section {
+      margin-bottom: 15px;
+      padding: 10px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      border: none;
+      border-radius: 5px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    .status {
+      font-size: 12px;
+      margin-top: 10px;
+      padding: 5px;
+      border-radius: 3px;
+      background: rgba(0,0,0,0.2);
+    }
+    .network-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>🔮 ZOS Network</h2>
+    <div class="network-info">
+      <span>Nodes: <span id="node-count">0</span></span>
+      <span>Status: <span id="connection-status">Connecting...</span></span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>🔐 Zero Knowledge Proofs</h3>
+    <button id="generate-page-proof">Generate Page Proof</button>
+    <button id="verify-proof">Verify Proof</button>
+    <button id="create-rollup">Create Rollup</button>
+  </div>
+
+  <div class="section">
+    <h3>🧠 Semantic Analysis</h3>
+    <button id="extract-entities">Extract Entities</button>
+    <button id="validate-math">Validate Math</button>
+    <button id="check-facts">Check Facts</button>
+  </div>
+
+  <div class="section">
+    <h3>🛡️ Compliance</h3>
+    <button id="gdpr-check">GDPR Check</button>
+    <button id="sec-validate">SEC Validate</button>
+    <button id="quality-audit">Quality Audit</button>
+  </div>
+
+  <div class="section">
+    <h3>🌐 Blockchain</h3>
+    <button id="ethereum-interact">Ethereum</button>
+    <button id="solana-interact">Solana</button>
+    <button id="bitcoin-interact">Bitcoin</button>
+  </div>
+
+  <div class="section">
+    <h3>⚙️ System</h3>
+    <button id="plugin-status">Plugin Status</button>
+    <button id="node-sync">Sync Nodes</button>
+    <button id="settings">Settings</button>
+  </div>
+
+  <div id="status" class="status">Ready</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
