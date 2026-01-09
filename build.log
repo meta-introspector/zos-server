@@ -1,5 +1,722 @@
-error: duplicate key
-  --> Cargo.toml:24:1
+   Compiling zos-server v0.1.0 (/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server)
+error[E0407]: method `export_to_mcp` is not a member of trait `VerbExporter`
+  --> src/protocol_exports.rs:8:5
    |
-24 | uuid = { version = "1.0", features = ["v4"] }
-   | ^^^^
+ 8 |       fn export_to_mcp(&self) -> Result<String, String> {
+   |       ^  ------------- help: there is an associated function with a similar name: `export_to_xml`
+   |  _____|
+   | |
+ 9 | |         // Export as Model Context Protocol format
+10 | |         let mut mcp = json!({
+11 | |             "jsonrpc": "2.0",
+...  |
+36 | |             .map_err(|e| format!("MCP serialization failed: {}", e))
+37 | |     }
+   | |_____^ not a member of trait `VerbExporter`
+
+error[E0407]: method `export_to_soap` is not a member of trait `VerbExporter`
+  --> src/protocol_exports.rs:39:5
+   |
+39 |       fn export_to_soap(&self) -> Result<String, String> {
+   |       ^  -------------- help: there is an associated function with a similar name: `export_to_sql`
+   |  _____|
+   | |
+40 | |         // Export as SOAP WSDL
+41 | |         let mut wsdl = String::new();
+42 | |         wsdl.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+...  |
+63 | |         Ok(wsdl)
+64 | |     }
+   | |_____^ not a member of trait `VerbExporter`
+
+error[E0407]: method `export_to_openapi` is not a member of trait `VerbExporter`
+   --> src/protocol_exports.rs:66:5
+    |
+ 66 | /     fn export_to_openapi(&self) -> Result<String, String> {
+ 67 | |         // Export as OpenAPI 3.0 specification
+ 68 | |         let mut openapi = json!({
+ 69 | |             "openapi": "3.0.0",
+...   |
+128 | |             .map_err(|e| format!("OpenAPI serialization failed: {}", e))
+129 | |     }
+    | |_____^ not a member of trait `VerbExporter`
+
+error[E0407]: method `export_to_rest_routes` is not a member of trait `VerbExporter`
+   --> src/protocol_exports.rs:131:5
+    |
+131 | /     fn export_to_rest_routes(&self) -> Result<String, String> {
+132 | |         // Export as REST route definitions
+133 | |         let mut routes = String::new();
+134 | |         routes.push_str("# ZOS Server REST Routes\n\n");
+...   |
+144 | |         Ok(routes)
+145 | |     }
+    | |_____^ not a member of trait `VerbExporter`
+
+warning: unused import: `LibVerb`
+ --> src/traits/mod.rs:4:29
+  |
+4 | use crate::enums::{P2PVerb, LibVerb, NetworkEvent};
+  |                             ^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `LoadedSo`
+ --> src/traits/mod.rs:5:45
+  |
+5 | use crate::structs::{PeerInfo, DatasetSeed, LoadedSo};
+  |                                             ^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+ --> src/traits/mod.rs:6:5
+  |
+6 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `LibVerb`
+ --> src/functions/mod.rs:5:29
+  |
+5 | use crate::enums::{P2PVerb, LibVerb};
+  |                             ^^^^^^^
+
+warning: unused import: `CString`
+ --> src/plugins/libp2p_c_interface.rs:5:22
+  |
+5 | use std::ffi::{CStr, CString};
+  |                      ^^^^^^^
+
+warning: unused import: `std::ptr`
+ --> src/plugins/libp2p_c_interface.rs:7:5
+  |
+7 | use std::ptr;
+  |     ^^^^^^^^
+
+warning: unused import: `crate::traits::LibraryLoader`
+ --> src/plugins/systemd_plugin.rs:4:5
+  |
+4 | use crate::traits::LibraryLoader;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `CStr`
+ --> src/plugins/systemd_plugin.rs:7:25
+  |
+7 | use std::ffi::{CString, CStr};
+  |                         ^^^^
+
+warning: unused import: `crate::traits::LibraryLoader`
+ --> src/plugins/oracle_plugin.rs:4:5
+  |
+4 | use crate::traits::LibraryLoader;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::traits::LibraryLoader`
+ --> src/plugins/docker_plugin.rs:4:5
+  |
+4 | use crate::traits::LibraryLoader;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `CStr`
+ --> src/plugins/docker_plugin.rs:6:25
+  |
+6 | use std::ffi::{CString, CStr};
+  |                         ^^^^
+
+warning: unused import: `crate::traits::LibraryLoader`
+ --> src/plugins/kernel_plugin.rs:4:5
+  |
+4 | use crate::traits::LibraryLoader;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `c_void`
+ --> src/plugins/kernel_plugin.rs:7:35
+  |
+7 | use std::os::raw::{c_char, c_int, c_void};
+  |                                   ^^^^^^
+
+warning: unused import: `CStr`
+ --> src/plugins/ebpf_plugin.rs:3:25
+  |
+3 | use std::ffi::{CString, CStr};
+  |                         ^^^^
+
+warning: unused import: `CStr`
+ --> src/plugins/solana_plugin.rs:3:25
+  |
+3 | use std::ffi::{CString, CStr};
+  |                         ^^^^
+
+warning: unused import: `CStr`
+ --> src/plugins/wasm_plugin.rs:3:25
+  |
+3 | use std::ffi::{CString, CStr};
+  |                         ^^^^
+
+warning: unused import: `CStr`
+ --> src/plugins/runtime_plugins.rs:3:25
+  |
+3 | use std::ffi::{CString, CStr};
+  |                         ^^^^
+
+warning: unused import: `CStr`
+ --> src/plugins/storage_plugins.rs:3:25
+  |
+3 | use std::ffi::{CString, CStr};
+  |                         ^^^^
+
+warning: unused import: `CStr`
+ --> src/plugins/blockchain_plugins.rs:3:25
+  |
+3 | use std::ffi::{CString, CStr};
+  |                         ^^^^
+
+warning: unused import: `CStr`
+ --> src/plugins/telemetry_plugin.rs:3:25
+  |
+3 | use std::ffi::{CString, CStr};
+  |                         ^^^^
+
+warning: unused import: `CStr`
+ --> src/plugins/compiler_plugins.rs:3:25
+  |
+3 | use std::ffi::{CString, CStr};
+  |                         ^^^^
+
+warning: unused import: `crate::enums::P2PVerb`
+ --> src/verb_export.rs:4:5
+  |
+4 | use crate::enums::P2PVerb;
+  |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `AsyncBufReadExt` and `self`
+  --> src/mini_sdf_server.rs:11:17
+   |
+11 | use tokio::io::{self, AsyncBufReadExt};
+   |                 ^^^^  ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::plugins::*`
+ --> src/node_coordinator.rs:4:5
+  |
+4 | use crate::plugins::*;
+  |     ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Swarm`
+ --> src/node_coordinator.rs:6:22
+  |
+6 | use libp2p::{PeerId, Swarm};
+  |                      ^^^^^
+
+warning: unused import: `crate::node_coordinator::ZosNode`
+ --> src/blockchain_ingestor.rs:5:5
+  |
+5 | use crate::node_coordinator::ZosNode;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Symbol`
+ --> src/universal_plugin_loader.rs:5:27
+  |
+5 | use libloading::{Library, Symbol};
+  |                           ^^^^^^
+
+warning: unused imports: `CStr` and `CString`
+ --> src/universal_plugin_loader.rs:7:16
+  |
+7 | use std::ffi::{CString, CStr};
+  |                ^^^^^^^  ^^^^
+
+warning: unused imports: `c_char` and `c_int`
+ --> src/universal_plugin_loader.rs:8:20
+  |
+8 | use std::os::raw::{c_char, c_int};
+  |                    ^^^^^^  ^^^^^
+
+warning: unused import: `ChunkType`
+ --> src/notebooklm_cli.rs:2:56
+  |
+2 | use crate::notebooklm_interface::{NotebookLMInterface, ChunkType};
+  |                                                        ^^^^^^^^^
+
+error[E0119]: conflicting implementations of trait `VerbExporter` for type `VerbExport`
+  --> src/protocol_exports.rs:5:1
+   |
+ 5 | impl VerbExporter for VerbExport {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ conflicting implementation for `VerbExport`
+   |
+  ::: src/verb_export.rs:36:1
+   |
+36 | impl VerbExporter for VerbExport {
+   | -------------------------------- first implementation here
+
+error[E0599]: no method named `with_tcp` found for struct `SwarmBuilder<NoProviderSpecified, ProviderPhase>` in the current scope
+  --> src/mini_sdf_server.rs:48:14
+   |
+47 |           let swarm = libp2p::SwarmBuilder::with_existing_identity(local_key)
+   |  _____________________-
+48 | |             .with_tcp(tcp::Config::default(), noise::Config::new, yamux::Config::default)?
+   | |             -^^^^^^^^ method not found in `SwarmBuilder<NoProviderSpecified, ProviderPhase>`
+   | |_____________|
+   |
+   |
+   = note: the method was found for
+           - `SwarmBuilder<libp2p::builder::phase::provider::Tokio, libp2p::builder::phase::tcp::TcpPhase>`
+   = note: the full name for the type has been written to '/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/target/debug/deps/zos_server-657dff2d8b868cfe.long-type-1268124314937751560.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: no method named `select_next_some` found for struct `Swarm<TBehaviour>` in the current scope
+    --> src/mini_sdf_server.rs:77:30
+     |
+  77 |             match self.swarm.select_next_some().await {
+     |                              ^^^^^^^^^^^^^^^^ method not found in `Swarm<SdfBehaviour>`
+     |
+    ::: /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-util-0.3.31/src/stream/stream/mod.rs:1691:8
+     |
+1691 |     fn select_next_some(&mut self) -> SelectNextSome<'_, Self>
+     |        ---------------- the method is available for `Swarm<SdfBehaviour>` here
+     |
+     = help: items from traits can only be used if the trait is in scope
+help: trait `StreamExt` which provides `select_next_some` is implemented but not in scope; perhaps you want to import it
+     |
+   4 + use libp2p::futures::StreamExt;
+     |
+
+warning: unused variable: `args`
+   --> src/node_coordinator.rs:156:55
+    |
+156 |             NodeMessage::PluginRequest { plugin_name, args } => {
+    |                                                       ^^^^ help: try ignoring the field: `args: _`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `node_info`
+   --> src/node_coordinator.rs:177:23
+    |
+177 |         for (peer_id, node_info) in &self.peer_nodes {
+    |                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_node_info`
+
+error[E0277]: the trait bound `BlockData: serde::Serialize` is not satisfied
+    --> src/blockchain_ingestor.rs:197:49
+     |
+ 197 |         let rollup_data = serde_json::to_string(&blocks)?;
+     |                           --------------------- ^^^^^^^ unsatisfied trait bound
+     |                           |
+     |                           required by a bound introduced by this call
+     |
+help: the trait `Serialize` is not implemented for `BlockData`
+    --> src/blockchain_ingestor.rs:36:1
+     |
+  36 | pub struct BlockData {
+     | ^^^^^^^^^^^^^^^^^^^^
+     = note: for local types consider adding `#[derive(serde::Serialize)]` to your `BlockData` type
+     = note: for types from other crates check whether the crate offers a `serde` feature flag
+     = help: the following other types implement trait `Serialize`:
+               &'a T
+               &'a mut T
+               ()
+               (T,)
+               (T0, T1)
+               (T0, T1, T2)
+               (T0, T1, T2, T3)
+               (T0, T1, T2, T3, T4)
+             and 148 others
+     = note: required for `Vec<BlockData>` to implement `Serialize`
+note: required by a bound in `serde_json::to_string`
+    --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/ser.rs:2247:17
+     |
+2245 | pub fn to_string<T>(value: &T) -> Result<String>
+     |        --------- required by a bound in this function
+2246 | where
+2247 |     T: ?Sized + Serialize,
+     |                 ^^^^^^^^^ required by this bound in `to_string`
+
+warning: unused variable: `tx_data`
+   --> src/blockchain_ingestor.rs:225:21
+    |
+225 |                 let tx_data = format!("block_{}_txs", block.block_number);
+    |                     ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tx_data`
+
+warning: unused variable: `rollup_message`
+   --> src/blockchain_ingestor.rs:244:13
+    |
+244 |         let rollup_message = format!("{{\"rollup_proof\": \"{}\", \"zk_proof\": \"{}\"}}", rollup_proof, zk_proof);
+    |             ^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_rollup_message`
+
+error[E0599]: no method named `into_bytes` found for unit type `()` in the current scope
+   --> src/universal_plugin_loader.rs:133:26
+    |
+133 |         Ok(native_binary.into_bytes())
+    |                          ^^^^^^^^^^
+    |
+help: there is a method `as_bytes` with a similar name
+    |
+133 -         Ok(native_binary.into_bytes())
+133 +         Ok(native_binary.as_bytes())
+    |
+
+warning: unused variable: `lib`
+   --> src/universal_plugin_loader.rs:315:13
+    |
+315 |         let lib = unsafe { Library::new(&temp_path)? };
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_lib`
+
+warning: unused variable: `args`
+   --> src/universal_plugin_loader.rs:324:80
+    |
+324 |     pub async fn execute_plugin(&self, plugin_name: &str, function_name: &str, args: &[u8]) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    |                                                                                ^^^^ help: if this is intentional, prefix it with an underscore: `_args`
+
+error[E0277]: the trait bound `ExecutionPathReview: serde::Serialize` is not satisfied
+    --> src/verified_plugin_loader.rs:103:57
+     |
+ 103 |             execution_path_proof: serde_json::to_string(&execution_review)?,
+     |                                   --------------------- ^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |                                   |
+     |                                   required by a bound introduced by this call
+     |
+help: the trait `Serialize` is not implemented for `ExecutionPathReview`
+    --> src/verified_plugin_loader.rs:29:1
+     |
+  29 | pub struct ExecutionPathReview {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = note: for local types consider adding `#[derive(serde::Serialize)]` to your `ExecutionPathReview` type
+     = note: for types from other crates check whether the crate offers a `serde` feature flag
+     = help: the following other types implement trait `Serialize`:
+               &'a T
+               &'a mut T
+               ()
+               (T,)
+               (T0, T1)
+               (T0, T1, T2)
+               (T0, T1, T2, T3)
+               (T0, T1, T2, T3, T4)
+             and 148 others
+note: required by a bound in `serde_json::to_string`
+    --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/ser.rs:2247:17
+     |
+2245 | pub fn to_string<T>(value: &T) -> Result<String>
+     |        --------- required by a bound in this function
+2246 | where
+2247 |     T: ?Sized + Serialize,
+     |                 ^^^^^^^^^ required by this bound in `to_string`
+
+error[E0599]: no method named `analyze_performance` found for reference `&VerifiedPluginLoader` in the current scope
+   --> src/verified_plugin_loader.rs:166:41
+    |
+166 |         let performance_analysis = self.analyze_performance(&disassembly).await?;
+    |                                         ^^^^^^^^^^^^^^^^^^^ method not found in `&VerifiedPluginLoader`
+
+error[E0599]: no method named `check_compliance` found for reference `&VerifiedPluginLoader` in the current scope
+   --> src/verified_plugin_loader.rs:169:38
+    |
+169 |         let compliance_result = self.check_compliance(&disassembly).await?;
+    |                                      ^^^^^^^^^^^^^^^^ method not found in `&VerifiedPluginLoader`
+
+error[E0277]: the trait bound `ExecutionPathReview: serde::Serialize` is not satisfied
+    --> src/verified_plugin_loader.rs:184:46
+     |
+ 184 |         let witness = serde_json::to_string(&execution_review)?;
+     |                       ---------------------  ^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |                       |
+     |                       required by a bound introduced by this call
+     |
+help: the trait `Serialize` is not implemented for `ExecutionPathReview`
+    --> src/verified_plugin_loader.rs:29:1
+     |
+  29 | pub struct ExecutionPathReview {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = note: for local types consider adding `#[derive(serde::Serialize)]` to your `ExecutionPathReview` type
+     = note: for types from other crates check whether the crate offers a `serde` feature flag
+     = help: the following other types implement trait `Serialize`:
+               &'a T
+               &'a mut T
+               ()
+               (T,)
+               (T0, T1)
+               (T0, T1, T2)
+               (T0, T1, T2, T3)
+               (T0, T1, T2, T3, T4)
+             and 148 others
+     = note: required for `&ExecutionPathReview` to implement `Serialize`
+note: required by a bound in `serde_json::to_string`
+    --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/ser.rs:2247:17
+     |
+2245 | pub fn to_string<T>(value: &T) -> Result<String>
+     |        --------- required by a bound in this function
+2246 | where
+2247 |     T: ?Sized + Serialize,
+     |                 ^^^^^^^^^ required by this bound in `to_string`
+
+warning: unused variable: `binary_data`
+   --> src/verified_plugin_loader.rs:293:41
+    |
+293 |     async fn estimate_network_io(&self, binary_data: &[u8]) -> Result<u64, Box<dyn std::error::Error>> {
+    |                                         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary_data`
+
+warning: unused variable: `binary_data`
+   --> src/verified_plugin_loader.rs:298:41
+    |
+298 |     async fn estimate_storage_io(&self, binary_data: &[u8]) -> Result<u64, Box<dyn std::error::Error>> {
+    |                                         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary_data`
+
+warning: unused variable: `proof`
+   --> src/verified_plugin_loader.rs:322:21
+    |
+322 |         if let Some(proof) = self.verified_plugins.get(plugin_name) {
+    |                     ^^^^^ help: if this is intentional, prefix it with an underscore: `_proof`
+
+error[E0277]: the trait bound `Cow<'_, str>: AsRef<[u8]>` is not satisfied
+  --> src/self_builder.rs:87:75
+   |
+87 |             fs::write(format!("{}/build_errors.log", self.project_root), &stderr)
+   |             --------- required by a bound introduced by this call         ^^^^^^ the trait `AsRef<[u8]>` is not implemented for `Cow<'_, str>`
+   |
+   = note: required for `&Cow<'_, str>` to implement `AsRef<[u8]>`
+note: required by a bound in `std::fs::write`
+  --> /build/rustc-1.91.1-src/library/std/src/fs.rs:383:1
+help: consider dereferencing here
+   |
+87 |             fs::write(format!("{}/build_errors.log", self.project_root), &*stderr)
+   |                                                                           +
+
+error[E0308]: mismatched types
+   --> src/self_builder.rs:168:20
+    |
+168 |             error: error.clone(),
+    |                    ^^^^^^^^^^^^^ expected `CompileError`, found `&CompileError`
+    |
+note: `CompileError` does not implement `Clone`, so `&CompileError` was cloned instead
+   --> src/self_builder.rs:168:20
+    |
+168 |             error: error.clone(),
+    |                    ^^^^^
+help: consider annotating `CompileError` with `#[derive(Clone)]`
+    |
+  7 + #[derive(Clone)]
+  8 | pub struct CompileError {
+    |
+
+warning: unused variable: `response_text`
+   --> src/self_builder.rs:218:13
+    |
+218 |         let response_text = response.text().await
+    |             ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_response_text`
+
+error[E0277]: `Swarm<libp2p::libp2p_gossipsub::Behaviour>` doesn't implement `Debug`
+  --> src/structs/mod.rs:54:5
+   |
+52 | #[derive(Debug)]
+   |          ----- in this derive macro expansion
+53 | pub struct LibP2P2Server {
+54 |     pub swarm: Option<libp2p::Swarm<libp2p::gossipsub::Behaviour>>,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `Swarm<libp2p::libp2p_gossipsub::Behaviour>`
+   |
+   = help: the trait `Debug` is implemented for `std::option::Option<T>`
+
+error[E0277]: the trait bound `Vec<u8>: From<&std::string::String>` is not satisfied
+  --> src/plugins/oracle_plugin.rs:38:41
+   |
+38 |             let c_config = CString::new(&self.config_path)
+   |                            ------------ ^^^^^^^^^^^^^^^^^ the trait `From<&std::string::String>` is not implemented for `Vec<u8>`
+   |                            |
+   |                            required by a bound introduced by this call
+   |
+   = note: required for `&std::string::String` to implement `Into<Vec<u8>>`
+note: required by a bound in `CString::new`
+  --> /build/rustc-1.91.1-src/library/alloc/src/ffi/c_str.rs:256:5
+help: consider dereferencing here
+   |
+38 |             let c_config = CString::new(&*self.config_path)
+   |                                          +
+
+error[E0599]: no method named `export_to_mcp` found for struct `VerbExport` in the current scope
+  --> src/plugin_registry.rs:68:38
+   |
+68 |         if let Ok(mcp) = verb_export.export_to_mcp() {
+   |                                      ^^^^^^^^^^^^^
+   |
+  ::: src/verb_export.rs:19:1
+   |
+19 | pub struct VerbExport {
+   | --------------------- method `export_to_mcp` not found for this struct
+   |
+help: there is a method `export_to_rdf` with a similar name
+   |
+68 -         if let Ok(mcp) = verb_export.export_to_mcp() {
+68 +         if let Ok(mcp) = verb_export.export_to_rdf() {
+   |
+
+error[E0599]: no method named `export_to_soap` found for struct `VerbExport` in the current scope
+  --> src/plugin_registry.rs:71:39
+   |
+71 |         if let Ok(soap) = verb_export.export_to_soap() {
+   |                                       ^^^^^^^^^^^^^^
+   |
+  ::: src/verb_export.rs:19:1
+   |
+19 | pub struct VerbExport {
+   | --------------------- method `export_to_soap` not found for this struct
+   |
+help: there is a method `export_to_sql` with a similar name
+   |
+71 -         if let Ok(soap) = verb_export.export_to_soap() {
+71 +         if let Ok(soap) = verb_export.export_to_sql() {
+   |
+
+error[E0599]: no method named `export_to_openapi` found for struct `VerbExport` in the current scope
+  --> src/plugin_registry.rs:74:42
+   |
+74 |         if let Ok(openapi) = verb_export.export_to_openapi() {
+   |                                          ^^^^^^^^^^^^^^^^^
+   |
+  ::: src/verb_export.rs:19:1
+   |
+19 | pub struct VerbExport {
+   | --------------------- method `export_to_openapi` not found for this struct
+   |
+help: there is a method `export_to_rdf` with a similar name
+   |
+74 -         if let Ok(openapi) = verb_export.export_to_openapi() {
+74 +         if let Ok(openapi) = verb_export.export_to_rdf() {
+   |
+
+error[E0599]: no method named `export_to_rest_routes` found for struct `VerbExport` in the current scope
+  --> src/plugin_registry.rs:77:39
+   |
+77 |         if let Ok(rest) = verb_export.export_to_rest_routes() {
+   |                                       ^^^^^^^^^^^^^^^^^^^^^
+   |
+  ::: src/verb_export.rs:19:1
+   |
+19 | pub struct VerbExport {
+   | --------------------- method `export_to_rest_routes` not found for this struct
+   |
+help: there is a method `export_to_parquet` with a similar name
+   |
+77 -         if let Ok(rest) = verb_export.export_to_rest_routes() {
+77 +         if let Ok(rest) = verb_export.export_to_parquet() {
+   |
+
+warning: unreachable expression
+   --> src/universal_plugin_loader.rs:186:9
+    |
+175 |         return "x86_64".to_string();
+    |         --------------------------- any code following this expression is unreachable
+...
+186 |         "unknown".to_string()
+    |         ^^^^^^^^^^^^^^^^^^^^^ unreachable expression
+    |
+    = note: `#[warn(unreachable_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `NetworkBehaviour`
+ --> src/mini_sdf_server.rs:6:13
+  |
+6 |     swarm::{NetworkBehaviour, SwarmEvent},
+  |             ^^^^^^^^^^^^^^^^
+
+warning: unused variable: `local_peer_id`
+  --> src/plugins/libp2p_c_interface.rs:14:9
+   |
+14 |     let local_peer_id = PeerId::from(local_key.public());
+   |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_local_peer_id`
+
+warning: unused variable: `msg_slice`
+  --> src/plugins/libp2p_c_interface.rs:95:9
+   |
+95 |     let msg_slice = std::slice::from_raw_parts(message, message_len);
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_msg_slice`
+
+error: future cannot be sent between threads safely
+   --> src/blockchain_ingestor.rs:126:9
+    |
+126 | /         tokio::spawn(async move {
+127 | |             let mut current_block = 0u64;
+128 | |             
+129 | |             loop {
+...   |
+149 | |         });
+    | |__________^ future created by async block is not `Send`
+    |
+    = help: the trait `std::marker::Send` is not implemented for `dyn StdError`
+note: future is not `Send` as this value is used across an await
+   --> src/blockchain_ingestor.rs:143:97
+    |
+141 |                     Err(e) => {
+    |                         - has type `Box<dyn StdError>` which is not `Send`
+142 |                         eprintln!("❌ Failed to fetch {} block {}: {}", chain_name, current_block, e);
+143 |                         tokio::time::sleep(tokio::time::Duration::from_secs(config.block_time)).await;
+    |                                                                                                 ^^^^^ await occurs here, with `e` maybe used later
+note: required by a bound in `tokio::spawn`
+   --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.49.0/src/task/spawn.rs:171:21
+    |
+169 |     pub fn spawn<F>(future: F) -> JoinHandle<F::Output>
+    |            ----- required by a bound in this function
+170 |     where
+171 |         F: Future + Send + 'static,
+    |                     ^^^^ required by this bound in `spawn`
+
+warning: unused variable: `wasm_data`
+   --> src/universal_plugin_loader.rs:221:31
+    |
+221 |     fn wasm_to_llvm_ir(&self, wasm_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
+    |                               ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_wasm_data`
+
+warning: unused variable: `binary_data`
+   --> src/universal_plugin_loader.rs:236:30
+    |
+236 |     fn x86_to_llvm_ir(&self, binary_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
+    |                              ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary_data`
+
+warning: unused variable: `binary_data`
+   --> src/universal_plugin_loader.rs:250:30
+    |
+250 |     fn arm_to_llvm_ir(&self, binary_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
+    |                              ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary_data`
+
+warning: unused variable: `binary_data`
+   --> src/universal_plugin_loader.rs:263:32
+    |
+263 |     fn riscv_to_llvm_ir(&self, binary_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
+    |                                ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary_data`
+
+warning: unused variable: `binary`
+   --> src/verified_plugin_loader.rs:303:44
+    |
+303 |     fn create_buffer_overflow_patch(&self, binary: &[u8]) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    |                                            ^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary`
+
+warning: unused variable: `binary`
+   --> src/verified_plugin_loader.rs:308:40
+    |
+308 |     fn create_memory_leak_patch(&self, binary: &[u8]) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    |                                        ^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary`
+
+error[E0382]: borrow of moved value: `content`
+  --> src/notebooklm_interface.rs:59:25
+   |
+46 |     pub fn create_intelligent_chunk(&mut self, content: String, topic: String) -> Result<String, String> {
+   |                                                ------- move occurs because `content` has type `std::string::String`, which does not implement the `Copy` trait
+...
+58 |             content,
+   |             ------- value moved here
+59 |             size_bytes: content.len(),
+   |                         ^^^^^^^ value borrowed here after move
+   |
+help: consider cloning the value if the performance cost is acceptable
+   |
+58 |             content: content.clone(),
+   |                    +++++++++++++++++
+
+error[E0716]: temporary value dropped while borrowed
+  --> src/notebooklm_cli.rs:79:48
+   |
+79 |             let topic = args.get(2).unwrap_or(&"general".to_string());
+   |                                                ^^^^^^^^^^^^^^^^^^^^^ - temporary value is freed at the end of this statement
+   |                                                |
+   |                                                creates a temporary value which is freed while still in use
+80 |             let chunk_id = cli.import_file(file_path, topic)?;
+   |                                                       ----- borrow later used here
+   |
+   = note: consider using a `let` binding to create a longer lived value
+
+Some errors have detailed explanations: E0119, E0277, E0308, E0382, E0407, E0599, E0716.
+For more information about an error, try `rustc --explain E0119`.
+warning: `zos-server` (lib) generated 50 warnings
+error: could not compile `zos-server` (lib) due to 24 previous errors; 50 warnings emitted

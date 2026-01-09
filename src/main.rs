@@ -15,6 +15,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map_err(|e| e.into());
     }
 
+    // Handle Self-Build commands
+    if args.len() > 1 && args[1] == "self-build" {
+        return self_build_cli::handle_self_build_command(&args[2..]).await
+            .map_err(|e| e.into());
+    }
+
     println!("🚀 Starting ZOS Server - Zero Ontology System");
     println!("📊 Initializing all plugin layers...");
 
