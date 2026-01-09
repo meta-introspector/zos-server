@@ -1,0 +1,38 @@
+# ZOS Network Configuration - Instance 1
+# Generated: 2026-01-09T13:36:23-05:00
+# AGPL-3.0 License
+
+[instance]
+id = "1"
+account = "solfunmeme"
+role = "coordinator"
+created = 1767983783
+coordinator_host = "solana.solfunmeme.com"
+
+[libp2p]
+peer_id = "12D3KooW8f630cc23eb3b786ea5aabcbeca3c38c5b1f2018"
+listen_addresses = [
+    "/ip4/0.0.0.0/tcp/4001",
+    "/ip4/0.0.0.0/udp/4001/quic-v1"
+]
+external_address = "/dns4/solana.solfunmeme.com/tcp/4001"
+bootstrap_peers = []  # This IS the bootstrap peer
+
+[network]
+name = "solfunmeme-net"
+bootstrap_url = "https://solana.solfunmeme.com:4001/p2p/12D3KooW8f630cc23eb3b786ea5aabcbeca3c38c5b1f2018"
+discovery_url = "https://github.com/solfunmeme/zos-bootstrap/raw/main/peers.json"
+fallback_urls = [
+    "https://solfunmeme.github.io/zos-bootstrap/",
+    "https://zos-bootstrap.solfunmeme.workers.dev/"
+]
+
+[deployment]
+binary_url = "https://github.com/solfunmeme/zos-server/releases/latest/download/"
+config_url = "https://raw.githubusercontent.com/solfunmeme/zos-server/main/accounts/solfunmeme/instances/instance-1/"
+update_channel = "stable"
+
+[security]
+instance_key = "FJRUE9ERWLgoWohU8hXR/7OVG8nicbuz/lukb9imX00="
+require_auth = false
+encryption_required = true

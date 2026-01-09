@@ -1,0 +1,133 @@
+name: Cross-Platform Build and Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            name: linux-x86_64
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            name: linux-aarch64
+          - target: aarch64-linux-android
+            os: ubuntu-latest
+            name: android-aarch64
+          - target: x86_64-pc-windows-gnu
+            os: ubuntu-latest
+            name: windows-x86_64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.target }}
+
+    - name: Install cross-compilation tools
+      if: matrix.target == 'aarch64-unknown-linux-gnu'
+      run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
+
+    - name: Install Android NDK
+      if: matrix.target == 'aarch64-linux-android'
+      run: |
+        wget -q https://dl.google.com/android/repository/android-ndk-r25c-linux.zip
+        unzip -q android-ndk-r25c-linux.zip
+        echo "ANDROID_NDK_HOME=$PWD/android-ndk-r25c" >> $GITHUB_ENV
+
+    - name: Build hwinfo binary
+      run: |
+        cd zos-deploy
+        cargo build --release --target ${{ matrix.target }}
+
+    - name: Package binary
+      run: |
+        mkdir -p dist
+        if [[ "${{ matrix.target }}" == *"windows"* ]]; then
+          cp zos-deploy/target/${{ matrix.target }}/release/zos_deploy.exe dist/zos_deploy-${{ matrix.target }}.exe
+        else
+          cp zos-deploy/target/${{ matrix.target }}/release/zos_deploy dist/zos_deploy-${{ matrix.target }}
+        fi
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: zos-deploy-${{ matrix.name }}
+        path: dist/*
+
+  windows-installer:
+    needs: build
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Download Windows binary
+      uses: actions/download-artifact@v4
+      with:
+        name: zos-deploy-windows-x86_64
+        path: installer/
+
+    - name: Create Windows installer
+      run: |
+        # Create NSIS installer script
+        @"
+        !define APPNAME "ZOS Deploy"
+        !define VERSION "0.1.0"
+
+        OutFile "zos-deploy-installer.exe"
+        InstallDir "$PROGRAMFILES64\ZOS"
+
+        Section "Install"
+          SetOutPath $INSTDIR
+          File "zos_deploy-x86_64-pc-windows-gnu.exe"
+          Rename "$INSTDIR\zos_deploy-x86_64-pc-windows-gnu.exe" "$INSTDIR\zos_deploy.exe"
+
+          # Add to PATH
+          EnVar::SetHKCU
+          EnVar::AddValue "PATH" "$INSTDIR"
+
+          # Create start menu shortcut
+          CreateDirectory "$SMPROGRAMS\ZOS"
+          CreateShortcut "$SMPROGRAMS\ZOS\ZOS Deploy.lnk" "$INSTDIR\zos_deploy.exe"
+        SectionEnd
+        "@ | Out-File -FilePath installer/installer.nsi -Encoding ASCII
+
+        # Install NSIS
+        choco install nsis -y
+
+        # Build installer
+        cd installer
+        makensis installer.nsi
+
+    - name: Upload installer
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-installer
+        path: installer/zos-deploy-installer.exe
+
+  release:
+    needs: [build, windows-installer]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          zos-deploy-*/zos_deploy-*
+          windows-installer/zos-deploy-installer.exe
+        generate_release_notes: true

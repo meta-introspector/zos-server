@@ -1,0 +1,19 @@
+[package]
+name = "zos-deploy"
+version = "0.1.0"
+edition = "2021"
+description = "ZOS Deployment Orchestrator - Multi-platform node management"
+license = "AGPL-3.0"
+
+[[bin]]
+name = "zos_deploy"
+path = "src/main.rs"
+
+[dependencies]
+# Zero dependencies for core, optional for deployment features
+serde = { version = "1.0", features = ["derive"], optional = true }
+serde_json = { version = "1.0", optional = true }
+
+[features]
+default = []
+deploy = ["dep:serde", "dep:serde_json"]

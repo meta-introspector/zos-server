@@ -1,0 +1,22 @@
+{
+  "account": "solfunmeme",
+  "instance_id": "1",
+  "coordinator": {
+    "host": "solana.solfunmeme.com",
+    "port": 4001,
+    "peer_id": "12D3KooW8f630cc23eb3b786ea5aabcbeca3c38c5b1f2018",
+    "bootstrap_url": "https://solana.solfunmeme.com:4001/p2p/12D3KooW8f630cc23eb3b786ea5aabcbeca3c38c5b1f2018"
+  },
+  "deployment": {
+    "created": 1767983783,
+    "version": "0.1.0",
+    "config_url": "https://raw.githubusercontent.com/solfunmeme/zos-server/main/accounts/solfunmeme/instances/instance-1/network.toml",
+    "join_script": "https://raw.githubusercontent.com/solfunmeme/zos-server/main/accounts/solfunmeme/instances/instance-1/join-network.sh"
+  },
+  "targets": {
+    "linux_x86_64": "zos_deploy-x86_64-unknown-linux-gnu",
+    "linux_aarch64": "zos_deploy-aarch64-unknown-linux-gnu",
+    "android_aarch64": "zos_deploy-aarch64-linux-android",
+    "windows_x86_64": "zos_deploy-x86_64-pc-windows-gnu.exe"
+  }
+}

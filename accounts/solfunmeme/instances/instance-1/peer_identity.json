@@ -1,0 +1,8 @@
+{
+  "peer_id": "12D3KooW8f630cc23eb3b786ea5aabcbeca3c38c5b1f2018",
+  "instance_id": "1",
+  "account": "solfunmeme",
+  "created": 1767983783,
+  "coordinator": true,
+  "note": "Private key stored locally at ~/.zos/keys/instance-1-private.json"
+}

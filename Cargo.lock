@@ -259,7 +259,19 @@ name = "zos-build-macros"
 version = "0.1.0"
 
 [[package]]
+name = "zos-deploy"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "zos-macros"
+version = "0.1.0"
+
+[[package]]
+name = "zos-plan"
 version = "0.1.0"
 
 [[package]]

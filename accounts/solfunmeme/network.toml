@@ -1,0 +1,91 @@
+# ZOS Network Configuration for solfunmeme account
+# AGPL-3.0 License
+
+[account]
+name = "solfunmeme"
+domain = "solfunmeme.com"
+coordinator = "solana.solfunmeme.com"
+
+[bootstrap]
+# Primary bootstrap node (this Linux server)
+primary_node = "solana.solfunmeme.com:4001"
+backup_nodes = [
+    "github.com/solfunmeme/zos-bootstrap",  # GitHub fallback
+    "cloudflare-workers.solfunmeme.com"     # Cloudflare Workers fallback
+]
+
+[libp2p]
+listen_addresses = [
+    "/ip4/0.0.0.0/tcp/4001",
+    "/ip4/0.0.0.0/udp/4001/quic-v1"
+]
+external_address = "/dns4/solana.solfunmeme.com/tcp/4001"
+peer_discovery = true
+mdns_enabled = true
+kad_enabled = true
+
+[nodes]
+# Physical node inventory
+[[nodes.physical]]
+type = "coordinator"
+hostname = "solana.solfunmeme.com"
+platform = "linux"
+arch = "x86_64"
+capabilities = ["systemd", "docker", "rust_native", "coordinator"]
+role = "bootstrap"
+
+[[nodes.physical]]
+type = "android_phone"
+count = 2
+platform = "android"
+arch = "aarch64"
+capabilities = ["termux", "tmux", "git", "rust_cross"]
+role = "worker"
+
+[[nodes.physical]]
+type = "windows_laptop"
+count = 4
+platform = "windows"
+arch = "x86_64"
+capabilities = ["wsl2", "docker", "rust_native"]
+role = "worker"
+
+[cloud]
+# Free tier cloud resources
+[[cloud.providers]]
+name = "github"
+tier = "free"
+services = ["actions", "packages", "pages"]
+bootstrap_repo = "solfunmeme/zos-bootstrap"
+
+[[cloud.providers]]
+name = "oracle"
+tier = "free"
+regions = ["us-phoenix-1", "us-ashburn-1"]
+services = ["compute", "storage"]
+
+[[cloud.providers]]
+name = "cloudflare"
+tier = "free"
+services = ["workers", "dns", "cdn"]
+worker_endpoint = "zos-bootstrap.solfunmeme.workers.dev"
+
+[[cloud.providers]]
+name = "vercel"
+tier = "free"
+services = ["functions", "edge"]
+deployment_url = "zos-bootstrap.vercel.app"
+
+[deployment]
+# Deployment configuration
+ssh_key_path = "~/.ssh/zos_deploy_key"
+binary_path = "/usr/local/bin/zos_deploy"
+config_path = "/etc/zos/network.toml"
+log_path = "/var/log/zos/"
+
+[security]
+# Network security settings
+allowed_peers = []  # Empty = allow all for bootstrap
+require_auth = false  # Disable for initial setup
+encryption_required = true
+peer_scoring_enabled = true

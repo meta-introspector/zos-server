@@ -1,0 +1,13 @@
+[package]
+name = "zos-plan"
+version = "0.1.0"
+edition = "2021"
+description = "ZOS Plan Generator - Pure macro-based planning system"
+license = "AGPL-3.0"
+
+[[bin]]
+name = "zos_plan"
+path = "src/main.rs"
+
+[dependencies]
+# Zero dependencies - pure macro calculations only
