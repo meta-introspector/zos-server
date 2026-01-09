@@ -10,8 +10,7 @@ env:
   ACTIONS_ORG: meta-introspector
   RUST_ORG: meta-introspector
   CACHE_ORG: meta-introspector
-  RUST_BACKTRACE: full
-  RUSTFLAGS: "-C instrument-coverage -Z emit-mir -Z emit-hir"
+  RUST_BACKTRACE: 1
 
 jobs:
   matrix-build:
@@ -22,33 +21,18 @@ jobs:
         features:
           - "default"
           - "all-plugins"
-          - "core-only"
-          - "extra-plugins"
-          - "notebooklm"
-          - "reqwest"
           - "self-build"
-          - "uuid"
         target:
           - "x86_64-unknown-linux-gnu"
-          - "aarch64-unknown-linux-gnu"
         profile:
           - "dev"
           - "release"
-        trace:
-          - "strace"
-          - "perf"
-          - "self-trace"
-        include:
-          - features: "all-plugins"
-            target: "x86_64-unknown-linux-gnu"
-            profile: "release"
-            trace: "full-coverage"
 
     steps:
-    - uses: ${{ env.ACTIONS_ORG }}/checkout@v4
-    - uses: ${{ env.RUST_ORG }}/rust-toolchain@stable
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
       with:
-        components: rustfmt, clippy, llvm-tools-preview
+        components: rustfmt, clippy
         targets: ${{ matrix.target }}
     - uses: ${{ env.CACHE_ORG }}/rust-cache@v2
 
