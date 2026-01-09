@@ -1,0 +1,173 @@
+name: 🦀 Rustc Flag Lattice Testing
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: 'Number of combinations to test'
+        required: false
+        default: '10'
+
+jobs:
+  lattice-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+    - name: 📥 Checkout code
+      run: |
+        git clone https://github.com/meta-introspector/zos-server.git .
+        git checkout ${{ github.sha }}
+
+    - name: 🦀 Install Rust
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source ~/.cargo/env
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        rustup component add rustfmt clippy
+
+    - name: 📊 Download previous results
+      run: |
+        # Try to download previous results artifact
+        echo "Checking for previous lattice results..."
+        mkdir -p lattice_test_results
+
+        # Create a simple script to check existing results
+        echo "Previous results will be preserved if they exist"
+
+    - name: 🧪 Generate lattice if needed
+      run: |
+        source ~/.cargo/env
+        if [ ! -f "rustc_flag_lattice.json" ]; then
+          ./generate_rustc_lattice.sh
+        fi
+
+    - name: 🔬 Run incremental lattice tests
+      run: |
+        source ~/.cargo/env
+
+        # Set batch size from input or default
+        BATCH_SIZE="${{ github.event.inputs.batch_size || '10' }}"
+
+        # Modify the incremental tester for this batch size
+        sed -i "s/BATCH_SIZE=5/BATCH_SIZE=$BATCH_SIZE/" incremental_lattice_test.sh
+        sed -i "s/MAX_TOTAL_TESTS=50/MAX_TOTAL_TESTS=$((BATCH_SIZE * 2))/" incremental_lattice_test.sh
+
+        # Run the tests
+        ./incremental_lattice_test.sh
+
+    - name: 📊 Generate lattice report
+      run: |
+        source ~/.cargo/env
+
+        # Create comprehensive report
+        cat > lattice_report.md << 'EOF'
+        # Rustc Flag Lattice Test Report
+
+        **Generated:** $(date -Iseconds)
+        **Commit:** ${{ github.sha }}
+        **Workflow:** ${{ github.run_id }}
+
+        ## Summary
+        EOF
+
+        # Add summary stats
+        if [ -f "lattice_test_results/summary.md" ]; then
+          cat lattice_test_results/summary.md >> lattice_report.md
+        fi
+
+        echo "" >> lattice_report.md
+        echo "## Test Environment" >> lattice_report.md
+        echo "- Runner: ubuntu-latest" >> lattice_report.md
+        echo "- Rust version: $(rustc --version)" >> lattice_report.md
+        echo "- Cargo version: $(cargo --version)" >> lattice_report.md
+
+        # Add failed combinations for analysis
+        echo "" >> lattice_report.md
+        echo "## Failed Combinations" >> lattice_report.md
+        find lattice_test_results -name "*.result" -exec grep -l "FAILED" {} \; | head -5 | while read file; do
+          basename=$(basename "$file" .result)
+          echo "- $basename" >> lattice_report.md
+        done
+
+    - name: 📦 Archive lattice results
+      run: |
+        # Create archive with timestamp
+        TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+        ARCHIVE_NAME="lattice_results_${TIMESTAMP}_${{ github.sha }}"
+
+        mkdir -p "archives/$ARCHIVE_NAME"
+
+        # Copy all results
+        cp -r lattice_test_results/* "archives/$ARCHIVE_NAME/" 2>/dev/null || true
+        cp rustc_flag_lattice.json "archives/$ARCHIVE_NAME/" 2>/dev/null || true
+        cp lattice_report.md "archives/$ARCHIVE_NAME/" 2>/dev/null || true
+
+        # Create index of all archives
+        echo "# Lattice Test Archives" > archives/index.md
+        echo "" >> archives/index.md
+        echo "Generated: $(date -Iseconds)" >> archives/index.md
+        echo "" >> archives/index.md
+
+        for dir in archives/lattice_results_*; do
+          if [ -d "$dir" ]; then
+            dirname=$(basename "$dir")
+            echo "- [$dirname](./$dirname/)" >> archives/index.md
+          fi
+        done
+
+        echo "📦 Created archive: $ARCHIVE_NAME"
+        ls -la "archives/$ARCHIVE_NAME/"
+
+    - name: 💾 Commit results to repository
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+        # Add new results
+        git add archives/ lattice_test_results/ rustc_flag_lattice.json lattice_report.md 2>/dev/null || true
+
+        # Check if there are changes to commit
+        if git diff --staged --quiet; then
+          echo "No new results to commit"
+        else
+          git commit -m "🧪 Lattice test results $(date -Iseconds)
+
+          - Tested combinations from commit ${{ github.sha }}
+          - Results archived with timestamp
+          - Incremental testing preserves previous results"
+
+          git push
+        fi
+
+    - name: 📊 Upload artifacts
+      run: |
+        # Create a simple artifact upload using tar
+        if [ -d "lattice_test_results" ]; then
+          tar -czf lattice-results.tar.gz lattice_test_results/ archives/ lattice_report.md
+          echo "📦 Created lattice-results.tar.gz"
+          ls -lh lattice-results.tar.gz
+        fi
+
+    - name: 📈 Summary
+      run: |
+        echo "🎯 Lattice Testing Complete"
+        echo "=========================="
+
+        if [ -f "lattice_test_results/summary.md" ]; then
+          echo "📊 Results:"
+          grep -E "(Successful|Failed|Total)" lattice_test_results/summary.md || echo "Summary not available"
+        fi
+
+        echo ""
+        echo "📁 Results committed to repository in archives/"
+        echo "🔄 Run workflow again to test more combinations"

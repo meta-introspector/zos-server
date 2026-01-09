@@ -4,7 +4,7 @@
 set -e
 
 LATTICE_FILE="rustc_flag_lattice.json"
-MAX_TESTS=10
+MAX_TESTS=50
 RESULTS_DIR="lattice_test_results"
 
 mkdir -p "$RESULTS_DIR"
