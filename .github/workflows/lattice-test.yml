@@ -12,10 +12,27 @@ on:
     - cron: '0 2 * * *'
   workflow_dispatch:
     inputs:
+      job_type:
+        description: 'Job type: "gap-detect", "gap-fill", or "slice"'
+        required: true
+        default: 'gap-detect'
+        type: choice
+        options:
+        - gap-detect
+        - gap-fill
+        - slice
+      lattice_slice:
+        description: 'Lattice slice pattern (e.g., "L0.*", "*.*.0.*")'
+        required: false
+        default: 'auto'
       batch_size:
         description: 'Number of combinations to test'
         required: false
         default: '10'
+      optimization_level:
+        description: 'Optimization level filter (0,1,2,3,s,z or "all")'
+        required: false
+        default: 'all'
 
 jobs:
   lattice-test:
@@ -44,12 +61,59 @@ jobs:
         # Create a simple script to check existing results
         echo "Previous results will be preserved if they exist"
 
-    - name: 🧪 Generate lattice if needed
+    - name: 🧠 Intelligent slice planning and execution
       run: |
         source ~/.cargo/env
-        if [ ! -f "rustc_flag_lattice.json" ]; then
-          ./generate_rustc_lattice.sh
-        fi
+
+        JOB_TYPE="${{ github.event.inputs.job_type || 'gap-detect' }}"
+        LATTICE_SLICE="${{ github.event.inputs.lattice_slice || 'auto' }}"
+        BATCH_SIZE="${{ github.event.inputs.batch_size || '10' }}"
+
+        echo "🎯 Job Type: $JOB_TYPE"
+        echo "📊 Lattice Slice: $LATTICE_SLICE"
+        echo "📦 Batch Size: $BATCH_SIZE"
+        echo "🌐 Runner ID: ${{ github.run_id }}"
+        echo "🔢 Run Number: ${{ github.run_number }}"
+
+        # Run intelligent slicer
+        python3 intelligent_slicer.py "$JOB_TYPE" "$LATTICE_SLICE" "$BATCH_SIZE" > slice_output.txt
+
+        echo "🧠 Intelligent Slice Analysis:"
+        cat slice_output.txt
+
+        # Extract and execute work items
+        echo ""
+        echo "🔬 Executing assigned work items:"
+
+        grep -E "^L[0-9]" slice_output.txt | while IFS='|' read -r coord rustflags features profile; do
+          echo "Testing $coord: $features ($profile)"
+
+          result_file="lattice_test_results/${coord}_${features}_${profile}.result"
+          log_file="lattice_test_results/${coord}_${features}_${profile}.log"
+
+          mkdir -p lattice_test_results
+
+          # Skip if already tested
+          if [ -f "$result_file" ]; then
+            echo "⏭️  $coord: SKIPPED (already tested)"
+            continue
+          fi
+
+          # Test with timeout
+          export RUSTFLAGS="$rustflags"
+
+          if timeout 120 cargo build --features "$features" --profile "$profile" > "$log_file" 2>&1; then
+            echo "SUCCESS" > "$result_file"
+            echo "✅ $coord: SUCCESS"
+          else
+            echo "FAILED" > "$result_file"
+            echo "❌ $coord: FAILED"
+          fi
+
+          # Clean for next test
+          cargo clean > /dev/null 2>&1 || true
+          unset RUSTFLAGS
+        done
 
     - name: 🔬 Run incremental lattice tests
       run: |
