@@ -9,6 +9,71 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Handle CLI commands
     if args.len() > 1 {
         match args[1].as_str() {
+            "task-start" => {
+                use zos_server::task_modes::{MultiModalTaskRunner, TaskConfig, TaskMode};
+
+                if args.len() < 4 {
+                    eprintln!("Usage: zos_server task-start <mode> <prompt> [options]");
+                    eprintln!("Modes: interactive, callback, github, batch, stream, webhook");
+                    std::process::exit(1);
+                }
+
+                let mode = match args[2].as_str() {
+                    "interactive" => TaskMode::Interactive,
+                    "callback" => TaskMode::Callback,
+                    "github" => TaskMode::GitHub,
+                    "batch" => TaskMode::Batch,
+                    "stream" => TaskMode::Stream,
+                    "webhook" => TaskMode::WebHook,
+                    _ => {
+                        eprintln!("Invalid mode. Use: interactive, callback, github, batch, stream, webhook");
+                        std::process::exit(1);
+                    }
+                };
+
+                let prompt = &args[3];
+                let config = TaskConfig {
+                    auto_continue: mode == TaskMode::Batch,
+                    max_iterations: 5,
+                    timeout_seconds: 30,
+                    callback_url: None,
+                    github_repo: args.get(4).cloned(),
+                    github_issue: args.get(5).and_then(|s| s.parse().ok()),
+                    webhook_url: None,
+                    interactive_prompts: mode == TaskMode::Interactive,
+                };
+
+                let mut runner = MultiModalTaskRunner::new();
+                let task_id = runner.start_task(prompt, mode, config).await;
+                println!("🚀 Task started with ID: {}", task_id);
+            }
+            "task-step" => {
+                use zos_server::task_modes::MultiModalTaskRunner;
+
+                if args.len() < 3 {
+                    eprintln!("Usage: zos_server task-step <task_id> [input]");
+                    std::process::exit(1);
+                }
+
+                let task_id = uuid::Uuid::parse_str(&args[2])?;
+                let input = args.get(3).cloned();
+
+                let mut runner = MultiModalTaskRunner::new();
+                match runner.execute_step(task_id, input).await {
+                    Ok(result) => {
+                        println!("✅ Step completed: {:?}", result.next_action);
+                        if result.compile_success {
+                            println!("Code:\n{}", result.code);
+                        } else {
+                            println!("Errors: {:?}", result.errors);
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("❌ Step failed: {}", e);
+                        std::process::exit(1);
+                    }
+                }
+            }
             "llm-improve" => {
                 use zos_server::llm_compiler_service::LLMCompilerService;
 
