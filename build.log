@@ -319,23 +319,23 @@ note: required by a bound in `Swarm`
 322 |     TBehaviour: NetworkBehaviour,
     |                 ^^^^^^^^^^^^^^^^ required by this bound in `Swarm`
 
-error[E0599]: no method named `with_tokio` found for struct `SwarmBuilder<Provider, Phase>` in the current scope
+error[E0599]: no method named `with_tcp` found for struct `SwarmBuilder<Provider, Phase>` in the current scope
   --> src/mini_sdf_server.rs:47:14
    |
 46 |           let swarm = libp2p::SwarmBuilder::with_existing_identity(local_key)
    |  _____________________-
-47 | |             .with_tokio()
-   | |             -^^^^^^^^^^ method not found in `SwarmBuilder<NoProviderSpecified, ProviderPhase>`
+47 | |             .with_tcp(tcp::Config::default(), noise::Config::new, yamux::Config::default)?
+   | |             -^^^^^^^^ method not found in `SwarmBuilder<NoProviderSpecified, ProviderPhase>`
    | |_____________|
    |
    |
-   = note: the full name for the type has been written to '/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/target/debug/deps/zos_server-1508c9af22b3a747.long-type-6698775364426019221.txt'
+   = note: the full name for the type has been written to '/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/target/debug/deps/zos_server-1508c9af22b3a747.long-type-1408590813443310292.txt'
    = note: consider using `--verbose` to print the full type name to the console
 
 error[E0277]: the trait bound `SdfBehaviour: NetworkBehaviour` is not satisfied
-   --> src/mini_sdf_server.rs:54:13
+   --> src/mini_sdf_server.rs:53:13
     |
- 54 |             swarm,
+ 53 |             swarm,
     |             ^^^^^ unsatisfied trait bound
     |
 help: the trait `NetworkBehaviour` is not implemented for `SdfBehaviour`
@@ -361,13 +361,30 @@ note: required by a bound in `Swarm`
     |                 ^^^^^^^^^^^^^^^^ required by this bound in `Swarm`
 
 error[E0599]: the method `listen_on` exists for struct `Swarm<SdfBehaviour>`, but its trait bounds were not satisfied
-   --> src/mini_sdf_server.rs:62:20
+   --> src/mini_sdf_server.rs:61:20
     |
  13 | pub struct SdfBehaviour {
     | ----------------------- doesn't satisfy `SdfBehaviour: NetworkBehaviour`
 ...
- 62 |         self.swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
+ 61 |         self.swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
     |                    ^^^^^^^^^ method cannot be called on `Swarm<SdfBehaviour>` due to unsatisfied trait bounds
+    |
+    = note: the following trait bounds were not satisfied:
+            `SdfBehaviour: NetworkBehaviour`
+note: the trait `NetworkBehaviour` must be implemented
+   --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-swarm-0.44.2/src/behaviour.rs:122:1
+    |
+122 | pub trait NetworkBehaviour: 'static {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0599]: the method `behaviour_mut` exists for struct `Swarm<SdfBehaviour>`, but its trait bounds were not satisfied
+   --> src/mini_sdf_server.rs:67:20
+    |
+ 13 | pub struct SdfBehaviour {
+    | ----------------------- doesn't satisfy `SdfBehaviour: NetworkBehaviour`
+...
+ 67 |         self.swarm.behaviour_mut().gossipsub.subscribe(&sdf_topic)?;
+    |                    ^^^^^^^^^^^^^ method cannot be called on `Swarm<SdfBehaviour>` due to unsatisfied trait bounds
     |
     = note: the following trait bounds were not satisfied:
             `SdfBehaviour: NetworkBehaviour`
@@ -383,24 +400,7 @@ error[E0599]: the method `behaviour_mut` exists for struct `Swarm<SdfBehaviour>`
  13 | pub struct SdfBehaviour {
     | ----------------------- doesn't satisfy `SdfBehaviour: NetworkBehaviour`
 ...
- 68 |         self.swarm.behaviour_mut().gossipsub.subscribe(&sdf_topic)?;
-    |                    ^^^^^^^^^^^^^ method cannot be called on `Swarm<SdfBehaviour>` due to unsatisfied trait bounds
-    |
-    = note: the following trait bounds were not satisfied:
-            `SdfBehaviour: NetworkBehaviour`
-note: the trait `NetworkBehaviour` must be implemented
-   --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-swarm-0.44.2/src/behaviour.rs:122:1
-    |
-122 | pub trait NetworkBehaviour: 'static {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0599]: the method `behaviour_mut` exists for struct `Swarm<SdfBehaviour>`, but its trait bounds were not satisfied
-   --> src/mini_sdf_server.rs:69:20
-    |
- 13 | pub struct SdfBehaviour {
-    | ----------------------- doesn't satisfy `SdfBehaviour: NetworkBehaviour`
-...
- 69 |         self.swarm.behaviour_mut().gossipsub.subscribe(&shell_topic)?;
+ 68 |         self.swarm.behaviour_mut().gossipsub.subscribe(&shell_topic)?;
     |                    ^^^^^^^^^^^^^ method cannot be called on `Swarm<SdfBehaviour>` due to unsatisfied trait bounds
     |
     = note: the following trait bounds were not satisfied:
@@ -412,18 +412,18 @@ note: the trait `NetworkBehaviour` must be implemented
     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 error[E0599]: no method named `select_next_some` found for struct `Swarm<TBehaviour>` in the current scope
-  --> src/mini_sdf_server.rs:77:30
+  --> src/mini_sdf_server.rs:76:30
    |
-77 |             match self.swarm.select_next_some().await {
+76 |             match self.swarm.select_next_some().await {
    |                              ^^^^^^^^^^^^^^^^ method not found in `Swarm<SdfBehaviour>`
 
 error[E0599]: the method `behaviour_mut` exists for struct `Swarm<SdfBehaviour>`, but its trait bounds were not satisfied
-   --> src/mini_sdf_server.rs:84:36
+   --> src/mini_sdf_server.rs:83:36
     |
  13 | pub struct SdfBehaviour {
     | ----------------------- doesn't satisfy `SdfBehaviour: NetworkBehaviour`
 ...
- 84 |                         self.swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
+ 83 |                         self.swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
     |                                    ^^^^^^^^^^^^^ method cannot be called on `Swarm<SdfBehaviour>` due to unsatisfied trait bounds
     |
     = note: the following trait bounds were not satisfied:
@@ -435,12 +435,12 @@ note: the trait `NetworkBehaviour` must be implemented
     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 error[E0599]: the method `behaviour_mut` exists for struct `Swarm<SdfBehaviour>`, but its trait bounds were not satisfied
-   --> src/mini_sdf_server.rs:122:36
+   --> src/mini_sdf_server.rs:121:36
     |
  13 | pub struct SdfBehaviour {
     | ----------------------- doesn't satisfy `SdfBehaviour: NetworkBehaviour`
 ...
-122 |         if let Err(e) = self.swarm.behaviour_mut().gossipsub.publish(shell_topic, response_msg.as_bytes()) {
+121 |         if let Err(e) = self.swarm.behaviour_mut().gossipsub.publish(shell_topic, response_msg.as_bytes()) {
     |                                    ^^^^^^^^^^^^^ method cannot be called on `Swarm<SdfBehaviour>` due to unsatisfied trait bounds
     |
     = note: the following trait bounds were not satisfied:
@@ -500,63 +500,11 @@ note: required by a bound in `serde_json::to_string`
 2247 |     T: ?Sized + Serialize,
      |                 ^^^^^^^^^ required by this bound in `to_string`
 
-error[E0308]: mismatched types
-   --> src/blockchain_ingestor.rs:220:17
+warning: unused variable: `tx_data`
+   --> src/blockchain_ingestor.rs:225:21
     |
-214 |       async fn generate_block_proof(&self, block: &BlockData) -> Result<String, Box<dyn std::error::Error>> {
-    |                                                                  ------------------------------------------ expected `Result<std::string::String, Box<(dyn StdError + 'static)>>` because of return type
-...
-220 | /                 self.rollup_coordinator.ethereum_plugin
-221 | |                     .call_contract("0x...", &contract_data)
-    | |___________________________________________________________^ expected `Result<String, Box<dyn Error>>`, found `Result<String, String>`
-    |
-    = note: expected enum `Result<_, Box<(dyn StdError + 'static)>>`
-               found enum `Result<_, std::string::String>`
-help: use `?` to coerce and return an appropriate `Err`, and wrap the resulting value in `Ok` so the expression remains of type `Result`
-    |
-220 ~                 Ok(self.rollup_coordinator.ethereum_plugin
-221 ~                     .call_contract("0x...", &contract_data)?)
-    |
-
-error[E0308]: mismatched types
-   --> src/blockchain_ingestor.rs:226:17
-    |
-214 |       async fn generate_block_proof(&self, block: &BlockData) -> Result<String, Box<dyn std::error::Error>> {
-    |                                                                  ------------------------------------------ expected `Result<std::string::String, Box<(dyn StdError + 'static)>>` because of return type
-...
-226 | /                 self.rollup_coordinator.bitcoin_plugin
-227 | |                     .send_transaction("", "", 0)
-228 | |                     .map(|_| format!("btc_proof_{}", block.block_number))
-    | |_________________________________________________________________________^ expected `Result<String, Box<dyn Error>>`, found `Result<String, String>`
-    |
-    = note: expected enum `Result<_, Box<(dyn StdError + 'static)>>`
-               found enum `Result<_, std::string::String>`
-help: use `?` to coerce and return an appropriate `Err`, and wrap the resulting value in `Ok` so the expression remains of type `Result`
-    |
-226 ~                 Ok(self.rollup_coordinator.bitcoin_plugin
-227 |                     .send_transaction("", "", 0)
-228 ~                     .map(|_| format!("btc_proof_{}", block.block_number))?)
-    |
-
-error[E0308]: mismatched types
-   --> src/blockchain_ingestor.rs:233:17
-    |
-214 |       async fn generate_block_proof(&self, block: &BlockData) -> Result<String, Box<dyn std::error::Error>> {
-    |                                                                  ------------------------------------------ expected `Result<std::string::String, Box<(dyn StdError + 'static)>>` because of return type
-...
-233 | /                 self.rollup_coordinator.solana_plugin
-234 | |                     .deploy_program(&program_data, "keypair")
-235 | |                     .map(|_| format!("sol_proof_{}", block.block_number))
-    | |_________________________________________________________________________^ expected `Result<String, Box<dyn Error>>`, found `Result<String, String>`
-    |
-    = note: expected enum `Result<_, Box<(dyn StdError + 'static)>>`
-               found enum `Result<_, std::string::String>`
-help: use `?` to coerce and return an appropriate `Err`, and wrap the resulting value in `Ok` so the expression remains of type `Result`
-    |
-233 ~                 Ok(self.rollup_coordinator.solana_plugin
-234 |                     .deploy_program(&program_data, "keypair")
-235 ~                     .map(|_| format!("sol_proof_{}", block.block_number))?)
-    |
+225 |                 let tx_data = format!("block_{}_txs", block.block_number);
+    |                     ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tx_data`
 
 warning: unused variable: `rollup_message`
    --> src/blockchain_ingestor.rs:244:13
@@ -565,71 +513,27 @@ warning: unused variable: `rollup_message`
     |             ^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_rollup_message`
 
 error[E0599]: no method named `into_bytes` found for unit type `()` in the current scope
-   --> src/universal_plugin_loader.rs:116:24
+   --> src/universal_plugin_loader.rs:133:26
     |
-116 |         Ok(wasm_binary.into_bytes())
-    |                        ^^^^^^^^^^
-    |
-help: there is a method `as_bytes` with a similar name
-    |
-116 -         Ok(wasm_binary.into_bytes())
-116 +         Ok(wasm_binary.as_bytes())
-    |
-
-error[E0599]: no method named `into_bytes` found for unit type `()` in the current scope
-   --> src/universal_plugin_loader.rs:130:26
-    |
-130 |         Ok(native_binary.into_bytes())
+133 |         Ok(native_binary.into_bytes())
     |                          ^^^^^^^^^^
     |
 help: there is a method `as_bytes` with a similar name
     |
-130 -         Ok(native_binary.into_bytes())
-130 +         Ok(native_binary.as_bytes())
+133 -         Ok(native_binary.into_bytes())
+133 +         Ok(native_binary.as_bytes())
     |
-
-error[E0308]: mismatched types
-   --> src/universal_plugin_loader.rs:142:56
-    |
-142 |         let target_binary = self.compile_llvm_for_arch(&optimized_ir, target_arch)?;
-    |                                  --------------------- ^^^^^^^^^^^^^ expected `&str`, found `&()`
-    |                                  |
-    |                                  arguments to this method are incorrect
-    |
-    = note: expected reference `&str`
-               found reference `&()`
-note: method defined here
-   --> src/universal_plugin_loader.rs:292:8
-    |
-292 |     fn compile_llvm_for_arch(&self, llvm_ir: &str, target_arch: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-    |        ^^^^^^^^^^^^^^^^^^^^^        -------------
-
-error[E0308]: mismatched types
-   --> src/universal_plugin_loader.rs:164:56
-    |
-164 |         let target_binary = self.compile_llvm_for_arch(&optimized_ir, target_arch)?;
-    |                                  --------------------- ^^^^^^^^^^^^^ expected `&str`, found `&()`
-    |                                  |
-    |                                  arguments to this method are incorrect
-    |
-    = note: expected reference `&str`
-               found reference `&()`
-note: method defined here
-   --> src/universal_plugin_loader.rs:292:8
-    |
-292 |     fn compile_llvm_for_arch(&self, llvm_ir: &str, target_arch: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-    |        ^^^^^^^^^^^^^^^^^^^^^        -------------
 
 warning: unused variable: `lib`
-   --> src/universal_plugin_loader.rs:312:13
+   --> src/universal_plugin_loader.rs:315:13
     |
-312 |         let lib = unsafe { Library::new(&temp_path)? };
+315 |         let lib = unsafe { Library::new(&temp_path)? };
     |             ^^^ help: if this is intentional, prefix it with an underscore: `_lib`
 
 warning: unused variable: `args`
-   --> src/universal_plugin_loader.rs:321:80
+   --> src/universal_plugin_loader.rs:324:80
     |
-321 |     pub async fn execute_plugin(&self, plugin_name: &str, function_name: &str, args: &[u8]) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+324 |     pub async fn execute_plugin(&self, plugin_name: &str, function_name: &str, args: &[u8]) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     |                                                                                ^^^^ help: if this is intentional, prefix it with an underscore: `_args`
 
 error[E0277]: the trait bound `ExecutionPathReview: serde::Serialize` is not satisfied
@@ -752,7 +656,7 @@ error[E0599]: no method named `with_tokio` found for struct `SwarmBuilder<Provid
    | |_________|
    |
    |
-   = note: the full name for the type has been written to '/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/target/debug/deps/zos_server-1508c9af22b3a747.long-type-6698775364426019221.txt'
+   = note: the full name for the type has been written to '/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/target/debug/deps/zos_server-1508c9af22b3a747.long-type-1408590813443310292.txt'
    = note: consider using `--verbose` to print the full type name to the console
 
 error[E0277]: the trait bound `Vec<u8>: From<&std::string::String>` is not satisfied
@@ -840,12 +744,12 @@ help: there is a method `export_to_parquet` with a similar name
    |
 
 warning: unreachable expression
-   --> src/universal_plugin_loader.rs:183:9
+   --> src/universal_plugin_loader.rs:186:9
     |
-172 |         return "x86_64".to_string();
+175 |         return "x86_64".to_string();
     |         --------------------------- any code following this expression is unreachable
 ...
-183 |         "unknown".to_string()
+186 |         "unknown".to_string()
     |         ^^^^^^^^^^^^^^^^^^^^^ unreachable expression
     |
     = note: `#[warn(unreachable_code)]` (part of `#[warn(unused)]`) on by default
@@ -886,27 +790,27 @@ note: required by a bound in `tokio::spawn`
     |                     ^^^^ required by this bound in `spawn`
 
 warning: unused variable: `wasm_data`
-   --> src/universal_plugin_loader.rs:218:31
+   --> src/universal_plugin_loader.rs:221:31
     |
-218 |     fn wasm_to_llvm_ir(&self, wasm_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
+221 |     fn wasm_to_llvm_ir(&self, wasm_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
     |                               ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_wasm_data`
 
 warning: unused variable: `binary_data`
-   --> src/universal_plugin_loader.rs:233:30
+   --> src/universal_plugin_loader.rs:236:30
     |
-233 |     fn x86_to_llvm_ir(&self, binary_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
+236 |     fn x86_to_llvm_ir(&self, binary_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
     |                              ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary_data`
 
 warning: unused variable: `binary_data`
-   --> src/universal_plugin_loader.rs:247:30
+   --> src/universal_plugin_loader.rs:250:30
     |
-247 |     fn arm_to_llvm_ir(&self, binary_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
+250 |     fn arm_to_llvm_ir(&self, binary_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
     |                              ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary_data`
 
 warning: unused variable: `binary_data`
-   --> src/universal_plugin_loader.rs:260:32
+   --> src/universal_plugin_loader.rs:263:32
     |
-260 |     fn riscv_to_llvm_ir(&self, binary_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
+263 |     fn riscv_to_llvm_ir(&self, binary_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
     |                                ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary_data`
 
 warning: unused variable: `binary`
@@ -922,24 +826,24 @@ warning: unused variable: `binary`
     |                                        ^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary`
 
 error[E0433]: failed to resolve: use of undeclared type `SdfBehaviourEvent`
-  --> src/mini_sdf_server.rs:81:39
+  --> src/mini_sdf_server.rs:80:39
    |
-81 |                 SwarmEvent::Behaviour(SdfBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
+80 |                 SwarmEvent::Behaviour(SdfBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
    |                                       ^^^^^^^^^^^^^^^^^
    |                                       |
    |                                       use of undeclared type `SdfBehaviourEvent`
    |                                       help: a struct with a similar name exists: `SdfBehaviour`
 
 error[E0433]: failed to resolve: use of undeclared type `SdfBehaviourEvent`
-  --> src/mini_sdf_server.rs:87:39
+  --> src/mini_sdf_server.rs:86:39
    |
-87 |                 SwarmEvent::Behaviour(SdfBehaviourEvent::Gossipsub(gossipsub::Event::Message {
+86 |                 SwarmEvent::Behaviour(SdfBehaviourEvent::Gossipsub(gossipsub::Event::Message {
    |                                       ^^^^^^^^^^^^^^^^^
    |                                       |
    |                                       use of undeclared type `SdfBehaviourEvent`
    |                                       help: a struct with a similar name exists: `SdfBehaviour`
 
-Some errors have detailed explanations: E0119, E0277, E0308, E0407, E0433, E0599.
+Some errors have detailed explanations: E0119, E0277, E0407, E0433, E0599.
 For more information about an error, try `rustc --explain E0119`.
-warning: `zos-server` (lib) generated 45 warnings
-error: could not compile `zos-server` (lib) due to 39 previous errors; 45 warnings emitted
+warning: `zos-server` (lib) generated 46 warnings
+error: could not compile `zos-server` (lib) due to 33 previous errors; 46 warnings emitted

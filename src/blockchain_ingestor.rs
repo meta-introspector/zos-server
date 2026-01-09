@@ -217,22 +217,22 @@ impl BlockchainIngestor {
             "1" => {
                 // Ethereum block proof
                 let contract_data = format!("block_{}", block.block_number);
-                self.rollup_coordinator.ethereum_plugin
-                    .call_contract("0x...", &contract_data)
+                Ok(self.rollup_coordinator.ethereum_plugin
+                    .call_contract("0x...", &contract_data)?)
             },
             "bitcoin" => {
                 // Bitcoin block proof
                 let tx_data = format!("block_{}_txs", block.block_number);
                 self.rollup_coordinator.bitcoin_plugin
-                    .send_transaction("", "", 0)
-                    .map(|_| format!("btc_proof_{}", block.block_number))
+                    .send_transaction("", "", 0)?;
+                Ok(format!("btc_proof_{}", block.block_number))
             },
             "solana-mainnet" => {
                 // Solana block proof
                 let program_data = format!("block_{}_program", block.block_number);
                 self.rollup_coordinator.solana_plugin
-                    .deploy_program(&program_data, "keypair")
-                    .map(|_| format!("sol_proof_{}", block.block_number))
+                    .deploy_program(&program_data, "keypair")?;
+                Ok(format!("sol_proof_{}", block.block_number))
             },
             _ => Ok(format!("generic_proof_{}", block.block_number))
         }

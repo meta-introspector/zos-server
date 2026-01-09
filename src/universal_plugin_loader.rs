@@ -110,10 +110,13 @@ impl UniversalPluginLoader {
         let c_source = self.generate_c_from_disassembly(&disassembly)?;
         
         // Compile C to WASM using Emscripten-like approach
-        let wasm_binary = self.gcc_plugin.compile_source(&c_source, "output.wasm", "-target wasm32")?;
+        self.gcc_plugin.compile_source(&c_source, "output.wasm", "-target wasm32")?;
+        
+        // Read the compiled WASM file
+        let wasm_binary = std::fs::read("output.wasm").map_err(|e| e.to_string())?;
         
         println!("✅ Compiled native binary to WASM");
-        Ok(wasm_binary.into_bytes())
+        Ok(wasm_binary)
     }
 
     async fn compile_wasm_to_native(&mut self, wasm_data: &[u8], target_arch: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
@@ -138,8 +141,8 @@ impl UniversalPluginLoader {
         let llvm_ir = self.disassembly_to_llvm_ir(&disassembly, source_arch)?;
         
         // Optimize and compile for target architecture
-        let optimized_ir = self.llvm_plugin.optimize_ir(&llvm_ir, "temp.ll")?;
-        let target_binary = self.compile_llvm_for_arch(&optimized_ir, target_arch)?;
+        self.llvm_plugin.optimize_ir(&llvm_ir, "temp.ll")?;
+        let target_binary = self.compile_llvm_for_arch(&llvm_ir, target_arch)?;
         
         println!("✅ Cross-compiled {} to {}", source_arch, target_arch);
         Ok(target_binary)
@@ -158,10 +161,10 @@ impl UniversalPluginLoader {
         };
         
         // Step 2: Optimize IR
-        let optimized_ir = self.llvm_plugin.optimize_ir(&llvm_ir, "universal.ll")?;
+        self.llvm_plugin.optimize_ir(&llvm_ir, "universal.ll")?;
         
         // Step 3: LLVM IR -> Target binary
-        let target_binary = self.compile_llvm_for_arch(&optimized_ir, target_arch)?;
+        let target_binary = self.compile_llvm_for_arch(&llvm_ir, target_arch)?;
         
         println!("✅ Universal translation completed");
         Ok(target_binary)

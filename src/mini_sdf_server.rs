@@ -44,7 +44,6 @@ impl MiniSdfServer {
         let behaviour = SdfBehaviour { gossipsub, mdns };
 
         let swarm = libp2p::SwarmBuilder::with_existing_identity(local_key)
-            .with_tokio()
             .with_tcp(tcp::Config::default(), noise::Config::new, yamux::Config::default)?
             .with_behaviour(|_| behaviour)?
             .with_swarm_config(|c| c.with_idle_connection_timeout(std::time::Duration::from_secs(60)))
