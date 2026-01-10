@@ -2146,6 +2146,8 @@ async fn deploy_systemd_command(
     println!("📦 Building release binary...");
     let output = tokio::process::Command::new("cargo")
         .args(&["build", "--release"])
+        .env("SOURCE_DATE_EPOCH", "1")
+        .env("RUSTFLAGS", "-C metadata=reproducible")
         .output()
         .await?;
 

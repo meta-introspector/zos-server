@@ -1,0 +1,10 @@
+[build]
+rustflags = [
+    "-C", "metadata=reproducible",
+    "-C", "embed-bitcode=no",
+    "--remap-path-prefix", "/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server=."
+]
+
+[env]
+SOURCE_DATE_EPOCH = "1"
+RUSTC_FORCE_UNSTABLE_IF_UNMARKED = "1"
