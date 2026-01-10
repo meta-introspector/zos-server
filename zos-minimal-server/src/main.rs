@@ -818,9 +818,6 @@ fi
 echo "🔨 Building ZOS..."
 cd zos-minimal-server
 
-# Remove lockfile to avoid version conflicts
-rm -f Cargo.lock
-
 case "$INSTALL_METHOD" in
     "nix")
         nix-shell -p rustc cargo pkg-config openssl git --run "cargo build --release"
