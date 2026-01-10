@@ -120,10 +120,29 @@ async fn homepage() -> Html<&'static str> {
 }
 
 async fn health() -> Json<serde_json::Value> {
+    // Get git info if available
+    let git_commit = std::process::Command::new("git")
+        .args(&["rev-parse", "HEAD"])
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .map(|s| s.trim().chars().take(8).collect::<String>())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    let git_branch = std::process::Command::new("git")
+        .args(&["branch", "--show-current"])
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
     Json(serde_json::json!({
         "status": "healthy",
         "version": "1.0.0-stage1",
-        "timestamp": chrono::Utc::now().to_rfc3339()
+        "timestamp": chrono::Utc::now().to_rfc3339(),
+        "git_commit": git_commit,
+        "git_branch": git_branch
     }))
 }
 

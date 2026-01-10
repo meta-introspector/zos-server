@@ -141,21 +141,57 @@ fi
 # Build ZOS
 echo "🔨 Building ZOS..."
 send_install_feedback "building" "Compiling source code" ""
+
+# Report git version info
+echo "📋 Repository Information:"
+GIT_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+GIT_BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+GIT_REMOTE=$(git remote get-url origin 2>/dev/null || echo "unknown")
+echo "   🌿 Branch: $GIT_BRANCH"
+echo "   📝 Commit: ${GIT_COMMIT:0:8}"
+echo "   🔗 Remote: $GIT_REMOTE"
+
+# Send git info feedback
+send_install_feedback "git_info" "Git info: branch=$GIT_BRANCH, commit=${GIT_COMMIT:0:8}" ""
+
 cd zos-minimal-server
 
 case "$INSTALL_METHOD" in
     "nix")
-        nix-shell -p rustc cargo pkg-config openssl git --run "cargo build --release"
+        BUILD_OUTPUT=$(nix-shell -p rustc cargo pkg-config openssl git --run "cargo build --release" 2>&1)
+        BUILD_STATUS=$?
         ;;
     "termux")
         echo "📱 Building with Termux packages..."
         pkg install -y rust binutils || true
-        cargo build --release
+        BUILD_OUTPUT=$(cargo build --release 2>&1)
+        BUILD_STATUS=$?
         ;;
     "cargo")
-        cargo build --release
+        BUILD_OUTPUT=$(cargo build --release 2>&1)
+        BUILD_STATUS=$?
         ;;
 esac
+
+# Check for specific Cargo.lock version error
+if echo "$BUILD_OUTPUT" | grep -q "lock file version.*requires.*lockfile-bump"; then
+    echo "🔧 Fixing Cargo.lock version compatibility..."
+    rm -f Cargo.lock
+    BUILD_OUTPUT=$(cargo generate-lockfile && cargo build --release 2>&1)
+    BUILD_STATUS=$?
+fi
+
+if [ $BUILD_STATUS -eq 0 ]; then
+    echo "✅ Build successful"
+    send_build_feedback "success" "$BUILD_OUTPUT" ""
+else
+    echo "❌ Build failed"
+    echo "📋 Build output:"
+    echo "$BUILD_OUTPUT" | tail -20
+    send_build_feedback "failed" "$BUILD_OUTPUT" "Build command failed with status $BUILD_STATUS"
+    send_install_feedback "failed" "Build failed" "Build command failed with status $BUILD_STATUS"
+    exit 1
+fi
 
 # Install ZOS
 echo "📦 Installing ZOS..."
