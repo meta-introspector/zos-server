@@ -1,16 +1,13 @@
 // ZOS Oracle Plugin - Standalone Oracle Cloud integration
 // AGPL-3.0 License
 
-pub mod wallet_auth;
-pub mod libp2p_verbs;
-pub mod plugin_loader;
-pub mod bootstrap_engine;
-pub mod dev_workflow;
-pub mod user_fingerprint;
+pub mod ai_marketplace;
 pub mod block_port_manager;
+pub mod dev_workflow;
 pub mod ranking_system;
 pub mod user_dashboard;
-pub mod ai_marketplace;
+pub mod user_fingerprint;
+pub mod wallet_auth;
 
 pub use wallet_auth::*;
 
@@ -38,10 +35,15 @@ pub extern "C" fn zos_oracle_list_stacks(compartment_id: *const c_char) -> *mut 
     // Call OCI CLI instead of compiling crypto dependencies
     let output = std::process::Command::new("oci")
         .args(&[
-            "resource-manager", "stack", "list",
-            "--compartment-id", &compartment_str,
-            "--lifecycle-state", "ACTIVE",
-            "--output", "json"
+            "resource-manager",
+            "stack",
+            "list",
+            "--compartment-id",
+            &compartment_str,
+            "--lifecycle-state",
+            "ACTIVE",
+            "--output",
+            "json",
         ])
         .output();
 
@@ -70,14 +72,24 @@ pub extern "C" fn zos_oracle_deploy_stack(stack_path: *const c_char) -> c_int {
     // Use OCI CLI for deployment
     let result = std::process::Command::new("oci")
         .args(&[
-            "resource-manager", "stack", "create-from-zip-file",
-            "--config-source", &path_str,
-            "--compartment-id", "ocid1.tenancy.oc1..aaaaaaaapxfkcjaczqslvnbekbqq2eefxgwx7kqbakvddhzaaiym62vmt5la"
+            "resource-manager",
+            "stack",
+            "create-from-zip-file",
+            "--config-source",
+            &path_str,
+            "--compartment-id",
+            "ocid1.tenancy.oc1..aaaaaaaapxfkcjaczqslvnbekbqq2eefxgwx7kqbakvddhzaaiym62vmt5la",
         ])
         .status();
 
     match result {
-        Ok(status) => if status.success() { 0 } else { -1 },
+        Ok(status) => {
+            if status.success() {
+                0
+            } else {
+                -1
+            }
+        }
         Err(_) => -1,
     }
 }

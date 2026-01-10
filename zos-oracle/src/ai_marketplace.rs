@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIPromptMarketplace {
@@ -140,10 +140,15 @@ impl AIPromptMarketplace {
         }
     }
 
-    pub fn publish_prompt(&mut self, publisher_id: &str, title: &str, description: &str,
-                         prompt_template: &str, category: PromptCategory,
-                         price_per_request: u64) -> Result<String, String> {
-
+    pub fn publish_prompt(
+        &mut self,
+        publisher_id: &str,
+        title: &str,
+        description: &str,
+        prompt_template: &str,
+        category: PromptCategory,
+        price_per_request: u64,
+    ) -> Result<String, String> {
         let prompt_id = format!("prompt_{}_{}", publisher_id, chrono::Utc::now().timestamp());
 
         let prompt = PublishedPrompt {
@@ -178,9 +183,14 @@ impl AIPromptMarketplace {
         Ok(prompt_id)
     }
 
-    pub fn register_llm_endpoint(&mut self, owner_id: &str, port: u16, model_name: &str,
-                                model_type: ModelType, max_tokens: u32) -> Result<String, String> {
-
+    pub fn register_llm_endpoint(
+        &mut self,
+        owner_id: &str,
+        port: u16,
+        model_name: &str,
+        model_type: ModelType,
+        max_tokens: u32,
+    ) -> Result<String, String> {
         let endpoint_id = format!("endpoint_{}_{}", owner_id, port);
 
         let endpoint = LLMEndpoint {
@@ -200,15 +210,23 @@ impl AIPromptMarketplace {
 
         self.llm_endpoints.insert(endpoint_id.clone(), endpoint);
 
-        println!("🤖 LLM endpoint registered: {} on port {}", model_name, port);
+        println!(
+            "🤖 LLM endpoint registered: {} on port {}",
+            model_name, port
+        );
         Ok(endpoint_id)
     }
 
-    pub fn execute_prompt(&mut self, user_id: &str, prompt_id: &str,
-                         input_data: serde_json::Value) -> Result<AIRequest, String> {
-
+    pub fn execute_prompt(
+        &mut self,
+        user_id: &str,
+        prompt_id: &str,
+        input_data: serde_json::Value,
+    ) -> Result<AIRequest, String> {
         // Check user quota
-        let quota = self.usage_quotas.get_mut(user_id)
+        let quota = self
+            .usage_quotas
+            .get_mut(user_id)
             .ok_or("User quota not found")?;
 
         if quota.requests_used_today >= quota.daily_requests {
@@ -216,12 +234,16 @@ impl AIPromptMarketplace {
         }
 
         // Get prompt
-        let prompt = self.published_prompts.get_mut(prompt_id)
+        let prompt = self
+            .published_prompts
+            .get_mut(prompt_id)
             .ok_or("Prompt not found")?;
 
         // Find available endpoint
         let endpoint_id = self.find_best_endpoint(&prompt.model_requirements)?;
-        let endpoint = self.llm_endpoints.get_mut(&endpoint_id)
+        let endpoint = self
+            .llm_endpoints
+            .get_mut(&endpoint_id)
             .ok_or("No available endpoints")?;
 
         // Check credits
@@ -233,7 +255,8 @@ impl AIPromptMarketplace {
         let request_id = format!("req_{}_{}", user_id, chrono::Utc::now().timestamp());
 
         // Execute prompt (simulate)
-        let processed_prompt = self.process_prompt_template(&prompt.prompt_template, &input_data)?;
+        let processed_prompt =
+            self.process_prompt_template(&prompt.prompt_template, &input_data)?;
         let output = self.call_llm_endpoint(&endpoint.endpoint_url, &processed_prompt)?;
 
         let tokens_used = (processed_prompt.len() + output.len()) / 4; // Rough estimate
@@ -252,7 +275,7 @@ impl AIPromptMarketplace {
         let revenue = RevenueShare {
             prompt_id: prompt_id.to_string(),
             publisher_earnings: (cost as f64 * 0.7) as u64, // 70% to prompt creator
-            platform_fee: (cost as f64 * 0.2) as u64,      // 20% platform fee
+            platform_fee: (cost as f64 * 0.2) as u64,       // 20% platform fee
             endpoint_provider_share: (cost as f64 * 0.1) as u64, // 10% to endpoint provider
             total_revenue: cost,
         };
@@ -274,21 +297,32 @@ impl AIPromptMarketplace {
         };
 
         // Store request history
-        self.request_history.entry(user_id.to_string())
+        self.request_history
+            .entry(user_id.to_string())
             .or_insert_with(Vec::new)
             .push(ai_request.clone());
 
-        println!("🧠 AI request executed: {} tokens, {} credits", tokens_used, cost);
+        println!(
+            "🧠 AI request executed: {} tokens, {} credits",
+            tokens_used, cost
+        );
         Ok(ai_request)
     }
 
-    pub fn direct_llm_request(&mut self, user_id: &str, endpoint_id: &str,
-                             prompt: &str) -> Result<AIRequest, String> {
-
-        let quota = self.usage_quotas.get_mut(user_id)
+    pub fn direct_llm_request(
+        &mut self,
+        user_id: &str,
+        endpoint_id: &str,
+        prompt: &str,
+    ) -> Result<AIRequest, String> {
+        let quota = self
+            .usage_quotas
+            .get_mut(user_id)
             .ok_or("User quota not found")?;
 
-        let endpoint = self.llm_endpoints.get_mut(endpoint_id)
+        let endpoint = self
+            .llm_endpoints
+            .get_mut(endpoint_id)
             .ok_or("Endpoint not found")?;
 
         if quota.requests_used_today >= quota.daily_requests {
@@ -330,15 +364,22 @@ impl AIPromptMarketplace {
             status: RequestStatus::Completed,
         };
 
-        self.request_history.entry(user_id.to_string())
+        self.request_history
+            .entry(user_id.to_string())
             .or_insert_with(Vec::new)
             .push(ai_request.clone());
 
-        println!("🎯 Direct LLM request: {} tokens, {} credits", actual_tokens, cost);
+        println!(
+            "🎯 Direct LLM request: {} tokens, {} credits",
+            actual_tokens, cost
+        );
         Ok(ai_request)
     }
 
-    pub fn get_marketplace_prompts(&self, category: Option<PromptCategory>) -> Vec<&PublishedPrompt> {
+    pub fn get_marketplace_prompts(
+        &self,
+        category: Option<PromptCategory>,
+    ) -> Vec<&PublishedPrompt> {
         let mut prompts: Vec<_> = self.published_prompts.values().collect();
 
         if let Some(cat) = category {
@@ -356,7 +397,9 @@ impl AIPromptMarketplace {
     }
 
     pub fn get_available_endpoints(&self, model_type: Option<ModelType>) -> Vec<&LLMEndpoint> {
-        let mut endpoints: Vec<_> = self.llm_endpoints.values()
+        let mut endpoints: Vec<_> = self
+            .llm_endpoints
+            .values()
             .filter(|e| e.available_quota > 1000) // Has quota available
             .collect();
 
@@ -404,7 +447,9 @@ impl AIPromptMarketplace {
     }
 
     fn find_best_endpoint(&self, requirements: &ModelRequirements) -> Result<String, String> {
-        let mut candidates: Vec<_> = self.llm_endpoints.values()
+        let mut candidates: Vec<_> = self
+            .llm_endpoints
+            .values()
             .filter(|e| e.available_quota > 1000)
             .filter(|e| e.max_tokens >= requirements.min_context_length)
             .collect();
@@ -423,7 +468,11 @@ impl AIPromptMarketplace {
         Ok(candidates[0].endpoint_id.clone())
     }
 
-    fn process_prompt_template(&self, template: &str, input: &serde_json::Value) -> Result<String, String> {
+    fn process_prompt_template(
+        &self,
+        template: &str,
+        input: &serde_json::Value,
+    ) -> Result<String, String> {
         let mut processed = template.to_string();
 
         // Simple template variable replacement
@@ -449,7 +498,11 @@ impl AIPromptMarketplace {
         ];
 
         let response_idx = prompt.len() % simulated_responses.len();
-        Ok(format!("{} {}", simulated_responses[response_idx], prompt.chars().take(50).collect::<String>()))
+        Ok(format!(
+            "{} {}",
+            simulated_responses[response_idx],
+            prompt.chars().take(50).collect::<String>()
+        ))
     }
 
     pub fn initialize_user_quota(&mut self, user_id: &str, tier: &str) {

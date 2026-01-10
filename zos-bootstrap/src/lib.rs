@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct EigenMatrix {
@@ -90,12 +90,13 @@ impl BootstrapEngine {
         let content = std::fs::read_to_string(path)
             .map_err(|e| format!("Failed to read eigenmatrix: {}", e))?;
 
-        let eigenmatrix: EigenMatrix = toml::from_str(&content)
-            .map_err(|e| format!("Failed to parse eigenmatrix: {}", e))?;
+        let eigenmatrix: EigenMatrix =
+            toml::from_str(&content).map_err(|e| format!("Failed to parse eigenmatrix: {}", e))?;
 
-        println!("🔐 Loaded eigenmatrix v{} (DAO block: {})",
-                 eigenmatrix.eigenmatrix.version,
-                 eigenmatrix.eigenmatrix.dao_adoption_block);
+        println!(
+            "🔐 Loaded eigenmatrix v{} (DAO block: {})",
+            eigenmatrix.eigenmatrix.version, eigenmatrix.eigenmatrix.dao_adoption_block
+        );
 
         Ok(Self {
             eigenmatrix,
@@ -123,7 +124,10 @@ impl BootstrapEngine {
     }
 
     fn execute_stage(&mut self, stage: &BuildStage) -> Result<(), String> {
-        println!("📦 Executing stage: {} (order: {})", stage.name, stage.order);
+        println!(
+            "📦 Executing stage: {} (order: {})",
+            stage.name, stage.order
+        );
 
         // Check dependencies
         for dep in &stage.dependencies {
@@ -135,7 +139,8 @@ impl BootstrapEngine {
         // Execute all steps in stage
         for step in &stage.step {
             self.execute_step(step)?;
-            self.completed_steps.push(format!("{}::{}", stage.name, step.name));
+            self.completed_steps
+                .push(format!("{}::{}", stage.name, step.name));
         }
 
         self.current_stage = stage.order + 1;
@@ -166,10 +171,14 @@ impl BootstrapEngine {
             .map_err(|e| format!("Cargo build failed: {}", e))?;
 
         if !output.status.success() {
-            return Err(format!("Build failed: {}", String::from_utf8_lossy(&output.stderr)));
+            return Err(format!(
+                "Build failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
         }
 
-        self.build_artifacts.insert(step.name.clone(), step.output.clone());
+        self.build_artifacts
+            .insert(step.name.clone(), step.output.clone());
         Ok(())
     }
 
@@ -195,22 +204,28 @@ impl BootstrapEngine {
             .map_err(|e| format!("Locked build failed: {}", e))?;
 
         if !output.status.success() {
-            return Err(format!("Locked build failed: {}", String::from_utf8_lossy(&output.stderr)));
+            return Err(format!(
+                "Locked build failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
         }
 
-        self.build_artifacts.insert(step.name.clone(), step.output.clone());
+        self.build_artifacts
+            .insert(step.name.clone(), step.output.clone());
         Ok(())
     }
 
     fn plugin_build(&mut self, step: &BuildStep) -> Result<(), String> {
         // Build plugin using previously built compiler
-        self.build_artifacts.insert(step.name.clone(), step.output.clone());
+        self.build_artifacts
+            .insert(step.name.clone(), step.output.clone());
         Ok(())
     }
 
     fn service_build(&mut self, step: &BuildStep) -> Result<(), String> {
         // Build service using self-hosted tools
-        self.build_artifacts.insert(step.name.clone(), step.output.clone());
+        self.build_artifacts
+            .insert(step.name.clone(), step.output.clone());
         Ok(())
     }
 
@@ -235,10 +250,22 @@ impl BootstrapEngine {
         let verification = &self.eigenmatrix.verification;
 
         // In real implementation, would compute actual hashes
-        println!("  ✓ Foundation hash: {}", &verification.foundation_hash[..16]);
-        println!("  ✓ Build system hash: {}", &verification.build_system_hash[..16]);
-        println!("  ✓ Core services hash: {}", &verification.core_services_hash[..16]);
-        println!("  ✓ Complete system hash: {}", &verification.complete_system_hash[..16]);
+        println!(
+            "  ✓ Foundation hash: {}",
+            &verification.foundation_hash[..16]
+        );
+        println!(
+            "  ✓ Build system hash: {}",
+            &verification.build_system_hash[..16]
+        );
+        println!(
+            "  ✓ Core services hash: {}",
+            &verification.core_services_hash[..16]
+        );
+        println!(
+            "  ✓ Complete system hash: {}",
+            &verification.complete_system_hash[..16]
+        );
 
         Ok(())
     }

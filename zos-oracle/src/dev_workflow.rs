@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DevServer {
@@ -144,10 +144,17 @@ impl DevServer {
 
         self.status = ServerStatus::Testing;
 
-        Ok(format!("Dev server launched at http://localhost:3000/dev/{}", self.server_id))
+        Ok(format!(
+            "Dev server launched at http://localhost:3000/dev/{}",
+            self.server_id
+        ))
     }
 
-    pub fn onboard_stakeholder(&mut self, address: &str, role: StakeholderRole) -> Result<(), String> {
+    pub fn onboard_stakeholder(
+        &mut self,
+        address: &str,
+        role: StakeholderRole,
+    ) -> Result<(), String> {
         let stakeholder = Stakeholder {
             address: address.to_string(),
             role: role.clone(),
@@ -172,9 +179,17 @@ impl DevServer {
         Ok(())
     }
 
-    pub fn flag_component(&mut self, flagger: &str, component: &str, description: &str, severity: AuditSeverity) -> Result<String, String> {
+    pub fn flag_component(
+        &mut self,
+        flagger: &str,
+        component: &str,
+        description: &str,
+        severity: AuditSeverity,
+    ) -> Result<String, String> {
         // Check if stakeholder can flag
-        let stakeholder = self.stakeholders.get(flagger)
+        let stakeholder = self
+            .stakeholders
+            .get(flagger)
             .ok_or("Stakeholder not found")?;
 
         if stakeholder.trust_level < 50 {
@@ -201,19 +216,31 @@ impl DevServer {
     }
 
     pub fn respond_to_audit(&mut self, audit_id: &str, response: &str) -> Result<(), String> {
-        let audit_item = self.audit_items.get_mut(audit_id)
+        let audit_item = self
+            .audit_items
+            .get_mut(audit_id)
             .ok_or("Audit item not found")?;
 
         audit_item.dev_response = Some(response.to_string());
         audit_item.status = AuditStatus::UnderReview;
 
-        println!("💬 Dev response to audit {}: {}", &audit_id[..12], &response[..50]);
+        println!(
+            "💬 Dev response to audit {}: {}",
+            &audit_id[..12],
+            &response[..50]
+        );
 
         Ok(())
     }
 
-    pub fn request_revision(&mut self, audit_id: &str, revision_details: &str) -> Result<(), String> {
-        let audit_item = self.audit_items.get_mut(audit_id)
+    pub fn request_revision(
+        &mut self,
+        audit_id: &str,
+        revision_details: &str,
+    ) -> Result<(), String> {
+        let audit_item = self
+            .audit_items
+            .get_mut(audit_id)
             .ok_or("Audit item not found")?;
 
         audit_item.revision_requested = Some(revision_details.to_string());
@@ -224,11 +251,23 @@ impl DevServer {
         Ok(())
     }
 
-    pub fn submit_proposal(&mut self, proposer: &str, title: &str, description: &str, changes: Vec<ProposedChange>) -> Result<String, String> {
-        let stakeholder = self.stakeholders.get_mut(proposer)
+    pub fn submit_proposal(
+        &mut self,
+        proposer: &str,
+        title: &str,
+        description: &str,
+        changes: Vec<ProposedChange>,
+    ) -> Result<String, String> {
+        let stakeholder = self
+            .stakeholders
+            .get_mut(proposer)
             .ok_or("Stakeholder not found")?;
 
-        let proposal_id = format!("prop_{}_{}", proposer[..8].to_string(), stakeholder.proposals_submitted);
+        let proposal_id = format!(
+            "prop_{}_{}",
+            proposer[..8].to_string(),
+            stakeholder.proposals_submitted
+        );
 
         let proposal = Proposal {
             proposal_id: proposal_id.clone(),
@@ -248,16 +287,29 @@ impl DevServer {
         Ok(proposal_id)
     }
 
-    pub fn vote_on_proposal(&mut self, voter: &str, proposal_id: &str, vote: Vote) -> Result<(), String> {
-        let stakeholder = self.stakeholders.get(voter)
+    pub fn vote_on_proposal(
+        &mut self,
+        voter: &str,
+        proposal_id: &str,
+        vote: Vote,
+    ) -> Result<(), String> {
+        let stakeholder = self
+            .stakeholders
+            .get(voter)
             .ok_or("Stakeholder not found")?;
 
-        let proposal = self.proposals.get_mut(proposal_id)
+        let proposal = self
+            .proposals
+            .get_mut(proposal_id)
             .ok_or("Proposal not found")?;
 
         proposal.votes.insert(voter.to_string(), vote);
 
-        println!("🗳️  Vote cast on proposal {} by {}", &proposal_id[..12], &voter[..8]);
+        println!(
+            "🗳️  Vote cast on proposal {} by {}",
+            &proposal_id[..12],
+            &voter[..8]
+        );
 
         // Check if proposal has enough votes to proceed
         self.check_proposal_consensus(proposal_id)?;
@@ -266,7 +318,9 @@ impl DevServer {
     }
 
     pub fn get_stakeholder_dashboard(&self, address: &str) -> Result<String, String> {
-        let stakeholder = self.stakeholders.get(address)
+        let stakeholder = self
+            .stakeholders
+            .get(address)
             .ok_or("Stakeholder not found")?;
 
         let dashboard = serde_json::json!({
@@ -301,7 +355,8 @@ impl DevServer {
             timestamp: chrono::Utc::now().timestamp() as u64,
         };
 
-        self.test_results.insert("bootstrap_001".to_string(), test_result);
+        self.test_results
+            .insert("bootstrap_001".to_string(), test_result);
 
         Ok("Bootstrap test passed".to_string())
     }
@@ -310,8 +365,12 @@ impl DevServer {
         println!("📊 Generating initial audit items...");
 
         let components = vec![
-            "foundation", "build_system", "core_services",
-            "plugin_loader", "governance", "libp2p_verbs"
+            "foundation",
+            "build_system",
+            "core_services",
+            "plugin_loader",
+            "governance",
+            "libp2p_verbs",
         ];
 
         for component in components {
@@ -346,7 +405,9 @@ impl DevServer {
     }
 
     fn check_proposal_consensus(&mut self, proposal_id: &str) -> Result<(), String> {
-        let proposal = self.proposals.get_mut(proposal_id)
+        let proposal = self
+            .proposals
+            .get_mut(proposal_id)
             .ok_or("Proposal not found")?;
 
         let total_stakeholders = self.stakeholders.len();
@@ -354,7 +415,9 @@ impl DevServer {
 
         // Need majority of stakeholders to vote
         if votes_cast >= (total_stakeholders * 2 / 3) {
-            let approvals = proposal.votes.values()
+            let approvals = proposal
+                .votes
+                .values()
                 .filter(|v| matches!(v, Vote::Approve))
                 .count();
 

@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserDashboard {
@@ -266,7 +266,8 @@ impl DashboardManager {
             dashboard.clone()
         } else {
             let dashboard = self.create_dashboard(user_id);
-            self.dashboards.insert(user_id.to_string(), dashboard.clone());
+            self.dashboards
+                .insert(user_id.to_string(), dashboard.clone());
             dashboard
         }
     }
@@ -365,15 +366,13 @@ impl DashboardManager {
                     },
                 ],
                 recent_rewards: Vec::new(),
-                milestone_progress: vec![
-                    MilestoneProgress {
-                        milestone_name: "Bronze Tier".to_string(),
-                        current_progress: 0,
-                        target: 100,
-                        reward: 100,
-                        estimated_completion: None,
-                    },
-                ],
+                milestone_progress: vec![MilestoneProgress {
+                    milestone_name: "Bronze Tier".to_string(),
+                    current_progress: 0,
+                    target: 100,
+                    reward: 100,
+                    estimated_completion: None,
+                }],
                 loyalty_bonuses: LoyaltyBonuses {
                     streak_multiplier: 1.0,
                     tier_bonus: 1.0,
@@ -409,17 +408,15 @@ impl DashboardManager {
                     average_sale_price: 0.0,
                 },
             },
-            notifications: vec![
-                Notification {
-                    id: "welcome".to_string(),
-                    notification_type: NotificationType::SystemUpdate,
-                    title: "Welcome to ZOS!".to_string(),
-                    message: "Complete your profile to earn bonus credits".to_string(),
-                    timestamp: chrono::Utc::now().timestamp() as u64,
-                    read: false,
-                    action_url: Some("/verify".to_string()),
-                },
-            ],
+            notifications: vec![Notification {
+                id: "welcome".to_string(),
+                notification_type: NotificationType::SystemUpdate,
+                title: "Welcome to ZOS!".to_string(),
+                message: "Complete your profile to earn bonus credits".to_string(),
+                timestamp: chrono::Utc::now().timestamp() as u64,
+                read: false,
+                action_url: Some("/verify".to_string()),
+            }],
         }
     }
 
@@ -472,5 +469,6 @@ POST /dashboard/{user_id}/notifications/{id}/read
 
 WebSocket /dashboard/{user_id}/live
   → Real-time dashboard updates
-"#.to_string()
+"#
+    .to_string()
 }

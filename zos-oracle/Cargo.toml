@@ -12,6 +12,9 @@ crate-type = ["cdylib", "rlib"]
 # Zero dependencies for core plugin interface
 serde = { version = "1.0", features = ["derive"], optional = true }
 serde_json = { version = "1.0", optional = true }
+tokio = { version = "1.0", features = ["full"], optional = true }
+reqwest = { version = "0.11", features = ["json"], optional = true }
+anyhow = { version = "1.0", optional = true }
 
 # Oracle-specific dependencies (optional)
 rsa = { version = "0.9", optional = true }
@@ -21,5 +24,5 @@ chrono = { version = "0.4", optional = true }
 
 [features]
 default = []
-full = ["serde", "serde_json", "rsa", "sha2", "base64", "chrono"]
+full = ["serde", "serde_json", "rsa", "sha2", "base64", "chrono", "tokio", "reqwest", "anyhow"]
 cli = []

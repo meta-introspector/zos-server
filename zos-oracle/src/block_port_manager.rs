@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BlockPortManager {
@@ -79,7 +79,8 @@ fn calculate_pi(iterations: u32) -> f64 {
     pi
 }
 println!("π ≈ {:.10}", calculate_pi(1000000));
-"#.to_string(),
+"#
+            .to_string(),
             description: "Calculate π using Leibniz formula".to_string(),
             max_execution_time_ms: 5000,
             credits_cost: 1,
@@ -97,7 +98,8 @@ fn fibonacci(n: u32) -> u64 {
 let fib = fibonacci(20);
 println!("🐰 Fibonacci rabbits after 20 months: {} pairs", fib);
 println!("📈 That's exponential growth! 🚀");
-"#.to_string(),
+"#
+            .to_string(),
             description: "Fibonacci sequence with rabbit meme".to_string(),
             max_execution_time_ms: 3000,
             credits_cost: 2,
@@ -119,7 +121,8 @@ println!("Two, three, five, seven,");
 println!("Eleven, thirteen, seventeen,");
 println!("Primes dance in mathematical heaven! ✨");
 println!("Found {} primes under 100", primes.len());
-"#.to_string(),
+"#
+            .to_string(),
             description: "Prime numbers with poetic flair".to_string(),
             max_execution_time_ms: 2000,
             credits_cost: 1,
@@ -140,7 +143,8 @@ println!("Found {} primes under 100", primes.len());
         self.current_block += 1;
 
         // Expire old ports
-        let expired_ports: Vec<u16> = self.active_ports
+        let expired_ports: Vec<u16> = self
+            .active_ports
             .iter()
             .filter(|(_, port)| port.expires_at_block <= self.current_block)
             .map(|(port, _)| *port)
@@ -161,7 +165,11 @@ println!("Found {} primes under 100", primes.len());
         });
     }
 
-    pub fn allocate_user_port(&mut self, user_id: &str, service_type: ServiceType) -> Result<u16, String> {
+    pub fn allocate_user_port(
+        &mut self,
+        user_id: &str,
+        service_type: ServiceType,
+    ) -> Result<u16, String> {
         if self.active_ports.len() >= self.max_concurrent_users as usize {
             return Err("No available ports - server at capacity".to_string());
         }
@@ -194,19 +202,24 @@ println!("Found {} primes under 100", primes.len());
 
         self.user_sessions.insert(user_id.to_string(), session);
 
-        println!("🔌 Port {} allocated to {} for block {}", port, &user_id[..8], self.current_block);
+        println!(
+            "🔌 Port {} allocated to {} for block {}",
+            port,
+            &user_id[..8],
+            self.current_block
+        );
         Ok(port)
     }
 
     pub fn share_port(&mut self, owner_id: &str, share_with: &str) -> Result<(), String> {
-        let session = self.user_sessions.get(owner_id)
+        let session = self
+            .user_sessions
+            .get(owner_id)
             .ok_or("User session not found")?;
 
-        let port = session.current_port
-            .ok_or("No active port to share")?;
+        let port = session.current_port.ok_or("No active port to share")?;
 
-        let user_port = self.active_ports.get_mut(&port)
-            .ok_or("Port not found")?;
+        let user_port = self.active_ports.get_mut(&port).ok_or("Port not found")?;
 
         if !user_port.shareable {
             return Err("Port is not shareable".to_string());
@@ -218,19 +231,30 @@ println!("Found {} primes under 100", primes.len());
 
         user_port.shared_with.push(share_with.to_string());
 
-        println!("🤝 Port {} shared with {} by {}", port, &share_with[..8], &owner_id[..8]);
+        println!(
+            "🤝 Port {} shared with {} by {}",
+            port,
+            &share_with[..8],
+            &owner_id[..8]
+        );
         Ok(())
     }
 
-    pub fn list_port_for_sale(&mut self, seller_id: &str, price_credits: u64, duration_blocks: u64, description: &str) -> Result<String, String> {
-        let session = self.user_sessions.get(seller_id)
+    pub fn list_port_for_sale(
+        &mut self,
+        seller_id: &str,
+        price_credits: u64,
+        duration_blocks: u64,
+        description: &str,
+    ) -> Result<String, String> {
+        let session = self
+            .user_sessions
+            .get(seller_id)
             .ok_or("User session not found")?;
 
-        let port = session.current_port
-            .ok_or("No active port to sell")?;
+        let port = session.current_port.ok_or("No active port to sell")?;
 
-        let user_port = self.active_ports.get(port)
-            .ok_or("Port not found")?;
+        let user_port = self.active_ports.get(port).ok_or("Port not found")?;
 
         if !user_port.resellable {
             return Err("Port is not resellable".to_string());
@@ -250,12 +274,17 @@ println!("Found {} primes under 100", primes.len());
 
         self.port_marketplace.insert(listing_id.clone(), listing);
 
-        println!("🏪 Port {} listed for sale: {} credits", port, price_credits);
+        println!(
+            "🏪 Port {} listed for sale: {} credits",
+            port, price_credits
+        );
         Ok(listing_id)
     }
 
     pub fn buy_port_access(&mut self, buyer_id: &str, listing_id: &str) -> Result<u16, String> {
-        let listing = self.port_marketplace.get(listing_id)
+        let listing = self
+            .port_marketplace
+            .get(listing_id)
             .ok_or("Listing not found")?
             .clone();
 
@@ -263,7 +292,9 @@ println!("Found {} primes under 100", primes.len());
         // For now, assume they do
 
         let port = listing.port;
-        let user_port = self.active_ports.get_mut(&port)
+        let user_port = self
+            .active_ports
+            .get_mut(&port)
             .ok_or("Port no longer available")?;
 
         if user_port.shared_with.len() >= listing.max_shares {
@@ -272,12 +303,22 @@ println!("Found {} primes under 100", primes.len());
 
         user_port.shared_with.push(buyer_id.to_string());
 
-        println!("💰 Port {} access sold to {} for {} credits", port, &buyer_id[..8], listing.price_credits);
+        println!(
+            "💰 Port {} access sold to {} for {} credits",
+            port,
+            &buyer_id[..8],
+            listing.price_credits
+        );
         Ok(port)
     }
 
-    pub fn execute_free_service(&mut self, user_id: &str, service_name: &str) -> Result<String, String> {
-        let service = self.free_tier_services
+    pub fn execute_free_service(
+        &mut self,
+        user_id: &str,
+        service_name: &str,
+    ) -> Result<String, String> {
+        let service = self
+            .free_tier_services
             .iter()
             .find(|s| s.name == service_name)
             .ok_or("Service not found")?;
@@ -320,7 +361,9 @@ println!("Found {} primes under 100", primes.len());
     }
 
     pub fn get_user_status(&self, user_id: &str) -> Result<String, String> {
-        let session = self.user_sessions.get(user_id)
+        let session = self
+            .user_sessions
+            .get(user_id)
             .ok_or("User session not found")?;
 
         let port_info = if let Some(port) = session.current_port {

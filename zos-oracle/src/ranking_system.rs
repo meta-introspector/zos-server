@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RankingSystem {
@@ -21,7 +21,7 @@ pub struct UserRanking {
     pub streak_days: u32,
     pub last_activity: u64,
     pub rank: u32,
-    pub rank_change: i32, // +/- from last period
+    pub rank_change: i32,          // +/- from last period
     pub threat_level: ThreatLevel, // How close others are to overtaking
 }
 
@@ -40,10 +40,10 @@ pub struct SeatHolder {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValueDecayConfig {
-    pub daily_decay_rate: f64,    // 0.1% per day
-    pub inactivity_penalty: f64,  // 1% per day inactive
-    pub streak_bonus: f64,        // 0.5% per day streak
-    pub competition_bonus: f64,   // 2% when under threat
+    pub daily_decay_rate: f64,   // 0.1% per day
+    pub inactivity_penalty: f64, // 1% per day inactive
+    pub streak_bonus: f64,       // 0.5% per day streak
+    pub competition_bonus: f64,  // 2% when under threat
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -103,11 +103,14 @@ impl RankingSystem {
         }
     }
 
-    pub fn update_user_value(&mut self, user_id: &str, value_added: f64, block: u64) -> Result<(), String> {
+    pub fn update_user_value(
+        &mut self,
+        user_id: &str,
+        value_added: f64,
+        block: u64,
+    ) -> Result<(), String> {
         // Find or create user ranking
-        let user_ranking = self.leaderboard
-            .iter_mut()
-            .find(|r| r.user_id == user_id);
+        let user_ranking = self.leaderboard.iter_mut().find(|r| r.user_id == user_id);
 
         if let Some(ranking) = user_ranking {
             // Apply daily decay first
@@ -126,9 +129,10 @@ impl RankingSystem {
             }
 
             // Apply streak bonus
-            let streak_bonus = ranking.cumulative_value * self.value_decay.streak_bonus * (ranking.streak_days as f64 / 100.0);
+            let streak_bonus = ranking.cumulative_value
+                * self.value_decay.streak_bonus
+                * (ranking.streak_days as f64 / 100.0);
             ranking.cumulative_value += streak_bonus;
-
         } else {
             // New user
             let new_ranking = UserRanking {
@@ -154,21 +158,33 @@ impl RankingSystem {
         // Check for seat challenges
         self.check_seat_challenges(user_id, block)?;
 
-        println!("📈 User {} value updated: +{:.2} (total: {:.2})",
-                 &user_id[..8], value_added,
-                 self.get_user_value(user_id).unwrap_or(0.0));
+        println!(
+            "📈 User {} value updated: +{:.2} (total: {:.2})",
+            &user_id[..8],
+            value_added,
+            self.get_user_value(user_id).unwrap_or(0.0)
+        );
 
         Ok(())
     }
 
-    pub fn challenge_seat(&mut self, challenger_id: &str, seat_number: u32, block: u64) -> Result<bool, String> {
-        let challenger_value = self.get_user_value(challenger_id)
+    pub fn challenge_seat(
+        &mut self,
+        challenger_id: &str,
+        seat_number: u32,
+        block: u64,
+    ) -> Result<bool, String> {
+        let challenger_value = self
+            .get_user_value(challenger_id)
             .ok_or("Challenger not found")?;
 
-        let seat_holder = self.seat_holders.get_mut(&seat_number)
+        let seat_holder = self
+            .seat_holders
+            .get_mut(&seat_number)
             .ok_or("Seat not found")?;
 
-        let holder_value = self.get_user_value(&seat_holder.holder_id)
+        let holder_value = self
+            .get_user_value(&seat_holder.holder_id)
             .ok_or("Seat holder not found")?;
 
         // Challenge succeeds if challenger has more cumulative value
@@ -190,17 +206,29 @@ impl RankingSystem {
             seat_holder.challenges_faced += 1;
 
             // Update user rankings
-            if let Some(challenger_rank) = self.leaderboard.iter_mut().find(|r| r.user_id == challenger_id) {
+            if let Some(challenger_rank) = self
+                .leaderboard
+                .iter_mut()
+                .find(|r| r.user_id == challenger_id)
+            {
                 challenger_rank.current_seat = Some(seat_number);
             }
 
-            if let Some(old_holder_rank) = self.leaderboard.iter_mut().find(|r| r.user_id == old_holder) {
+            if let Some(old_holder_rank) = self
+                .leaderboard
+                .iter_mut()
+                .find(|r| r.user_id == old_holder)
+            {
                 old_holder_rank.current_seat = None;
             }
 
-            println!("👑 Seat #{} challenged! {} overtakes {} (Δ{:.2})",
-                     seat_number, &challenger_id[..8], &old_holder[..8],
-                     challenger_value - holder_value);
+            println!(
+                "👑 Seat #{} challenged! {} overtakes {} (Δ{:.2})",
+                seat_number,
+                &challenger_id[..8],
+                &old_holder[..8],
+                challenger_value - holder_value
+            );
 
             // Add to historical record
             if let Some(snapshot) = self.historical_rankings.last_mut() {
@@ -212,9 +240,13 @@ impl RankingSystem {
             seat_holder.challenges_faced += 1;
             seat_holder.challenges_won += 1;
 
-            println!("🛡️  Seat #{} defended! {} holds against {} (Δ{:.2})",
-                     seat_number, &seat_holder.holder_id[..8], &challenger_id[..8],
-                     holder_value - challenger_value);
+            println!(
+                "🛡️  Seat #{} defended! {} holds against {} (Δ{:.2})",
+                seat_number,
+                &seat_holder.holder_id[..8],
+                &challenger_id[..8],
+                holder_value - challenger_value
+            );
 
             Ok(false)
         }
@@ -228,10 +260,17 @@ impl RankingSystem {
             ranking.threat_level = self.calculate_threat_level(&ranking.user_id);
 
             // Apply competition bonus if threatened
-            if matches!(ranking.threat_level, ThreatLevel::Threatened | ThreatLevel::Critical) {
+            if matches!(
+                ranking.threat_level,
+                ThreatLevel::Threatened | ThreatLevel::Critical
+            ) {
                 let bonus = ranking.cumulative_value * self.value_decay.competition_bonus;
                 ranking.cumulative_value += bonus;
-                println!("⚔️  {} gets competition bonus: +{:.2}", &ranking.user_id[..8], bonus);
+                println!(
+                    "⚔️  {} gets competition bonus: +{:.2}",
+                    &ranking.user_id[..8],
+                    bonus
+                );
             }
         }
 
@@ -275,7 +314,8 @@ impl RankingSystem {
 
     pub fn get_rising_stars(&self) -> Vec<String> {
         // Users with high daily/weekly growth rates
-        let mut rising: Vec<_> = self.leaderboard
+        let mut rising: Vec<_> = self
+            .leaderboard
             .iter()
             .filter(|r| r.daily_value > 0.0 && r.streak_days >= 3)
             .filter(|r| r.current_seat.is_none()) // Not already seated
@@ -287,7 +327,8 @@ impl RankingSystem {
             b_growth.partial_cmp(&a_growth).unwrap()
         });
 
-        rising.into_iter()
+        rising
+            .into_iter()
             .take(10)
             .map(|r| r.user_id.clone())
             .collect()
@@ -303,7 +344,8 @@ impl RankingSystem {
 
         // Inactivity penalty
         if days_inactive > 1.0 {
-            let penalty = ranking.cumulative_value * self.value_decay.inactivity_penalty * days_inactive;
+            let penalty =
+                ranking.cumulative_value * self.value_decay.inactivity_penalty * days_inactive;
             ranking.cumulative_value -= penalty;
         }
 
@@ -313,9 +355,8 @@ impl RankingSystem {
 
     fn recalculate_rankings(&mut self) {
         // Sort by cumulative value
-        self.leaderboard.sort_by(|a, b| {
-            b.cumulative_value.partial_cmp(&a.cumulative_value).unwrap()
-        });
+        self.leaderboard
+            .sort_by(|a, b| b.cumulative_value.partial_cmp(&a.cumulative_value).unwrap());
 
         // Update ranks and rank changes
         for (i, ranking) in self.leaderboard.iter_mut().enumerate() {
@@ -330,23 +371,34 @@ impl RankingSystem {
             if user_rank.rank == 1 {
                 // Check how close #2 is
                 if let Some(second) = self.leaderboard.get(1) {
-                    let lead_percentage = (user_rank.cumulative_value - second.cumulative_value) / user_rank.cumulative_value;
+                    let lead_percentage = (user_rank.cumulative_value - second.cumulative_value)
+                        / user_rank.cumulative_value;
 
-                    if lead_percentage > 0.10 { ThreatLevel::Safe }
-                    else if lead_percentage > 0.05 { ThreatLevel::Comfortable }
-                    else if lead_percentage > 0.01 { ThreatLevel::Threatened }
-                    else { ThreatLevel::Critical }
+                    if lead_percentage > 0.10 {
+                        ThreatLevel::Safe
+                    } else if lead_percentage > 0.05 {
+                        ThreatLevel::Comfortable
+                    } else if lead_percentage > 0.01 {
+                        ThreatLevel::Threatened
+                    } else {
+                        ThreatLevel::Critical
+                    }
                 } else {
                     ThreatLevel::Safe
                 }
             } else {
                 // Check if they can challenge the person above
                 if let Some(above) = self.leaderboard.get((user_rank.rank - 2) as usize) {
-                    let gap_percentage = (above.cumulative_value - user_rank.cumulative_value) / above.cumulative_value;
+                    let gap_percentage = (above.cumulative_value - user_rank.cumulative_value)
+                        / above.cumulative_value;
 
-                    if gap_percentage < 0.01 { ThreatLevel::Critical }
-                    else if gap_percentage < 0.05 { ThreatLevel::Threatened }
-                    else { ThreatLevel::Comfortable }
+                    if gap_percentage < 0.01 {
+                        ThreatLevel::Critical
+                    } else if gap_percentage < 0.05 {
+                        ThreatLevel::Threatened
+                    } else {
+                        ThreatLevel::Comfortable
+                    }
                 } else {
                     ThreatLevel::Safe
                 }
@@ -363,10 +415,15 @@ impl RankingSystem {
         for (seat_number, seat_holder) in &mut self.seat_holders {
             let holder_value = self.get_user_value(&seat_holder.holder_id).unwrap_or(0.0);
 
-            if user_value > holder_value * 1.01 { // Need 1% lead to challenge
+            if user_value > holder_value * 1.01 {
+                // Need 1% lead to challenge
                 seat_holder.next_challenger = Some(user_id.to_string());
-                println!("⚔️  {} can challenge seat #{} (lead: {:.2})",
-                         &user_id[..8], seat_number, user_value - holder_value);
+                println!(
+                    "⚔️  {} can challenge seat #{} (lead: {:.2})",
+                    &user_id[..8],
+                    seat_number,
+                    user_value - holder_value
+                );
             }
         }
 

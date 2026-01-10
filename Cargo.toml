@@ -9,7 +9,12 @@ members = [
     "zos-oracle",
     "zos-unix-accounts",
     "zos-retro-games",
-    "zos-minimal-server"
+    "zos-minimal-server",
+    "zos-libp2p",
+    "zos-plugins",
+    "zos-bootstrap",
+    "zos-oci",
+    "zos-analysis"
 ]
 resolver = "2"
 
