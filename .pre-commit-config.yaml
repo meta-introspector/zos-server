@@ -9,6 +9,12 @@ repos:
       - id: check-merge-conflict
       - id: check-json
 
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.9.0
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
+
   - repo: https://github.com/doublify/pre-commit-rust
     rev: v1.0
     hooks:
