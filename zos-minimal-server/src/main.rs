@@ -93,6 +93,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/deploy/dev-to-staging", post(deploy_dev_to_staging))
         .route("/deploy/staging-to-prod", post(deploy_staging_to_prod))
         .route("/deploy/rollout", post(rollout_to_clients))
+        .route("/bootstrap/prod", post(bootstrap_prod_server))
         .route("/webhook/git", post(git_webhook))
         .route("/poll-git", post(poll_git_updates))
         .route("/ping", get(ping_node))
@@ -1358,5 +1359,87 @@ echo "✅ Client rollout complete - stable branch updated"
         "status": "rolling_out",
         "stage": "client_rollout",
         "message": "Updating stable branch for client installations"
+    }))
+}
+
+async fn bootstrap_prod_server() -> Json<serde_json::Value> {
+    println!("🏭 Bootstrapping production server");
+
+    tokio::spawn(async {
+        let script = r#"#!/bin/bash
+set -e
+echo "🏭 Production server bootstrap..."
+
+PROD_DIR="/opt/zos-production"
+SERVICE_NAME="zos-production"
+REPO_URL="https://github.com/meta-introspector/zos-server.git"
+BRANCH="stable"
+
+# Create production directory
+sudo mkdir -p "$PROD_DIR"
+sudo chown -R "$USER:$USER" "$PROD_DIR"
+
+# Clone or update repository
+if [ -d "$PROD_DIR/.git" ]; then
+    echo "🔄 Updating production repository..."
+    cd "$PROD_DIR"
+    git fetch origin
+    git checkout "$BRANCH"
+    git pull origin "$BRANCH"
+else
+    echo "📥 Cloning production repository..."
+    git clone -b "$BRANCH" "$REPO_URL" "$PROD_DIR"
+    cd "$PROD_DIR"
+fi
+
+# Build production server
+echo "🔨 Building production server..."
+cd zos-minimal-server
+cargo build --release
+
+# Create production systemd service
+echo "📋 Creating production systemd service..."
+sudo tee /etc/systemd/system/$SERVICE_NAME.service > /dev/null << EOF
+[Unit]
+Description=ZOS Production Server - Self-Maintaining
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=$USER
+Group=$USER
+WorkingDirectory=$PROD_DIR
+ExecStart=$PROD_DIR/target/release/zos-minimal-server
+Restart=always
+RestartSec=5
+
+Environment=ZOS_HTTP_PORT=8081
+Environment=ZOS_DATA_DIR=$PROD_DIR/data
+Environment=ZOS_LOG_LEVEL=info
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start production service
+sudo systemctl daemon-reload
+sudo systemctl enable $SERVICE_NAME
+sudo systemctl start $SERVICE_NAME
+
+echo "✅ Production server bootstrapped on port 8081"
+"#;
+
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(script)
+            .output()
+            .await;
+    });
+
+    Json(serde_json::json!({
+        "status": "bootstrapping",
+        "stage": "production_bootstrap",
+        "message": "Creating independent production server with own git state"
     }))
 }
