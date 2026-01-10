@@ -231,6 +231,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/traces", get(get_traces))
         .route("/install/qa-service", post(install_qa_service))
         .route("/manage/qa/update", post(update_qa_server))
+        .route("/deploy/verify-hash/:hash", post(deploy_verify_hash))
         .route("/webhook/git", post(git_webhook))
         .route("/poll-git", post(poll_git_updates))
         .route("/ping", get(ping_node))
@@ -316,6 +317,24 @@ async fn health() -> Json<serde_json::Value> {
         .map(|s| s.trim().to_string())
         .unwrap_or_else(|| "unknown".to_string());
 
+    // Get binary hash
+    let binary_path =
+        std::env::current_exe().unwrap_or_else(|_| std::path::PathBuf::from("unknown"));
+
+    let binary_hash = std::process::Command::new("sha256sum")
+        .arg(&binary_path)
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .map(|s| s.split_whitespace().next().unwrap_or("unknown").to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    let binary_hash_short = if binary_hash != "unknown" {
+        binary_hash.chars().take(8).collect::<String>()
+    } else {
+        "unknown".to_string()
+    };
+
     let cwd = std::env::current_dir()
         .map(|p| p.to_string_lossy().to_string())
         .unwrap_or_else(|_| "unknown".to_string());
@@ -329,13 +348,18 @@ async fn health() -> Json<serde_json::Value> {
         "env": {
             "cwd": cwd,
             "port": port,
-            "pid": std::process::id()
+            "pid": std::process::id(),
+            "binary_path": binary_path.to_string_lossy()
         },
         "git": {
             "commit": git_commit,
             "commit_short": git_commit_short,
             "branch": git_branch,
             "age": commit_age
+        },
+        "binary": {
+            "hash": binary_hash,
+            "hash_short": binary_hash_short
         }
     }))
 }
@@ -1843,5 +1867,57 @@ curl -s http://localhost:8082/health | jq .git || echo "❌ QA server not respon
         "message": "Dev server managing QA server update",
         "target": "localhost:8082",
         "action": "remote_update"
+    }))
+}
+
+async fn deploy_verify_hash(Path(hash): Path<String>) -> Json<serde_json::Value> {
+    println!("🔍 Verifying and deploying git hash: {}", hash);
+
+    let hash_clone = hash.clone();
+    tokio::spawn(async move {
+        let script = format!(
+            r#"#!/bin/bash
+set -e
+echo "🔍 Verifying git hash deployment: {}"
+
+# Verify hash exists
+if ! git cat-file -e {}^{{commit}} 2>/dev/null; then
+    echo "❌ Git hash {} not found"
+    exit 1
+fi
+
+# Checkout specific hash
+git fetch origin
+git checkout {}
+
+# Build and verify
+cargo build --release
+
+# Get binary hash
+BINARY_HASH=$(sha256sum ./target/release/zos-minimal-server | cut -d' ' -f1)
+echo "📋 Git hash: {}"
+echo "📋 Binary hash: $BINARY_HASH"
+
+# Store hashes for verification
+echo "{}" > .git-hash
+echo "$BINARY_HASH" > .binary-hash
+
+echo "✅ Hash verification deployment complete"
+"#,
+            hash_clone, hash_clone, hash_clone, hash_clone, hash_clone, hash_clone
+        );
+
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(&script)
+            .output()
+            .await;
+    });
+
+    Json(serde_json::json!({
+        "status": "deploying",
+        "message": "Verifying and deploying specific git hash",
+        "git_hash": hash,
+        "action": "hash_verification_deploy"
     }))
 }
