@@ -67,6 +67,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/status/:wallet", get(user_status))
         .route("/deploy", post(deploy_zos2))
         .route("/rebuild", post(rebuild_self))
+        .route("/update-self", post(update_self_systemd))
+        .route("/webhook/git", post(git_webhook))
+        .route("/poll-git", post(poll_git_updates))
+        .route("/ping", get(ping_node))
         .route("/build-cross", post(build_cross_platform))
         .route("/source", get(serve_source))
         .route("/install.sh", get(serve_installer))
@@ -322,6 +326,7 @@ struct DeployRequest {
     instance_name: String,
     rebuild_self: bool,
     prepare_windows: bool,
+    deploy_method: Option<String>, // "systemd", "binary", "docker"
 }
 
 #[derive(Debug, Serialize)]
@@ -337,11 +342,93 @@ async fn deploy_zos2(Json(req): Json<DeployRequest>) -> Json<DeployResponse> {
 
     let instance_name = req.instance_name.clone();
     let target_port = req.target_port;
+    let deploy_method = req
+        .deploy_method
+        .clone()
+        .unwrap_or_else(|| "binary".to_string());
+
+    println!("📦 Deploy method: {}", deploy_method);
 
     // Deploy ZOS2 instance
     let deploy_result = tokio::spawn(async move {
-        let script = format!(
-            r#"#!/bin/bash
+        let script = if deploy_method == "systemd" {
+            format!(
+                r#"#!/bin/bash
+set -e
+echo "🔧 ZOS1 deploying ZOS2 via systemd on port {}"
+
+# Build ZOS2 binary
+cargo build --release --bin zos-minimal-server
+
+# Create ZOS2 user and directories
+sudo useradd -r -s /bin/false -d /opt/{} -m {} 2>/dev/null || true
+sudo mkdir -p /opt/{}/{{bin,data,config,logs}}
+sudo chown -R {}:{} /opt/{}
+
+# Install ZOS2 binary
+sudo cp target/release/zos-minimal-server /opt/{}/bin/
+sudo chmod +x /opt/{}/bin/zos-minimal-server
+
+# Create ZOS2 systemd service
+sudo tee /etc/systemd/system/{}.service > /dev/null <<EOF
+[Unit]
+Description=ZOS2 Server - Deployed by ZOS1
+After=network.target zos-server.service
+Wants=network.target
+
+[Service]
+Type=simple
+User={}
+Group={}
+WorkingDirectory=/opt/{}
+ExecStart=/opt/{}/bin/zos-minimal-server
+Restart=always
+RestartSec=5
+Environment=ZOS_HTTP_PORT={}
+Environment=ZOS_DATA_DIR=/opt/{}/data
+Environment=ZOS_LOG_LEVEL=info
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/{}/data /opt/{}/logs
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start ZOS2
+sudo systemctl daemon-reload
+sudo systemctl enable {}.service
+sudo systemctl start {}.service
+
+echo "✅ ZOS2 deployed via systemd successfully"
+"#,
+                req.target_port,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.target_port,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name
+            )
+        } else {
+            format!(
+                r#"#!/bin/bash
 set -e
 echo "🔧 ZOS1 deploying ZOS2 on port {}"
 
@@ -393,27 +480,28 @@ sudo systemctl start {}.service
 
 echo "✅ ZOS2 deployed successfully"
 "#,
-            req.target_port,
-            req.instance_name,
-            req.instance_name,
-            req.instance_name,
-            req.instance_name,
-            req.instance_name,
-            req.instance_name,
-            req.instance_name,
-            req.instance_name,
-            req.instance_name,
-            req.instance_name,
-            req.instance_name,
-            req.instance_name,
-            req.instance_name,
-            req.target_port,
-            req.instance_name,
-            req.instance_name,
-            req.instance_name,
-            req.instance_name,
-            req.instance_name
-        );
+                req.target_port,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.target_port,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name
+            )
+        };
 
         // Execute deployment script
         let output = tokio::process::Command::new("bash")
@@ -474,8 +562,35 @@ echo "✅ ZOS2 deployed successfully"
 }
 
 #[derive(Debug, Deserialize)]
-struct CrossBuildRequest {
-    targets: Vec<String>,
+struct GitWebhookPayload {
+    #[serde(rename = "ref")]
+    git_ref: Option<String>,
+    repository: Option<GitRepository>,
+    head_commit: Option<GitCommit>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GitRepository {
+    name: Option<String>,
+    clone_url: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GitCommit {
+    id: Option<String>,
+    message: Option<String>,
+    author: Option<GitAuthor>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GitAuthor {
+    name: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct PollRequest {
+    auto_deploy: Option<bool>,
+    branch: Option<String>,
 }
 
 async fn build_cross_platform(Json(req): Json<CrossBuildRequest>) -> Json<serde_json::Value> {
@@ -643,12 +758,20 @@ case "$PLATFORM" in
         ;;
 esac
 
-# Install Rust if not present
+# Install Rust if not present or too old
 if ! command -v cargo >/dev/null 2>&1; then
     echo "🦀 Installing Rust..."
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     source ~/.cargo/env
     export PATH="$HOME/.cargo/bin:$PATH"
+else
+    # Check Rust version and update if needed
+    RUST_VERSION=$(rustc --version | awk '{print $2}')
+    echo "🦀 Current Rust version: $RUST_VERSION"
+    if [[ "$RUST_VERSION" < "1.82" ]]; then
+        echo "🔄 Updating Rust to latest version..."
+        rustup update
+    fi
 fi
 
 # Create installation directories
@@ -767,7 +890,8 @@ async fn serve_tarball() -> Result<Vec<u8>, StatusCode> {
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    let remote_url = String::from_utf8_lossy(&remote_output.stdout).trim();
+    let remote_url = String::from_utf8_lossy(&remote_output.stdout);
+    let remote_url = remote_url.trim();
 
     // Clone fresh copy
     let clone_output = tokio::process::Command::new("git")
@@ -810,6 +934,333 @@ async fn serve_tarball() -> Result<Vec<u8>, StatusCode> {
     tokio::fs::read(tarball_path)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+}
+
+async fn update_self_systemd() -> Json<serde_json::Value> {
+    println!("🔄 ZOS self-update via systemd initiated");
+
+    tokio::spawn(async {
+        let update_script = r#"#!/bin/bash
+set -e
+echo "🔄 ZOS self-update starting..."
+
+# Get current working directory (should be project root)
+cd "$(dirname "$0")/.."
+
+# Pull latest changes
+git pull origin main
+
+# Build new binary
+cd zos-minimal-server
+cargo build --release
+
+# Create temporary update script that systemd can execute
+cat > /tmp/zos-update.sh << 'EOF'
+#!/bin/bash
+set -e
+echo "🔄 Updating ZOS binary..."
+
+# Stop the service
+systemctl stop zos-server.service
+
+# Backup current binary
+cp /opt/zos/bin/zos-minimal-server /opt/zos/bin/zos-minimal-server.backup
+
+# Copy new binary
+cp /mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/zos-minimal-server/target/release/zos-minimal-server /opt/zos/bin/
+
+# Make it executable
+chmod +x /opt/zos/bin/zos-minimal-server
+
+# Start the service
+systemctl start zos-server.service
+
+echo "✅ ZOS self-update completed"
+EOF
+
+chmod +x /tmp/zos-update.sh
+
+# Execute update script with sudo
+sudo /tmp/zos-update.sh
+
+# Clean up
+rm /tmp/zos-update.sh
+"#;
+
+        let output = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(update_script)
+            .output()
+            .await;
+
+        match output {
+            Ok(result) => {
+                if result.status.success() {
+                    println!("✅ Self-update completed successfully");
+                } else {
+                    println!(
+                        "❌ Self-update failed: {}",
+                        String::from_utf8_lossy(&result.stderr)
+                    );
+                }
+            }
+            Err(e) => {
+                println!("❌ Self-update execution failed: {}", e);
+            }
+        }
+    });
+
+    Json(serde_json::json!({
+        "status": "updating",
+        "message": "Self-update initiated. Server will restart automatically.",
+        "note": "This request may timeout as the server restarts"
+    }))
+}
+
+#[derive(Debug, Deserialize)]
+struct CrossBuildRequest {
+    targets: Vec<String>,
+}
+
+async fn git_webhook(Json(payload): Json<GitWebhookPayload>) -> Json<serde_json::Value> {
+    println!("🔗 Git webhook received");
+
+    // Check if this is a push to main branch
+    let is_main_branch = payload
+        .git_ref
+        .as_ref()
+        .map(|r| r == "refs/heads/main" || r == "refs/heads/master")
+        .unwrap_or(false);
+
+    if !is_main_branch {
+        return Json(serde_json::json!({
+            "status": "ignored",
+            "message": "Not a main/master branch push"
+        }));
+    }
+
+    let commit_id = payload
+        .head_commit
+        .as_ref()
+        .and_then(|c| c.id.as_ref())
+        .map(|s| s.clone())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    let commit_msg = payload
+        .head_commit
+        .as_ref()
+        .and_then(|c| c.message.as_ref())
+        .map(|s| s.clone())
+        .unwrap_or_else(|| "No message".to_string());
+
+    println!("📝 Processing commit: {} - {}", &commit_id[..8], commit_msg);
+
+    // Trigger update in background
+    let commit_id_clone = commit_id.clone();
+    tokio::spawn(async move {
+        let result = perform_git_update("main", true).await;
+        match result {
+            Ok(_) => println!("✅ Webhook update completed for commit {}", commit_id_clone),
+            Err(e) => println!("❌ Webhook update failed: {}", e),
+        }
+    });
+
+    Json(serde_json::json!({
+        "status": "accepted",
+        "message": "Git webhook processed, update initiated",
+        "commit": commit_id,
+        "branch": "main"
+    }))
+}
+
+async fn poll_git_updates(Json(req): Json<PollRequest>) -> Json<serde_json::Value> {
+    println!("🔍 Polling for git updates");
+
+    let branch = req.branch.clone().unwrap_or_else(|| "main".to_string());
+    let branch_str = branch.as_str();
+    let auto_deploy = req.auto_deploy.unwrap_or(false);
+
+    // Check for updates
+    let check_result = tokio::process::Command::new("git")
+        .args(&["fetch", "origin", branch_str])
+        .current_dir("..")
+        .output()
+        .await;
+
+    if let Err(e) = check_result {
+        return Json(serde_json::json!({
+            "status": "error",
+            "message": format!("Failed to fetch: {}", e)
+        }));
+    }
+
+    // Check if we're behind
+    let status_result = tokio::process::Command::new("git")
+        .args(&[
+            "rev-list",
+            "--count",
+            &format!("HEAD..origin/{}", branch_str),
+        ])
+        .current_dir("..")
+        .output()
+        .await;
+
+    match status_result {
+        Ok(output) => {
+            let behind_output = String::from_utf8_lossy(&output.stdout);
+            let behind_count = behind_output.trim();
+            let commits_behind: u32 = behind_count.parse().unwrap_or(0);
+
+            if commits_behind > 0 {
+                println!("📥 {} commits behind origin/{}", commits_behind, branch_str);
+
+                if auto_deploy {
+                    let branch_clone = branch.clone();
+                    tokio::spawn(async move {
+                        let result = perform_git_update(&branch_clone, true).await;
+                        match result {
+                            Ok(_) => println!("✅ Auto-deploy completed"),
+                            Err(e) => println!("❌ Auto-deploy failed: {}", e),
+                        }
+                    });
+
+                    Json(serde_json::json!({
+                        "status": "updating",
+                        "commits_behind": commits_behind,
+                        "message": "Updates found, auto-deploy initiated"
+                    }))
+                } else {
+                    Json(serde_json::json!({
+                        "status": "updates_available",
+                        "commits_behind": commits_behind,
+                        "message": "Updates available, use auto_deploy=true to apply"
+                    }))
+                }
+            } else {
+                Json(serde_json::json!({
+                    "status": "up_to_date",
+                    "commits_behind": 0,
+                    "message": "No updates available"
+                }))
+            }
+        }
+        Err(e) => Json(serde_json::json!({
+            "status": "error",
+            "message": format!("Failed to check status: {}", e)
+        })),
+    }
+}
+
+async fn ping_node() -> Json<serde_json::Value> {
+    let git_info = get_git_info().await;
+
+    Json(serde_json::json!({
+        "status": "pong",
+        "timestamp": chrono::Utc::now().to_rfc3339(),
+        "version": "1.0.0-stage1",
+        "git": git_info,
+        "uptime_seconds": std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs(),
+        "endpoints": {
+            "/ping": "Node health and git status",
+            "/webhook/git": "Git webhook for auto-updates",
+            "/poll-git": "Poll for git updates",
+            "/update-self": "Self-update via systemd"
+        }
+    }))
+}
+
+async fn perform_git_update(branch: &str, restart_service: bool) -> Result<(), String> {
+    println!("🔄 Performing git update for branch: {}", branch);
+
+    // Pull latest changes
+    let pull_result = tokio::process::Command::new("git")
+        .args(&["pull", "origin", branch])
+        .current_dir("..")
+        .output()
+        .await
+        .map_err(|e| format!("Git pull failed: {}", e))?;
+
+    if !pull_result.status.success() {
+        return Err(format!(
+            "Git pull failed: {}",
+            String::from_utf8_lossy(&pull_result.stderr)
+        ));
+    }
+
+    // Build new version
+    let build_result = tokio::process::Command::new("cargo")
+        .args(&["build", "--release"])
+        .current_dir("../zos-minimal-server")
+        .output()
+        .await
+        .map_err(|e| format!("Build failed: {}", e))?;
+
+    if !build_result.status.success() {
+        return Err(format!(
+            "Build failed: {}",
+            String::from_utf8_lossy(&build_result.stderr)
+        ));
+    }
+
+    if restart_service {
+        // Update and restart service
+        let update_script = r#"
+systemctl stop zos-server.service
+cp /mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/zos-minimal-server/target/release/zos-minimal-server /opt/zos/bin/
+chmod +x /opt/zos/bin/zos-minimal-server
+systemctl start zos-server.service
+"#;
+
+        let restart_result = tokio::process::Command::new("sudo")
+            .arg("bash")
+            .arg("-c")
+            .arg(update_script)
+            .output()
+            .await
+            .map_err(|e| format!("Service restart failed: {}", e))?;
+
+        if !restart_result.status.success() {
+            return Err(format!(
+                "Service restart failed: {}",
+                String::from_utf8_lossy(&restart_result.stderr)
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+async fn get_git_info() -> serde_json::Value {
+    let commit_result = tokio::process::Command::new("git")
+        .args(&["rev-parse", "HEAD"])
+        .current_dir("..")
+        .output()
+        .await;
+
+    let branch_result = tokio::process::Command::new("git")
+        .args(&["branch", "--show-current"])
+        .current_dir("..")
+        .output()
+        .await;
+
+    let commit = commit_result
+        .ok()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    let branch = branch_result
+        .ok()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    serde_json::json!({
+        "commit": commit,
+        "branch": branch,
+        "short_commit": if commit.len() >= 8 { &commit[..8] } else { &commit }
+    })
 }
 
 async fn background_tasks(state: AppState) {
