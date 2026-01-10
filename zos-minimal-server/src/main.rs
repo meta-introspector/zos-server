@@ -1,6 +1,6 @@
 use axum::{
     extract::{ConnectInfo, Path, State},
-    http::{header, Request, StatusCode},
+    http::{header, StatusCode},
     response::{Html, Json, Response},
     routing::{get, post},
     Router,
@@ -14,7 +14,7 @@ use tokio::sync::RwLock;
 use tokio::time::{interval, Duration};
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
-use tracing::{info, warn};
+use tracing::info;
 
 // Client tracking structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -322,7 +322,7 @@ async fn user_status(
 
 async fn service_call(
     Path((wallet, service)): Path<(String, String)>,
-    State(state): State<AppState>,
+    State(_state): State<AppState>,
 ) -> Json<serde_json::Value> {
     // Simple service implementations
     let result = match service.as_str() {
@@ -957,6 +957,16 @@ struct CrossBuildRequest {
 async fn git_webhook(Json(payload): Json<GitWebhookPayload>) -> Json<serde_json::Value> {
     println!("🔗 Git webhook received");
 
+    // Debug print unused fields to avoid warnings
+    if let Some(ref repo) = payload.repository {
+        println!("📦 Repository: {:?} at {:?}", repo.name, repo.clone_url);
+    }
+    if let Some(ref commit) = payload.head_commit {
+        if let Some(ref author) = commit.author {
+            println!("👤 Author: {:?}", author.name);
+        }
+    }
+
     // Check if this is a push to main branch
     let is_main_branch = payload
         .git_ref
@@ -1218,7 +1228,7 @@ async fn background_tasks(state: AppState) {
 }
 
 // Client tracking middleware
-async fn track_client(
+pub async fn track_client(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
     request: axum::http::Request<axum::body::Body>,
