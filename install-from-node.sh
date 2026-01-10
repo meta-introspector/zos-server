@@ -6,6 +6,7 @@ set -e
 
 # Extract ZOS server from script URL or use default
 ZOS_SERVER="${ZOS_SERVER:-solana.solfunmeme.com:8080}"
+ZOS_BRANCH="${ZOS_BRANCH:-stable}"
 if [[ -n "$BASH_SOURCE" ]]; then
     # Try to extract from the URL this script was downloaded from
     SCRIPT_URL=$(ps -o args= -p $PPID | grep -o 'http://[^/]*' || echo "")
@@ -16,6 +17,7 @@ fi
 
 echo "🚀 ZOS Universal Installer"
 echo "📡 Installing from: $ZOS_SERVER"
+echo "🌿 Branch: $ZOS_BRANCH"
 echo ""
 
 # Function to send install feedback
@@ -68,7 +70,13 @@ case "$PLATFORM" in
         echo "🐧 Linux detected"
         if command -v nix >/dev/null 2>&1; then
             echo "❄️  Nix detected - using Nix environment"
-            INSTALL_METHOD="nix"
+            # Check if we're in Termux/Android
+            if [[ "$PREFIX" == *"termux"* ]] || [[ "$PWD" == *"termux"* ]]; then
+                echo "📱 Android/Termux detected - using Termux packages"
+                INSTALL_METHOD="termux"
+            else
+                INSTALL_METHOD="nix"
+            fi
         elif command -v apt >/dev/null 2>&1; then
             echo "📦 APT detected - installing dependencies"
             sudo apt update
@@ -115,7 +123,13 @@ echo "📥 Downloading ZOS source..."
 send_install_feedback "downloading" "Downloading source code" ""
 if command -v git >/dev/null 2>&1; then
     echo "📂 Cloning from Git..."
-    git clone https://github.com/meta-introspector/zos-server.git
+    git clone -b "$ZOS_BRANCH" https://github.com/meta-introspector/zos-server.git 2>/dev/null || {
+        echo "⚠️  Branch $ZOS_BRANCH not found, using main"
+        git clone https://github.com/meta-introspector/zos-server.git
+        cd zos-server
+        git checkout "$ZOS_BRANCH" 2>/dev/null || git checkout main
+        cd ..
+    }
     cd zos-server
 else
     echo "📦 Downloading tarball..."
@@ -132,6 +146,11 @@ cd zos-minimal-server
 case "$INSTALL_METHOD" in
     "nix")
         nix-shell -p rustc cargo pkg-config openssl git --run "cargo build --release"
+        ;;
+    "termux")
+        echo "📱 Building with Termux packages..."
+        pkg install -y rust binutils || true
+        cargo build --release
         ;;
     "cargo")
         cargo build --release

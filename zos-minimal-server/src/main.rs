@@ -74,6 +74,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/build-cross", post(build_cross_platform))
         .route("/source", get(serve_source))
         .route("/install.sh", get(serve_installer))
+        .route("/install/:branch", get(serve_installer_branch))
         .route("/tarball", get(serve_tarball))
         .route("/:wallet/:service", get(service_call))
         .with_state(state.clone());
@@ -863,6 +864,48 @@ echo "🌐 Join network: http://solana.solfunmeme.com:8080"
             "attachment; filename=\"install.sh\"",
         )
         .body(installer_script.to_string())
+        .unwrap()
+}
+
+async fn serve_installer_branch(Path(branch): Path<String>) -> Response<String> {
+    println!("🚀 Serving ZOS installer script for branch: {}", branch);
+
+    // Read the installer script from file and customize for branch
+    let mut installer_script = match std::fs::read_to_string("install-from-node.sh") {
+        Ok(content) => content,
+        Err(_) => {
+            format!(
+                r#"#!/bin/bash
+set -e
+echo "🚀 ZOS Universal Installer"
+echo "🌿 Branch: {}"
+curl -L https://github.com/meta-introspector/zos-server/archive/{}.tar.gz -o zos-server.tar.gz
+tar -xzf zos-server.tar.gz
+cd zos-server-*/zos-minimal-server
+cargo build --release
+mkdir -p ~/.local/bin
+cp target/release/zos-minimal-server ~/.local/bin/
+echo "🎉 ZOS Installation Complete!"
+"#,
+                branch, branch
+            )
+        }
+    };
+
+    // Replace default branch with requested branch
+    installer_script = installer_script.replace(
+        "ZOS_BRANCH=\"${ZOS_BRANCH:-stable}\"",
+        &format!("ZOS_BRANCH=\"${{ZOS_BRANCH:-{}}}\"", branch),
+    );
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(header::CONTENT_TYPE, "text/plain; charset=utf-8")
+        .header(
+            header::CONTENT_DISPOSITION,
+            &format!("attachment; filename=\"install-{}.sh\"", branch),
+        )
+        .body(installer_script)
         .unwrap()
 }
 
