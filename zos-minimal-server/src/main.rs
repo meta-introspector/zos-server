@@ -8,10 +8,11 @@ use axum::{
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 use std::net::SocketAddr;
-use std::sync::Arc;
 use tokio::sync::RwLock;
-use tokio::time::{interval, Duration};
+use tokio::time::interval;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 use tracing::info;
@@ -29,11 +30,135 @@ pub struct ClientRecord {
 }
 
 // Minimal state for Stage 1
+#[derive(Debug, Clone, Serialize)]
+struct ResourceTrace {
+    verb: String,
+    start_time: DateTime<Utc>,
+    duration_ms: u64,
+    memory_kb: u64,
+    cpu_percent: f64,
+    syscalls: u64,
+    permissions: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+struct ResourceTracer {
+    traces: Arc<Mutex<Vec<ResourceTrace>>>,
+}
+
+impl ResourceTracer {
+    fn new() -> Self {
+        Self {
+            traces: Arc::new(Mutex::new(Vec::new())),
+        }
+    }
+
+    fn start_trace(&self, verb: &str) -> TraceContext {
+        TraceContext {
+            verb: verb.to_string(),
+            start_time: Utc::now(),
+            start_instant: Instant::now(),
+            tracer: self.clone(),
+        }
+    }
+
+    fn add_trace(&self, trace: ResourceTrace) {
+        if let Ok(mut traces) = self.traces.lock() {
+            traces.push(trace);
+            // Keep only last 1000 traces
+            if traces.len() > 1000 {
+                let excess = traces.len() - 1000;
+                traces.drain(0..excess);
+            }
+        }
+    }
+
+    fn get_traces(&self) -> Vec<ResourceTrace> {
+        self.traces.lock().unwrap_or_else(|_| panic!("Lock poisoned")).clone()
+    }
+}
+
+struct TraceContext {
+    verb: String,
+    start_time: DateTime<Utc>,
+    start_instant: Instant,
+    tracer: ResourceTracer,
+}
+
+impl TraceContext {
+    fn finish(self) {
+        let duration = self.start_instant.elapsed();
+        let memory_kb = get_memory_usage();
+        let cpu_percent = get_cpu_usage();
+        let syscalls = get_syscall_count();
+        let permissions = get_required_permissions(&self.verb);
+
+        let trace = ResourceTrace {
+            verb: self.verb,
+            start_time: self.start_time,
+            duration_ms: duration.as_millis() as u64,
+            memory_kb,
+            cpu_percent,
+            syscalls,
+            permissions,
+        };
+
+        self.tracer.add_trace(trace);
+    }
+}
+
+fn get_memory_usage() -> u64 {
+    // Read from /proc/self/status
+    std::fs::read_to_string("/proc/self/status")
+        .ok()
+        .and_then(|content| {
+            content
+                .lines()
+                .find(|line| line.starts_with("VmRSS:"))
+                .and_then(|line| {
+                    line.split_whitespace()
+                        .nth(1)
+                        .and_then(|s| s.parse::<u64>().ok())
+                })
+        })
+        .unwrap_or(0)
+}
+
+fn get_cpu_usage() -> f64 {
+    // Simple CPU usage approximation
+    // In production, this would use more sophisticated monitoring
+    0.0
+}
+
+fn get_syscall_count() -> u64 {
+    // Read syscall count from /proc/self/stat
+    std::fs::read_to_string("/proc/self/stat")
+        .ok()
+        .and_then(|content| {
+            content
+                .split_whitespace()
+                .nth(13) // syscall field
+                .and_then(|s| s.parse::<u64>().ok())
+        })
+        .unwrap_or(0)
+}
+
+fn get_required_permissions(verb: &str) -> Vec<String> {
+    match verb {
+        "health" => vec!["read".to_string()],
+        "install" => vec!["read".to_string(), "network".to_string()],
+        "deploy" => vec!["read".to_string(), "write".to_string(), "execute".to_string()],
+        "git_webhook" => vec!["read".to_string(), "write".to_string()],
+        _ => vec!["read".to_string()],
+    }
+}
+
 #[derive(Clone)]
 pub struct AppState {
     pub user_sessions: Arc<RwLock<HashMap<String, UserSession>>>,
     pub client_db: Arc<RwLock<HashMap<String, ClientRecord>>>,
     pub config: ServerConfig,
+    pub tracer: ResourceTracer,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -79,6 +204,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         user_sessions: Arc::new(RwLock::new(HashMap::new())),
         client_db: Arc::new(RwLock::new(HashMap::new())),
         config: config.clone(),
+        tracer: ResourceTracer::new(),
     };
 
     let app = Router::new()
@@ -95,6 +221,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/deploy/rollout", post(rollout_to_clients))
         .route("/bootstrap/prod", post(bootstrap_prod_server))
         .route("/instance/checkout/:branch", post(checkout_and_rebuild))
+        .route("/traces", get(get_traces))
         .route("/webhook/git", post(git_webhook))
         .route("/poll-git", post(poll_git_updates))
         .route("/ping", get(ping_node))
@@ -1544,4 +1671,18 @@ fi
         "branch": branch,
         "message": format!("Checking out branch {} and hot-swapping server", branch)
     }))
+}
+
+async fn get_traces(State(state): State<AppState>) -> Json<serde_json::Value> {
+    let _trace = state.tracer.start_trace("get_traces");
+    
+    let traces = state.tracer.get_traces();
+    let result = Json(serde_json::json!({
+        "traces": traces,
+        "count": traces.len(),
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    }));
+    
+    _trace.finish();
+    result
 }
