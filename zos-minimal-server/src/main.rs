@@ -42,7 +42,7 @@ struct ResourceTrace {
 }
 
 #[derive(Debug, Clone)]
-struct ResourceTracer {
+pub struct ResourceTracer {
     traces: Arc<Mutex<Vec<ResourceTrace>>>,
 }
 
