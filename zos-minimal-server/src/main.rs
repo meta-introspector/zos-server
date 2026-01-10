@@ -90,6 +90,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/deploy", post(deploy_zos2))
         .route("/rebuild", post(rebuild_self))
         .route("/update-self", post(update_self_systemd))
+        .route("/deploy/dev-to-staging", post(deploy_dev_to_staging))
+        .route("/deploy/staging-to-prod", post(deploy_staging_to_prod))
+        .route("/deploy/rollout", post(rollout_to_clients))
         .route("/webhook/git", post(git_webhook))
         .route("/poll-git", post(poll_git_updates))
         .route("/ping", get(ping_node))
@@ -98,10 +101,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/install.sh", get(serve_installer))
         .route("/install/:branch", get(serve_installer_branch))
         .route("/tarball", get(serve_tarball))
-        .route("/logs/install", post(log_install))
-        .route("/logs/build", post(log_build))
-        .route("/logs", get(list_logs))
-        .route("/logs/:host", get(get_host_logs))
         .route("/security/clients", get(list_clients))
         .route("/:wallet/:service", get(service_call))
         .layer(
@@ -1258,5 +1257,95 @@ async fn list_clients(State(state): State<AppState>) -> Json<serde_json::Value> 
     Json(serde_json::json!({
         "total_clients": client_list.len(),
         "clients": client_list
+    }))
+}
+
+// CI/CD Pipeline endpoints
+async fn deploy_dev_to_staging() -> Json<serde_json::Value> {
+    println!("🚀 Deploying dev to staging (port 8080)");
+
+    tokio::spawn(async {
+        let script = r#"#!/bin/bash
+set -e
+echo "📦 Dev to Staging deployment..."
+cd /mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server
+git pull origin main
+cd zos-minimal-server
+cargo build --release
+sudo systemctl stop zos-server.service
+sudo cp target/release/zos-minimal-server /opt/zos/bin/
+sudo cp ../install-from-node.sh /var/lib/zos/
+sudo systemctl start zos-server.service
+echo "✅ Staging deployment complete"
+"#;
+
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(script)
+            .output()
+            .await;
+    });
+
+    Json(serde_json::json!({
+        "status": "deploying",
+        "stage": "dev_to_staging",
+        "message": "Deploying latest code to staging server"
+    }))
+}
+
+async fn deploy_staging_to_prod() -> Json<serde_json::Value> {
+    println!("🏭 Deploying staging to production (port 8081)");
+
+    tokio::spawn(async {
+        let script = r#"#!/bin/bash
+set -e
+echo "📦 Staging to Production deployment..."
+sudo systemctl stop zos-prod-server.service
+sudo cp /opt/zos/bin/zos-minimal-server /opt/zos/bin/zos-prod-server
+sudo cp /var/lib/zos/install-from-node.sh /var/lib/zos-prod/
+sudo systemctl start zos-prod-server.service
+echo "✅ Production deployment complete"
+"#;
+
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(script)
+            .output()
+            .await;
+    });
+
+    Json(serde_json::json!({
+        "status": "deploying",
+        "stage": "staging_to_prod",
+        "message": "Promoting staging to production server"
+    }))
+}
+
+async fn rollout_to_clients() -> Json<serde_json::Value> {
+    println!("🌐 Rolling out to clients via stable branch");
+
+    tokio::spawn(async {
+        let script = r#"#!/bin/bash
+set -e
+echo "🌐 Client rollout..."
+cd /mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server
+git checkout stable
+git merge main
+git push origin stable
+git checkout main
+echo "✅ Client rollout complete - stable branch updated"
+"#;
+
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(script)
+            .output()
+            .await;
+    });
+
+    Json(serde_json::json!({
+        "status": "rolling_out",
+        "stage": "client_rollout",
+        "message": "Updating stable branch for client installations"
     }))
 }
