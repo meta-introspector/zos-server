@@ -222,6 +222,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/bootstrap/prod", post(bootstrap_prod_server))
         .route("/instance/checkout/:branch", post(checkout_and_rebuild))
         .route("/traces", get(get_traces))
+        .route("/install/qa-service", post(install_qa_service))
+        .route("/manage/qa/update", post(update_qa_server))
         .route("/webhook/git", post(git_webhook))
         .route("/poll-git", post(poll_git_updates))
         .route("/ping", get(ping_node))
@@ -1512,52 +1514,57 @@ echo "✅ Client rollout complete - stable branch updated"
 }
 
 async fn bootstrap_prod_server() -> Json<serde_json::Value> {
-    println!("🏭 Bootstrapping production server");
+    println!("🏭 Bootstrapping production server with dedicated user");
 
     tokio::spawn(async {
         let script = r#"#!/bin/bash
 set -e
-echo "🏭 Production server bootstrap..."
+echo "🏭 Production server bootstrap with dedicated user..."
 
 PROD_DIR="/opt/zos-production"
 SERVICE_NAME="zos-production"
 REPO_URL="https://github.com/meta-introspector/zos-server.git"
 BRANCH="stable"
 
+# Create dedicated production user
+sudo useradd -r -m -s /bin/bash zos-prod || echo "User zos-prod already exists"
+
 # Create production directory
 sudo mkdir -p "$PROD_DIR"
-sudo chown -R "$USER:$USER" "$PROD_DIR"
+sudo chown -R zos-prod:zos-prod "$PROD_DIR"
 
-# Clone or update repository
-if [ -d "$PROD_DIR/.git" ]; then
-    echo "🔄 Updating production repository..."
-    cd "$PROD_DIR"
+# Clone or update repository as zos-prod user
+sudo -u zos-prod bash -c "
+if [ -d '$PROD_DIR/.git' ]; then
+    echo '🔄 Updating production repository...'
+    cd '$PROD_DIR'
     git fetch origin
-    git checkout "$BRANCH"
-    git pull origin "$BRANCH"
+    git checkout '$BRANCH'
+    git pull origin '$BRANCH'
 else
-    echo "📥 Cloning production repository..."
-    git clone -b "$BRANCH" "$REPO_URL" "$PROD_DIR"
-    cd "$PROD_DIR"
+    echo '📥 Cloning production repository...'
+    git clone -b '$BRANCH' '$REPO_URL' '$PROD_DIR'
+    cd '$PROD_DIR'
 fi
 
 # Build production server
-echo "🔨 Building production server..."
+echo '🔨 Building production server...'
 cd zos-minimal-server
 cargo build --release
+"
 
 # Create production systemd service
 echo "📋 Creating production systemd service..."
 sudo tee /etc/systemd/system/$SERVICE_NAME.service > /dev/null << EOF
 [Unit]
-Description=ZOS Production Server - Self-Maintaining
+Description=ZOS Production Server - Dedicated User
 After=network.target
 Wants=network.target
 
 [Service]
 Type=simple
-User=$USER
-Group=$USER
+User=zos-prod
+Group=zos-prod
 WorkingDirectory=$PROD_DIR
 ExecStart=$PROD_DIR/target/release/zos-minimal-server
 Restart=always
@@ -1571,12 +1578,12 @@ Environment=ZOS_LOG_LEVEL=info
 WantedBy=multi-user.target
 EOF
 
-# Enable and start production service
-sudo systemctl daemon-reload
-sudo systemctl enable $SERVICE_NAME
-sudo systemctl start $SERVICE_NAME
+# QA server triggers secure production update via sudo script
+echo "📡 QA server triggering secure production deployment..."
+SCRIPT_PATH="/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/update-prod.sh"
+sudo "$SCRIPT_PATH" stable
 
-echo "✅ Production server bootstrapped on port 8081"
+echo "✅ Production deployment triggered successfully"
 "#;
 
         let _ = tokio::process::Command::new("bash")
@@ -1587,9 +1594,9 @@ echo "✅ Production server bootstrapped on port 8081"
     });
 
     Json(serde_json::json!({
-        "status": "bootstrapping",
+        "status": "triggered",
         "stage": "production_bootstrap",
-        "message": "Creating independent production server with own git state"
+        "message": "QA server triggered secure production deployment via sudo script"
     }))
 }
 
@@ -1685,4 +1692,133 @@ async fn get_traces(State(state): State<AppState>) -> Json<serde_json::Value> {
     
     _trace.finish();
     result
+}
+
+async fn install_qa_service(State(state): State<AppState>) -> Json<serde_json::Value> {
+    let _trace = state.tracer.start_trace("install_qa_service");
+    
+    println!("🔧 Installing QA service with dedicated user");
+    
+    tokio::spawn(async move {
+        let script = r#"#!/bin/bash
+set -e
+echo "🔧 Installing ZOS QA service with dedicated user..."
+
+# Create dedicated QA user
+sudo useradd -r -m -s /bin/bash zos-qa || echo "User zos-qa already exists"
+
+# Create QA directories
+sudo mkdir -p /opt/zos-qa
+sudo chown zos-qa:zos-qa /opt/zos-qa
+
+# Copy current binary
+sudo cp ./target/release/zos-minimal-server /usr/local/bin/zos-qa-server
+sudo chmod +x /usr/local/bin/zos-qa-server
+
+# Clone QA branch as zos-qa user
+sudo -u zos-qa bash -c "
+cd /opt/zos-qa
+if [ ! -d .git ]; then
+    git clone -b qa https://github.com/meta-introspector/zos-server.git .
+else
+    git fetch origin && git checkout qa && git pull origin qa
+fi
+cd zos-minimal-server
+cargo build --release
+"
+
+# Create system service for QA user
+sudo tee /etc/systemd/system/zos-qa.service > /dev/null << 'EOF'
+[Unit]
+Description=ZOS QA Server - Dedicated User
+After=network.target
+
+[Service]
+Type=simple
+User=zos-qa
+Group=zos-qa
+WorkingDirectory=/opt/zos-qa
+ExecStart=/usr/local/bin/zos-qa-server
+Restart=always
+RestartSec=5
+
+Environment=ZOS_HTTP_PORT=8082
+Environment=ZOS_DATA_DIR=/opt/zos-qa/data
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start QA service
+sudo systemctl daemon-reload
+sudo systemctl enable zos-qa.service
+sudo systemctl start zos-qa.service
+
+echo "✅ QA service installed with dedicated user 'zos-qa' on port 8082"
+"#;
+        
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(&script)
+            .output()
+            .await;
+    });
+    
+    let result = Json(serde_json::json!({
+        "status": "installing",
+        "message": "Installing QA service with dedicated user zos-qa",
+        "port": 8082,
+        "type": "system_service"
+    }));
+    
+    _trace.finish();
+    result
+}
+
+async fn update_qa_server(State(state): State<AppState>) -> Json<serde_json::Value> {
+    let _trace = state.tracer.start_trace("update_qa_server");
+    
+    println!("🔄 Dev server updating QA server");
+    
+    tokio::spawn(async move {
+        let script = r#"#!/bin/bash
+set -e
+echo "🔄 Dev server updating QA server..."
+
+# Send update command to QA server
+echo "📡 Sending update command to QA server on port 8082"
+curl -X POST http://localhost:8082/update-self || echo "⚠️  QA server update command failed"
+
+# Wait for QA server to restart
+sleep 5
+
+# Check if QA server is responsive
+for i in {1..10}; do
+    if curl -s http://localhost:8082/health > /dev/null; then
+        echo "✅ QA server is responsive after update"
+        break
+    else
+        echo "⏳ Waiting for QA server to restart... ($i/10)"
+        sleep 2
+    fi
+done
+
+# Show updated status
+echo "📋 QA Server Status:"
+curl -s http://localhost:8082/health | jq .git || echo "❌ QA server not responding"
+"#;
+        
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(&script)
+            .output()
+            .await;
+    });
+    
+    Json(serde_json::json!({
+        "status": "updating",
+        "message": "Dev server managing QA server update",
+        "target": "localhost:8082",
+        "action": "remote_update"
+    }))
 }
