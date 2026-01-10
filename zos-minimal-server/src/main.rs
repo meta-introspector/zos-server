@@ -327,6 +327,7 @@ async fn serve_http(port: u16) -> Result<(), Box<dyn std::error::Error>> {
         .route("/source", get(serve_source))
         .route("/install.sh", get(serve_installer))
         .route("/install/:branch", get(serve_installer_branch))
+        .route("/download/binary", get(serve_binary))
         .route("/tarball", get(serve_tarball))
         .route("/security/clients", get(list_clients))
         .route("/:wallet/:service", get(service_call))
@@ -1012,8 +1013,67 @@ async fn serve_source() -> Json<serde_json::Value> {
 async fn serve_installer() -> Response<String> {
     println!("🚀 Serving ZOS installer script");
 
-    let installer_script = std::fs::read_to_string("install-from-node.sh")
-        .expect("install-from-node.sh file not found - ensure it exists in working directory");
+    let installer_script = r#"#!/bin/bash
+# ZOS Universal Installer - Reproducible Binary Installation
+
+set -e
+
+echo "🚀 ZOS Universal Installer"
+echo "=========================="
+
+# Get system info
+ARCH=$(uname -m)
+OS=$(uname -s)
+echo "System: $OS $ARCH"
+
+# Get expected hash from server
+echo "🔍 Getting binary hash from server..."
+SERVER_URL="${ZOS_SERVER_URL:-http://localhost:8080}"
+EXPECTED_HASH=$(curl -s "$SERVER_URL/health" | jq -r .binary.hash)
+EXPECTED_GIT=$(curl -s "$SERVER_URL/health" | jq -r .git.commit_short)
+
+echo "Expected binary hash: $EXPECTED_HASH"
+echo "Expected git commit: $EXPECTED_GIT"
+
+# Download binary
+echo "📦 Downloading ZOS binary..."
+curl -L "$SERVER_URL/download/binary" -o zos-server
+chmod +x zos-server
+
+# Verify binary hash
+echo "🔍 Verifying binary integrity..."
+ACTUAL_HASH=$(sha256sum zos-server | cut -d' ' -f1)
+
+if [ "$EXPECTED_HASH" = "$ACTUAL_HASH" ]; then
+    echo "✅ Binary verification successful"
+    echo "   Hash: $ACTUAL_HASH"
+else
+    echo "❌ Binary verification failed"
+    echo "   Expected: $EXPECTED_HASH"
+    echo "   Actual:   $ACTUAL_HASH"
+    exit 1
+fi
+
+# Install binary
+echo "📋 Installing ZOS server..."
+sudo mkdir -p /usr/local/bin
+sudo mv zos-server /usr/local/bin/zos-server
+sudo chmod +x /usr/local/bin/zos-server
+
+echo "✅ ZOS Installation Complete!"
+echo ""
+echo "Installed version:"
+echo "  Git commit: $EXPECTED_GIT"
+echo "  Binary hash: $EXPECTED_HASH"
+echo ""
+echo "Usage:"
+echo "  zos-server serve [port]           - Start server"
+echo "  zos-server status                 - Show git/binary hashes"
+echo "  zos-server network-status         - Show network status"
+echo "  zos-server deploy-systemd qa 8082 - Deploy to systemd"
+echo ""
+echo "🌐 Start your server: zos-server serve 8080"
+"#;
 
     Response::builder()
         .status(StatusCode::OK)
@@ -1022,7 +1082,7 @@ async fn serve_installer() -> Response<String> {
             header::CONTENT_DISPOSITION,
             "attachment; filename=\"install.sh\"",
         )
-        .body(installer_script)
+        .body(installer_script.to_string())
         .unwrap()
 }
 
@@ -2238,4 +2298,19 @@ WantedBy=multi-user.target
     );
 
     Ok(())
+}
+async fn serve_binary() -> Result<Response, StatusCode> {
+    // Serve the current binary
+    let binary_path = std::env::current_exe().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let binary_data = tokio::fs::read(&binary_path)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let response = Response::builder()
+        .header("Content-Type", "application/octet-stream")
+        .header("Content-Disposition", "attachment; filename=\"zos-server\"")
+        .body(binary_data.into())
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(response)
 }
