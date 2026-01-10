@@ -123,13 +123,23 @@ echo "📥 Downloading ZOS source..."
 send_install_feedback "downloading" "Downloading source code" ""
 if command -v git >/dev/null 2>&1; then
     echo "📂 Cloning from Git..."
-    git clone -b "$ZOS_BRANCH" https://github.com/meta-introspector/zos-server.git 2>/dev/null || {
-        echo "⚠️  Branch $ZOS_BRANCH not found, using main"
-        git clone https://github.com/meta-introspector/zos-server.git
+if command -v git >/dev/null 2>&1; then
+    echo "📂 Cloning from Git (branch: $ZOS_BRANCH)..."
+    if [ -d "zos-server" ]; then
+        echo "🔄 Updating existing zos-server repository..."
         cd zos-server
+        git fetch origin
         git checkout "$ZOS_BRANCH" 2>/dev/null || git checkout main
-        cd ..
-    }
+        git pull origin "$ZOS_BRANCH" 2>/dev/null || git pull origin main
+    else
+        git clone -b "$ZOS_BRANCH" https://github.com/meta-introspector/zos-server.git 2>/dev/null || {
+            echo "⚠️  Branch $ZOS_BRANCH not found, using main"
+            git clone https://github.com/meta-introspector/zos-server.git
+            cd zos-server
+            git checkout "$ZOS_BRANCH" 2>/dev/null || git checkout main
+        }
+        cd zos-server
+    fi
     cd zos-server
 else
     echo "📦 Downloading tarball..."
