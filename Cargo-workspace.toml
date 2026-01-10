@@ -1,0 +1,177 @@
+[workspace]
+members = [
+    "zos-macros",
+    "zos-traits",
+    "zos-types",
+    "zos-build-macros",
+    "zos-plan",
+    "zos-deploy",
+    "zos-oracle",
+    "zos-unix-accounts",
+    "zos-retro-games",
+    "zos-minimal-server",
+    "zos-libp2p",
+    "zos-plugins",
+    "zos-bootstrap",
+    "zos-oci",
+    "zos-analysis"
+]
+resolver = "2"
+
+[workspace.dependencies]
+# Zero deps foundation
+zos-macros = { path = "zos-macros" }
+zos-traits = { path = "zos-traits" }
+zos-types = { path = "zos-types" }
+zos-build-macros = { path = "zos-build-macros" }
+zos-plan = { path = "zos-plan" }
+zos-deploy = { path = "zos-deploy" }
+zos-oracle = { path = "zos-oracle" }
+zos-unix-accounts = { path = "zos-unix-accounts" }
+zos-retro-games = { path = "zos-retro-games" }
+
+# Standalone server dependencies
+axum = "0.7"
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace", "request-id"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+clap = { version = "4.0", features = ["derive"] }
+
+[package]
+name = "zos-server"
+version = "0.1.0"
+edition = "2021"
+description = "Zero Ontology System - Complete plugin-based computation platform"
+license = "AGPL-3.0"
+repository = "https://github.com/meta-introspector/zos-server"
+
+[[bin]]
+name = "zos_server"
+path = "src/main.rs"
+
+[[bin]]
+name = "zos-minimal-server"
+path = "zos-minimal-server/src/main.rs"
+
+[dependencies]
+# Foundation (zero deps)
+zos-macros = { workspace = true }
+zos-traits = { workspace = true }
+zos-types = { workspace = true }
+
+# Standalone server dependencies
+axum = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+reqwest = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Optional runtime deps
+uuid = { version = "1.0", features = ["v4"], optional = true }
+
+[build-dependencies]
+zos-build-macros = { workspace = true }
+
+[features]
+default = []
+slim = []
+
+# Layer -4: Advanced ZK
+advanced_zk = ["rollups", "lattice_folding", "hme", "metacoq", "lean4"]
+rollups = []
+lattice_folding = []
+hme = []
+metacoq = []
+lean4 = []
+
+# Layer -3: Zero Knowledge
+zk = ["zk_snarks", "zk_starks", "correctness_proofs"]
+zk_snarks = []
+zk_starks = []
+correctness_proofs = []
+
+# Layer -2: Regulatory
+regulatory = ["sec_compliance", "quality_assurance", "gdpr", "hipaa", "sox", "iso"]
+sec_compliance = []
+quality_assurance = []
+gdpr = []
+hipaa = []
+sox = []
+iso = []
+
+# Layer -1: Governance
+governance = ["voting_systems", "resource_management", "erp_integration"]
+voting_systems = []
+resource_management = []
+erp_integration = []
+
+# Layer 0: Foundation
+foundation = ["lmfdb", "wikidata", "openstreetmap", "archive_org", "sdf_org"]
+lmfdb = []
+wikidata = []
+openstreetmap = []
+archive_org = []
+sdf_org = []
+
+# Layer 1: System (19 plugins)
+system = ["systemd", "docker", "compilers", "blockchain", "kernel", "ebpf", "wasm", "runtime_plugins", "storage", "networking", "security", "telemetry", "debug", "bintools", "libp2p", "solana", "oracle", "enterprise", "modeling"]
+systemd = []
+docker = []
+compilers = []
+blockchain = []
+kernel = []
+ebpf = []
+wasm = []
+runtime_plugins = []
+storage = []
+networking = []
+security = []
+telemetry = []
+debug = []
+bintools = []
+libp2p = []
+solana = []
+oracle = []
+enterprise = []
+modeling = []
+
+# Layer 2: Data Formats
+data_formats = ["parquet", "huggingface", "rdf", "sql", "protocols", "dataflow", "knowledge"]
+parquet = []
+huggingface = []
+rdf = []
+sql = []
+protocols = []
+dataflow = []
+knowledge = []
+
+# Layer ∞: Recursive
+recursive = ["infinite_export", "cross_layer_communication", "recursive_verification"]
+infinite_export = []
+cross_layer_communication = []
+recursive_verification = []
+
+# Runtime dependencies (optional)
+serde = []
+runtime = ["dep:uuid"]
+full = ["serde", "runtime"]
+
+# Complete layer sets
+all_layers = ["advanced_zk", "zk", "regulatory", "governance", "foundation", "system", "data_formats", "recursive"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"

@@ -1,0 +1,12 @@
+# ZOS Server Configuration
+[server]
+host = "0.0.0.0"
+port = 8080
+domain = "solana.solfunmeme.com"
+
+[auth]
+session_duration_hours = 2
+
+[deployment]
+qa_port = 8082
+prod_port = 8081

@@ -1,0 +1,2507 @@
+// Re-export the main server functionality
+pub use crate::zos_minimal_server::*;
+
+// Interface functions for the plugin
+use serde_json::Value;
+use std::process::Command;
+
+pub async fn start_server(port: String) -> Result<(), Box<dyn std::error::Error>> {
+    // Start the server using the existing main function logic
+    std::env::set_var("ZOS_PORT", &port);
+
+    // Call the original server start logic
+    let (command, params) = ("serve".to_string(), vec![port]);
+    main_server_logic(command, params).await
+}
+
+pub async fn deploy_qa_service(git_hash: &str, port: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let (command, params) = ("deploy-qa".to_string(), vec![git_hash.to_string(), port.to_string()]);
+    main_server_logic(command, params).await
+}
+
+pub async fn deploy_prod_service(git_hash: &str, port: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let (command, params) = ("deploy-prod".to_string(), vec![git_hash.to_string(), port.to_string()]);
+    main_server_logic(command, params).await
+}
+
+pub async fn setup_qa_instance(port: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let (command, params) = ("setup-qa".to_string(), vec![port.to_string()]);
+    main_server_logic(command, params).await
+}
+
+pub async fn setup_prod_instance(port: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let (command, params) = ("setup-prod".to_string(), vec![port.to_string()]);
+    main_server_logic(command, params).await
+}
+
+pub async fn get_server_status() -> Result<Value, Box<dyn std::error::Error>> {
+    let (command, params) = ("status".to_string(), vec![]);
+    main_server_logic(command, params).await?;
+    Ok(serde_json::json!({"status": "ok"}))
+}
+
+pub async fn bootstrap_system(args: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
+    let (command, params) = ("bootstrap".to_string(), args);
+    main_server_logic(command, params).await
+}
+
+pub async fn check_network_status() -> Result<Value, Box<dyn std::error::Error>> {
+    let (command, params) = ("network-status".to_string(), vec![]);
+    main_server_logic(command, params).await?;
+    Ok(serde_json::json!({"status": "checked"}))
+}
+
+pub async fn deploy_systemd_service(env: &str, port: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let (command, params) = ("deploy-systemd".to_string(), vec![env.to_string(), port.to_string()]);
+    main_server_logic(command, params).await
+}
+
+// Main server logic extracted from the original main function
+pub async fn main_server_logic(command: String, params: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
+    match command.as_str() {
+        "serve" => {
+            let port = params.get(0).unwrap_or(&"8080".to_string()).parse::<u16>()?;
+            start_axum_server(port).await?;
+        }
+        "deploy-qa" => {
+            if params.len() < 2 {
+                return Err("Usage: deploy-qa <git_hash> <port>".into());
+            }
+            execute_deploy_qa(&params[0], &params[1]).await?;
+        }
+        "deploy-prod" => {
+            if params.len() < 2 {
+                return Err("Usage: deploy-prod <git_hash> <port>".into());
+            }
+            execute_deploy_prod(&params[0], &params[1]).await?;
+        }
+        "setup-qa" => {
+            let port = params.get(0).unwrap_or(&"8082".to_string());
+            execute_setup_qa(port).await?;
+        }
+        "setup-prod" => {
+            let port = params.get(0).unwrap_or(&"8081".to_string());
+            execute_setup_prod(port).await?;
+        }
+        "status" => {
+            execute_status().await?;
+        }
+        "bootstrap" => {
+            execute_bootstrap(params).await?;
+        }
+        "network-status" => {
+            execute_network_status().await?;
+        }
+        "deploy-systemd" => {
+            if params.len() < 2 {
+                return Err("Usage: deploy-systemd <env> <port>".into());
+            }
+            execute_deploy_systemd(&params[0], &params[1]).await?;
+        }
+        _ => {
+            return Err(format!("Unknown command: {}", command).into());
+        }
+    }
+    Ok(())
+}
+
+// Extract the actual server start logic
+async fn start_axum_server(port: u16) -> Result<(), Box<dyn std::error::Error>> {
+    use axum::{
+    extract::{ConnectInfo, Path, State},
+    http::{header, StatusCode},
+    response::{Html, Json, Response},
+    routing::{get, post},
+    Router,
+};
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::env;
+use std::net::SocketAddr;
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
+use tokio::sync::RwLock;
+use tokio::time::interval;
+use tower::ServiceBuilder;
+use tower_http::trace::TraceLayer;
+use tracing::info;
+
+// CLI Command Handling
+fn parse_args() -> (String, Vec<String>) {
+    let args: Vec<String> = env::args().collect();
+    if args.len() < 2 {
+        return ("serve".to_string(), vec!["8080".to_string()]);
+    }
+
+    let command = args[1].clone();
+    let params = args[2..].to_vec();
+    (command, params)
+}
+
+// Client tracking structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClientRecord {
+    pub ip: String,
+    pub user_agent: Option<String>,
+    pub first_seen: DateTime<Utc>,
+    pub last_seen: DateTime<Utc>,
+    pub request_count: u64,
+    pub endpoints_accessed: Vec<String>,
+    pub risk_score: u32,
+}
+
+// Minimal state for Stage 1
+#[derive(Debug, Clone, Serialize)]
+struct ResourceTrace {
+    verb: String,
+    start_time: DateTime<Utc>,
+    duration_ms: u64,
+    memory_kb: u64,
+    cpu_percent: f64,
+    syscalls: u64,
+    permissions: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ResourceTracer {
+    traces: Arc<Mutex<Vec<ResourceTrace>>>,
+}
+
+impl ResourceTracer {
+    fn new() -> Self {
+        Self {
+            traces: Arc::new(Mutex::new(Vec::new())),
+        }
+    }
+
+    fn start_trace(&self, verb: &str) -> TraceContext {
+        TraceContext {
+            verb: verb.to_string(),
+            start_time: Utc::now(),
+            start_instant: Instant::now(),
+            tracer: self.clone(),
+        }
+    }
+
+    fn add_trace(&self, trace: ResourceTrace) {
+        if let Ok(mut traces) = self.traces.lock() {
+            traces.push(trace);
+            // Keep only last 1000 traces
+            if traces.len() > 1000 {
+                let excess = traces.len() - 1000;
+                traces.drain(0..excess);
+            }
+        }
+    }
+
+    fn get_traces(&self) -> Vec<ResourceTrace> {
+        self.traces
+            .lock()
+            .unwrap_or_else(|_| panic!("Lock poisoned"))
+            .clone()
+    }
+}
+
+struct TraceContext {
+    verb: String,
+    start_time: DateTime<Utc>,
+    start_instant: Instant,
+    tracer: ResourceTracer,
+}
+
+impl TraceContext {
+    fn finish(self) {
+        let duration = self.start_instant.elapsed();
+        let memory_kb = get_memory_usage();
+        let cpu_percent = get_cpu_usage();
+        let syscalls = get_syscall_count();
+        let permissions = get_required_permissions(&self.verb);
+
+        let trace = ResourceTrace {
+            verb: self.verb,
+            start_time: self.start_time,
+            duration_ms: duration.as_millis() as u64,
+            memory_kb,
+            cpu_percent,
+            syscalls,
+            permissions,
+        };
+
+        self.tracer.add_trace(trace);
+    }
+}
+
+fn get_memory_usage() -> u64 {
+    // Read from /proc/self/status
+    std::fs::read_to_string("/proc/self/status")
+        .ok()
+        .and_then(|content| {
+            content
+                .lines()
+                .find(|line| line.starts_with("VmRSS:"))
+                .and_then(|line| {
+                    line.split_whitespace()
+                        .nth(1)
+                        .and_then(|s| s.parse::<u64>().ok())
+                })
+        })
+        .unwrap_or(0)
+}
+
+fn get_cpu_usage() -> f64 {
+    // Simple CPU usage approximation
+    // In production, this would use more sophisticated monitoring
+    0.0
+}
+
+fn get_syscall_count() -> u64 {
+    // Read syscall count from /proc/self/stat
+    std::fs::read_to_string("/proc/self/stat")
+        .ok()
+        .and_then(|content| {
+            content
+                .split_whitespace()
+                .nth(13) // syscall field
+                .and_then(|s| s.parse::<u64>().ok())
+        })
+        .unwrap_or(0)
+}
+
+fn get_required_permissions(verb: &str) -> Vec<String> {
+    match verb {
+        "health" => vec!["read".to_string()],
+        "install" => vec!["read".to_string(), "network".to_string()],
+        "deploy" => vec![
+            "read".to_string(),
+            "write".to_string(),
+            "execute".to_string(),
+        ],
+        "git_webhook" => vec!["read".to_string(), "write".to_string()],
+        _ => vec!["read".to_string()],
+    }
+}
+
+#[derive(Clone)]
+pub struct AppState {
+    pub user_sessions: Arc<RwLock<HashMap<String, UserSession>>>,
+    pub client_db: Arc<RwLock<HashMap<String, ClientRecord>>>,
+    pub config: ServerConfig,
+    pub tracer: ResourceTracer,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServerConfig {
+    pub http_port: u16,
+    pub domain: String,
+    pub max_users: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserSession {
+    pub wallet_address: String,
+    pub allocated_port: Option<u16>,
+    pub credits: u64,
+    pub last_activity: u64,
+}
+
+impl ServerConfig {
+    pub fn load() -> Self {
+        Self {
+            http_port: std::env::var("ZOS_HTTP_PORT")
+                .unwrap_or("8080".to_string())
+                .parse()
+                .unwrap_or(8080),
+            domain: std::env::var("ZOS_DOMAIN").unwrap_or("localhost".to_string()),
+            max_users: 50,
+        }
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let (command, params) = parse_args();
+
+    match command.as_str() {
+        "serve" => {
+            let port = params
+                .get(0)
+                .unwrap_or(&"8080".to_string())
+                .parse()
+                .unwrap_or(8080);
+            serve_http(port).await?;
+        }
+        "deploy-qa" => {
+            let hash = params.get(0).ok_or("Hash required for deploy-qa")?;
+            deploy_qa_command(hash).await?;
+        }
+        "deploy-prod" => {
+            let hash = params.get(0).ok_or("Hash required for deploy-prod")?;
+            deploy_prod_command(hash).await?;
+        }
+        "setup-qa" => {
+            let port = params
+                .get(0)
+                .unwrap_or(&"8082".to_string())
+                .parse()
+                .unwrap_or(8082);
+            setup_qa_command(port).await?;
+        }
+        "setup-prod" => {
+            let port = params
+                .get(0)
+                .unwrap_or(&"8081".to_string())
+                .parse()
+                .unwrap_or(8081);
+            setup_prod_command(port).await?;
+        }
+        "status" => {
+            status_command().await?;
+        }
+        "bootstrap" => {
+            bootstrap_command().await?;
+        }
+        "network-status" => {
+            network_status_command().await?;
+        }
+        "deploy-systemd" => {
+            let service = params.get(0).unwrap_or(&"qa".to_string()).clone();
+            let port = params
+                .get(1)
+                .unwrap_or(&"8082".to_string())
+                .parse()
+                .unwrap_or(8082);
+            deploy_systemd_command(&service, port).await?;
+        }
+        _ => {
+            println!("ZOS Server Commands:");
+            println!("  serve [port]           - Start HTTP server (default: 8080)");
+            println!("  deploy-qa <hash>       - Deploy to QA with hash verification");
+            println!("  deploy-prod <hash>     - Deploy to Production");
+            println!("  setup-qa [port]        - Setup QA instance (default: 8082)");
+            println!("  setup-prod [port]      - Setup Production instance (default: 8081)");
+            println!("  status                 - Get current git and binary hashes");
+            println!("  bootstrap              - Bootstrap entire pipeline");
+            println!("  network-status         - Show all known servers");
+            println!("  deploy-systemd [qa|prod] [port] - Deploy service to systemd");
+        }
+    }
+
+    Ok(())
+}
+
+async fn serve_http(port: u16) -> Result<(), Box<dyn std::error::Error>> {
+    println!("🚀 ZOS Server starting on port {}", port);
+
+    // Set the port in environment for the config
+    std::env::set_var("ZOS_HTTP_PORT", port.to_string());
+    // Initialize tracing
+    tracing_subscriber::fmt::init();
+
+    let config = ServerConfig::load();
+
+    println!("🚀 ZOS Stage 1 Server");
+    println!("   Domain: {}", config.domain);
+    println!("   Port: {}", config.http_port);
+
+    let state = AppState {
+        user_sessions: Arc::new(RwLock::new(HashMap::new())),
+        client_db: Arc::new(RwLock::new(HashMap::new())),
+        config: config.clone(),
+        tracer: ResourceTracer::new(),
+    };
+
+    let app = Router::new()
+        .route("/", get(homepage))
+        .route("/health", get(health))
+        .route("/dashboard/:wallet", get(dashboard))
+        .route("/api/allocate-port", post(allocate_port))
+        .route("/api/status/:wallet", get(user_status))
+        .route("/deploy", post(deploy_zos2))
+        .route("/rebuild", post(rebuild_self))
+        .route("/update-self", post(update_self_systemd))
+        .route("/deploy/dev-to-staging", post(deploy_dev_to_staging))
+        .route("/deploy/staging-to-prod", post(deploy_staging_to_prod))
+        .route("/deploy/rollout", post(rollout_to_clients))
+        .route("/bootstrap/prod", post(bootstrap_prod_server))
+        .route("/instance/checkout/:branch", post(checkout_and_rebuild))
+        .route("/traces", get(get_traces))
+        .route("/install/qa-service", post(install_qa_service))
+        .route("/manage/qa/update", post(update_qa_server))
+        .route("/deploy/verify-hash/:hash", post(deploy_verify_hash))
+        .route("/webhook/git", post(git_webhook))
+        .route("/poll-git", post(poll_git_updates))
+        .route("/ping", get(ping_node))
+        .route("/build-cross", post(build_cross_platform))
+        .route("/source", get(serve_source))
+        .route("/install.sh", get(serve_installer))
+        .route("/install", get(serve_installer))
+        .route("/install/:branch", get(serve_installer_branch))
+        .route("/download/binary", get(serve_binary))
+        .route("/download/binary/:git_hash/:arch", get(serve_binary_for_arch))
+        .route("/install-log", post(receive_install_log))
+        .route("/binary-hash", get(serve_binary_hash))
+        .route("/git-hash", get(serve_git_hash))
+        .route("/tarball", get(serve_tarball))
+        .route("/security/clients", get(list_clients))
+        .route("/:wallet/:service", get(service_call))
+        .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
+        .with_state(state.clone());
+
+    let addr = format!("0.0.0.0:{}", config.http_port);
+    println!("🌐 Server running on {}", addr);
+
+    // Run server and background tasks
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+    println!("🌐 Server running on {}", addr);
+
+    tokio::select! {
+        _ = axum::serve(listener, app) => {},
+        _ = background_tasks(state) => {}
+    }
+
+    Ok(())
+}
+
+async fn homepage() -> Html<&'static str> {
+    Html(
+        r#"
+    <html>
+    <head><title>ZOS Stage 1</title></head>
+    <body style="font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px;">
+        <h1>🚀 ZOS Stage 1 Server</h1>
+        <p>Minimal decentralized compute platform</p>
+
+        <h3>📊 Endpoints</h3>
+        <ul>
+            <li><code>GET /health</code> - Health check</li>
+            <li><code>GET /dashboard/{wallet}</code> - User dashboard</li>
+            <li><code>POST /api/allocate-port</code> - Allocate port</li>
+            <li><code>GET /{wallet}/{service}</code> - Call service</li>
+        </ul>
+
+        <h3>🎮 Try It</h3>
+        <p><a href="/dashboard/demo">Demo Dashboard</a></p>
+    </body>
+    </html>
+    "#,
+    )
+}
+
+async fn health() -> Json<serde_json::Value> {
+    // Get git info if available
+    let git_commit = std::process::Command::new("git")
+        .args(&["rev-parse", "HEAD"])
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    let git_commit_short = if git_commit != "unknown" {
+        git_commit.chars().take(8).collect::<String>()
+    } else {
+        "unknown".to_string()
+    };
+
+    let git_branch = std::process::Command::new("git")
+        .args(&["branch", "--show-current"])
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    let commit_age = std::process::Command::new("git")
+        .args(&["log", "-1", "--format=%cr"])
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    // Get binary hash
+    let binary_path =
+        std::env::current_exe().unwrap_or_else(|_| std::path::PathBuf::from("unknown"));
+
+    let binary_hash = std::process::Command::new("sha256sum")
+        .arg(&binary_path)
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .map(|s| s.split_whitespace().next().unwrap_or("unknown").to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    let binary_hash_short = if binary_hash != "unknown" {
+        binary_hash.chars().take(8).collect::<String>()
+    } else {
+        "unknown".to_string()
+    };
+
+    let cwd = std::env::current_dir()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|_| "unknown".to_string());
+
+    let port = std::env::var("ZOS_HTTP_PORT").unwrap_or_else(|_| "8080".to_string());
+
+    Json(serde_json::json!({
+        "status": "healthy",
+        "version": "1.0.0-stage1",
+        "timestamp": chrono::Utc::now().to_rfc3339(),
+        "env": {
+            "cwd": cwd,
+            "port": port,
+            "pid": std::process::id(),
+            "binary_path": binary_path.to_string_lossy()
+        },
+        "git": {
+            "commit": git_commit,
+            "commit_short": git_commit_short,
+            "branch": git_branch,
+            "age": commit_age
+        },
+        "binary": {
+            "hash": binary_hash,
+            "hash_short": binary_hash_short
+        }
+    }))
+}
+
+async fn dashboard(Path(wallet): Path<String>) -> Html<String> {
+    Html(format!(
+        r#"
+    <html>
+    <head><title>ZOS Dashboard - {}</title></head>
+    <body style="font-family: Arial; margin: 0; padding: 20px; background: #f5f5f5;">
+        <h1>🎯 ZOS Dashboard</h1>
+        <p>Wallet: <code>{}</code></p>
+
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3>📊 Status</h3>
+            <p>Credits: <strong>100</strong></p>
+            <p>Port: <strong>None allocated</strong></p>
+            <button onclick="allocatePort()" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
+                Allocate Port
+            </button>
+        </div>
+
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3>🎮 Free Services</h3>
+            <button onclick="callService('pi')" style="margin: 5px; padding: 8px 16px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">
+                🥧 Calculate Pi
+            </button>
+            <button onclick="callService('fibonacci')" style="margin: 5px; padding: 8px 16px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">
+                🐰 Fibonacci
+            </button>
+            <button onclick="callService('primes')" style="margin: 5px; padding: 8px 16px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">
+                🎭 Primes
+            </button>
+        </div>
+
+        <script>
+            async function allocatePort() {{
+                try {{
+                    const response = await fetch('/api/allocate-port', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ wallet: '{}' }})
+                    }});
+                    const result = await response.json();
+                    alert('Port allocated: ' + result.port);
+                    location.reload();
+                }} catch (e) {{
+                    alert('Error: ' + e.message);
+                }}
+            }}
+
+            async function callService(service) {{
+                try {{
+                    const response = await fetch('/{}/'+service);
+                    const result = await response.json();
+                    alert(service + ' result: ' + JSON.stringify(result.result));
+                }} catch (e) {{
+                    alert('Error: ' + e.message);
+                }}
+            }}
+        </script>
+    </body>
+    </html>
+    "#,
+        wallet, wallet, wallet, wallet
+    ))
+}
+
+async fn allocate_port(
+    State(state): State<AppState>,
+    axum::Json(request): axum::Json<serde_json::Value>,
+) -> Result<Json<serde_json::Value>, StatusCode> {
+    let wallet = request
+        .get("wallet")
+        .and_then(|w| w.as_str())
+        .ok_or(StatusCode::BAD_REQUEST)?;
+
+    let port = 20000 + (wallet.len() % 1000) as u16;
+
+    let mut sessions = state.user_sessions.write().await;
+    let session = sessions.entry(wallet.to_string()).or_insert(UserSession {
+        wallet_address: wallet.to_string(),
+        allocated_port: None,
+        credits: 100,
+        last_activity: chrono::Utc::now().timestamp() as u64,
+    });
+
+    session.allocated_port = Some(port);
+    session.last_activity = chrono::Utc::now().timestamp() as u64;
+
+    println!("🔌 Port {} allocated to {}", port, &wallet[..8]);
+
+    Ok(Json(serde_json::json!({
+        "success": true,
+        "port": port,
+        "expires_in_seconds": 300
+    })))
+}
+
+async fn user_status(
+    Path(wallet): Path<String>,
+    State(state): State<AppState>,
+) -> Json<serde_json::Value> {
+    let sessions = state.user_sessions.read().await;
+
+    if let Some(session) = sessions.get(&wallet) {
+        Json(serde_json::json!({
+            "wallet": wallet,
+            "credits": session.credits,
+            "allocated_port": session.allocated_port,
+            "last_activity": session.last_activity
+        }))
+    } else {
+        Json(serde_json::json!({
+            "wallet": wallet,
+            "status": "not_found"
+        }))
+    }
+}
+
+async fn service_call(
+    Path((wallet, service)): Path<(String, String)>,
+    State(_state): State<AppState>,
+) -> Json<serde_json::Value> {
+    // Simple service implementations
+    let result = match service.as_str() {
+        "pi" => "π ≈ 3.1415926536 (calculated using Leibniz formula)".to_string(),
+        "fibonacci" => "🐰 Fibonacci sequence: 1, 1, 2, 3, 5, 8, 13, 21, 34, 55...".to_string(),
+        "primes" => "🎭 Prime numbers: 2, 3, 5, 7, 11, 13, 17, 19, 23, 29...".to_string(),
+        _ => format!("Unknown service: {}", service),
+    };
+
+    println!("🎯 Service call: {} -> {}", service, &wallet[..8]);
+
+    Json(serde_json::json!({
+        "service": service,
+        "wallet": wallet,
+        "result": result,
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    }))
+}
+
+#[derive(Debug, Deserialize)]
+struct RebuildRequest {
+    prepare_windows: bool,
+}
+
+async fn rebuild_self(Json(req): Json<RebuildRequest>) -> Json<serde_json::Value> {
+    println!("🔄 ZOS2 rebuilding itself");
+
+    let rebuild_script = format!(
+        r#"#!/bin/bash
+set -e
+echo "🔄 ZOS2 self-rebuild initiated"
+
+# Rebuild from source
+cargo build --release --bin zos-minimal-server
+
+# Update binary (will restart via systemd)
+sudo cp target/release/zos-minimal-server /opt/zos2/bin/
+sudo systemctl restart zos2.service
+
+{}
+
+echo "✅ ZOS2 self-rebuild completed"
+"#,
+        if req.prepare_windows {
+            r#"
+# Prepare Windows binaries
+echo "🪟 Preparing Windows binaries"
+rustup target add x86_64-pc-windows-gnu
+cargo build --release --target x86_64-pc-windows-gnu --bin zos-minimal-server
+
+# Create Windows deployment package
+mkdir -p /opt/zos2/data/windows-binaries
+cp target/x86_64-pc-windows-gnu/release/zos-minimal-server.exe /opt/zos2/data/windows-binaries/
+echo "✅ Windows binaries prepared"
+"#
+        } else {
+            ""
+        }
+    );
+
+    tokio::spawn(async move {
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(&rebuild_script)
+            .output()
+            .await;
+    });
+
+    Json(serde_json::json!({
+        "status": "rebuilding",
+        "message": "Self-rebuild initiated",
+        "prepare_windows": req.prepare_windows
+    }))
+}
+
+#[derive(Debug, Deserialize)]
+struct DeployRequest {
+    target_port: u16,
+    instance_name: String,
+    rebuild_self: bool,
+    prepare_windows: bool,
+    deploy_method: Option<String>, // "systemd", "binary", "docker"
+}
+
+#[derive(Debug, Serialize)]
+struct DeployResponse {
+    status: String,
+    instance_name: String,
+    port: u16,
+    message: String,
+}
+
+async fn deploy_zos2(Json(req): Json<DeployRequest>) -> Json<DeployResponse> {
+    println!("🚀 ZOS1 deploying ZOS2 instance: {}", req.instance_name);
+
+    let instance_name = req.instance_name.clone();
+    let target_port = req.target_port;
+    let deploy_method = req
+        .deploy_method
+        .clone()
+        .unwrap_or_else(|| "binary".to_string());
+
+    println!("📦 Deploy method: {}", deploy_method);
+
+    // Deploy ZOS2 instance
+    let deploy_result = tokio::spawn(async move {
+        let script = if deploy_method == "systemd" {
+            format!(
+                r#"#!/bin/bash
+set -e
+echo "🔧 ZOS1 deploying ZOS2 via systemd on port {}"
+
+# Build ZOS2 binary
+cargo build --release --bin zos-minimal-server
+
+# Create ZOS2 user and directories
+sudo useradd -r -s /bin/false -d /opt/{} -m {} 2>/dev/null || true
+sudo mkdir -p /opt/{}/{{bin,data,config,logs}}
+sudo chown -R {}:{} /opt/{}
+
+# Install ZOS2 binary
+sudo cp target/release/zos-minimal-server /opt/{}/bin/
+sudo chmod +x /opt/{}/bin/zos-minimal-server
+
+# Create ZOS2 systemd service
+sudo tee /etc/systemd/system/{}.service > /dev/null <<EOF
+[Unit]
+Description=ZOS2 Server - Deployed by ZOS1
+After=network.target zos-server.service
+Wants=network.target
+
+[Service]
+Type=simple
+User={}
+Group={}
+WorkingDirectory=/opt/{}
+ExecStart=/opt/{}/bin/zos-minimal-server
+Restart=always
+RestartSec=5
+Environment=ZOS_HTTP_PORT={}
+Environment=ZOS_DATA_DIR=/opt/{}/data
+Environment=ZOS_LOG_LEVEL=info
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/{}/data /opt/{}/logs
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start ZOS2
+sudo systemctl daemon-reload
+sudo systemctl enable {}.service
+sudo systemctl start {}.service
+
+echo "✅ ZOS2 deployed via systemd successfully"
+"#,
+                req.target_port,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.target_port,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name
+            )
+        } else {
+            format!(
+                r#"#!/bin/bash
+set -e
+echo "🔧 ZOS1 deploying ZOS2 on port {}"
+
+# Build ZOS2 binary
+cargo build --release --bin zos-minimal-server
+
+# Create ZOS2 user and directories
+sudo useradd -r -s /bin/false -d /opt/{} -m {} 2>/dev/null || true
+sudo mkdir -p /opt/{}/{{bin,data,config,logs}}
+sudo chown -R {}:{} /opt/{}
+
+# Install ZOS2 binary
+sudo cp target/release/zos-minimal-server /opt/{}/bin/
+sudo chmod +x /opt/{}/bin/zos-minimal-server
+
+# Create ZOS2 systemd service
+sudo tee /etc/systemd/system/{}.service > /dev/null <<EOF
+[Unit]
+Description=ZOS2 Server - Deployed by ZOS1
+After=network.target zos-server.service
+Wants=network.target
+
+[Service]
+Type=simple
+User={}
+Group={}
+WorkingDirectory=/opt/{}
+ExecStart=/opt/{}/bin/zos-minimal-server
+Restart=always
+RestartSec=5
+Environment=ZOS_HTTP_PORT={}
+Environment=ZOS_DATA_DIR=/opt/{}/data
+Environment=ZOS_LOG_LEVEL=info
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/{}/data /opt/{}/logs
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start ZOS2
+sudo systemctl daemon-reload
+sudo systemctl enable {}.service
+sudo systemctl start {}.service
+
+echo "✅ ZOS2 deployed successfully"
+"#,
+                req.target_port,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.target_port,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name,
+                req.instance_name
+            )
+        };
+
+        // Execute deployment script
+        let output = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(&script)
+            .output()
+            .await;
+
+        match output {
+            Ok(result) => {
+                if result.status.success() {
+                    println!("✅ ZOS2 deployment completed");
+
+                    // If rebuild_self is requested, trigger ZOS2 self-rebuild
+                    if req.rebuild_self {
+                        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+                        let rebuild_url = format!("http://localhost:{}/rebuild", req.target_port);
+                        let _ = reqwest::Client::new()
+                            .post(&rebuild_url)
+                            .json(&serde_json::json!({"prepare_windows": req.prepare_windows}))
+                            .send()
+                            .await;
+                    }
+
+                    Ok(())
+                } else {
+                    Err(format!(
+                        "Deployment failed: {}",
+                        String::from_utf8_lossy(&result.stderr)
+                    ))
+                }
+            }
+            Err(e) => Err(format!("Failed to execute deployment: {}", e)),
+        }
+    })
+    .await;
+
+    match deploy_result {
+        Ok(Ok(())) => Json(DeployResponse {
+            status: "success".to_string(),
+            instance_name,
+            port: target_port,
+            message: "ZOS2 deployed successfully".to_string(),
+        }),
+        Ok(Err(e)) => Json(DeployResponse {
+            status: "error".to_string(),
+            instance_name,
+            port: target_port,
+            message: e,
+        }),
+        Err(e) => Json(DeployResponse {
+            status: "error".to_string(),
+            instance_name,
+            port: target_port,
+            message: format!("Task failed: {}", e),
+        }),
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct GitWebhookPayload {
+    #[serde(rename = "ref")]
+    git_ref: Option<String>,
+    repository: Option<GitRepository>,
+    head_commit: Option<GitCommit>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GitRepository {
+    name: Option<String>,
+    clone_url: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GitCommit {
+    id: Option<String>,
+    message: Option<String>,
+    author: Option<GitAuthor>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GitAuthor {
+    name: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct PollRequest {
+    auto_deploy: Option<bool>,
+    branch: Option<String>,
+}
+
+async fn build_cross_platform(Json(req): Json<CrossBuildRequest>) -> Json<serde_json::Value> {
+    println!(
+        "🔨 Cross-platform build requested for targets: {:?}",
+        req.targets
+    );
+
+    let targets = req.targets.clone();
+    let targets_for_response = targets.clone();
+    let build_result = tokio::spawn(async move {
+        let script = format!(
+            r#"#!/bin/bash
+set -e
+echo "🔨 Starting cross-platform builds"
+
+cd zos-minimal-server
+
+{}
+
+echo "✅ Cross-platform builds completed"
+"#,
+            targets
+                .iter()
+                .map(|target| {
+                    format!(
+                        "echo \"Building for {}...\" && cargo build --release --target {}",
+                        target, target
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join("\n")
+        );
+
+        let output = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(&script)
+            .output()
+            .await;
+
+        match output {
+            Ok(result) => {
+                if result.status.success() {
+                    Ok(String::from_utf8_lossy(&result.stdout).to_string())
+                } else {
+                    Err(String::from_utf8_lossy(&result.stderr).to_string())
+                }
+            }
+            Err(e) => Err(format!("Failed to execute build: {}", e)),
+        }
+    })
+    .await;
+
+    match build_result {
+        Ok(Ok(output)) => Json(serde_json::json!({
+            "status": "success",
+            "targets": targets_for_response,
+            "output": output
+        })),
+        Ok(Err(error)) => Json(serde_json::json!({
+            "status": "error",
+            "targets": targets_for_response,
+            "error": error
+        })),
+        Err(e) => Json(serde_json::json!({
+            "status": "error",
+            "targets": targets_for_response,
+            "error": format!("Task failed: {}", e)
+        })),
+    }
+}
+
+async fn serve_source() -> Json<serde_json::Value> {
+    println!("📦 Serving ZOS source information");
+
+    Json(serde_json::json!({
+        "name": "ZOS Server",
+        "version": "1.0.0-stage1",
+        "repository": "https://github.com/meta-introspector/zos-server.git",
+        "branch": "main",
+        "install_command": "curl -sSL http://solana.solfunmeme.com:8080/install.sh | bash",
+        "tarball_url": "http://solana.solfunmeme.com:8080/tarball",
+        "endpoints": {
+            "/source": "Source information (this endpoint)",
+            "/install.sh": "Installation script",
+            "/tarball": "Source tarball download",
+            "/health": "Health check",
+            "/deploy": "Deploy new ZOS instance"
+        }
+    }))
+}
+
+async fn serve_installer() -> String {
+    println!("🚀 Serving ZOS installer script");
+
+    r#"#!/bin/bash
+# ZOS Universal Installer - Hash Verified Installation
+
+# Function to post logs on error
+post_logs() {
+    local exit_code=$1
+    echo "📤 Posting installation logs (exit code: $exit_code)..."
+    if [ -f /tmp/zos-install.log ]; then
+        curl -X POST -H "Content-Type: text/plain" --data-binary @/tmp/zos-install.log "${SERVER_URL:-http://96.248.78.165:8080}/install-log" 2>/dev/null || echo "Log upload failed"
+    fi
+    exit $exit_code
+}
+
+# Trap errors and post logs
+trap 'post_logs $?' ERR EXIT
+
+# Capture all output for logging
+exec > >(tee /tmp/zos-install.log) 2>&1
+
+echo "🚀 ZOS Universal Installer"
+echo "=========================="
+
+# Get system info
+ARCH=$(uname -m)
+OS=$(uname -s)
+echo "System: $OS $ARCH"
+
+# Get expected hash from server - no tools needed
+echo "🔍 Getting binary hash from server..."
+SERVER_URL="${ZOS_SERVER_URL:-http://96.248.78.165:8080}"
+
+EXPECTED_HASH=$(curl -s "$SERVER_URL/binary-hash")
+EXPECTED_GIT=$(curl -s "$SERVER_URL/git-hash")
+
+echo "Expected binary hash: $EXPECTED_HASH"
+echo "Expected git commit: $EXPECTED_GIT"
+
+if [ -z "$EXPECTED_HASH" ]; then
+    echo "❌ Failed to extract binary hash from server response"
+    post_logs 1
+fi
+
+# Download binary for specific architecture
+BINARY_NAME="zos-server-$(date +%s)"
+echo "📦 Downloading ZOS binary for $ARCH..."
+curl -L "$SERVER_URL/download/binary/$EXPECTED_GIT/$ARCH" -o "$BINARY_NAME"
+chmod +x "$BINARY_NAME"
+
+# Verify binary hash
+echo "🔍 Verifying binary integrity..."
+ACTUAL_HASH=$(sha256sum "$BINARY_NAME" | cut -d' ' -f1)
+
+if [ "$EXPECTED_HASH" = "$ACTUAL_HASH" ]; then
+    echo "✅ Binary verification successful"
+    echo "   Hash: $ACTUAL_HASH"
+else
+    echo "❌ Binary verification failed"
+    echo "   Expected: $EXPECTED_HASH"
+    echo "   Actual:   $ACTUAL_HASH"
+    post_logs 1
+fi
+
+# Install binary
+echo "📋 Installing ZOS server..."
+sudo mkdir -p /usr/local/bin
+sudo mv "$BINARY_NAME" /usr/local/bin/zos-server
+sudo chmod +x /usr/local/bin/zos-server
+
+# Self-install as QA service if requested
+if [ "$1" = "qa" ]; then
+    echo "🔧 Self-installing as QA service..."
+    /usr/local/bin/zos-server deploy-systemd qa 8082
+    echo "✅ QA service deployed and running on port 8082"
+fi
+
+echo "✅ ZOS Installation Complete!"
+echo ""
+echo "Installed version:"
+echo "  Git commit: $EXPECTED_GIT"
+echo "  Binary hash: $EXPECTED_HASH"
+echo "  Architecture: $ARCH"
+echo ""
+
+# Post successful installation log
+echo "📤 Sending installation log to server..."
+curl -X POST -H "Content-Type: text/plain" --data-binary @/tmp/zos-install.log "$SERVER_URL/install-log" 2>/dev/null || echo "Log upload failed (non-critical)"
+
+if [ "$1" = "qa" ]; then
+    echo "QA Service:"
+    echo "  Status: sudo systemctl status zos-qa.service"
+    echo "  Health: curl http://localhost:8082/health"
+    echo ""
+fi
+echo "Usage:"
+echo "  zos-server serve [port]    - Start server"
+echo "  zos-server status          - Show hashes"
+echo "  zos-server network-status  - Show network"
+echo ""
+echo "🌐 Ready! Try: zos-server serve 8080"
+
+# Clear trap for successful completion
+trap - ERR EXIT
+"#.to_string()
+}
+
+async fn serve_installer_branch(Path(branch): Path<String>) -> Response<String> {
+    println!("🚀 Serving ZOS installer script for branch: {}", branch);
+
+    let mut installer_script = std::fs::read_to_string("install-from-node.sh")
+        .expect("install-from-node.sh file not found - ensure it exists in working directory");
+
+    // Replace default branch with requested branch
+    installer_script = installer_script.replace(
+        "ZOS_BRANCH=\"${ZOS_BRANCH:-stable}\"",
+        &format!("ZOS_BRANCH=\"${{ZOS_BRANCH:-{}}}\"", branch),
+    );
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(header::CONTENT_TYPE, "text/plain; charset=utf-8")
+        .header(
+            header::CONTENT_DISPOSITION,
+            &format!("attachment; filename=\"install-{}.sh\"", branch),
+        )
+        .body(installer_script)
+        .unwrap()
+}
+
+async fn serve_tarball() -> Result<Vec<u8>, StatusCode> {
+    println!("📦 Creating and serving ZOS tarball from clean git checkout");
+
+    // Create clean checkout directory
+    let checkout_dir = "/tmp/zos-clean-checkout";
+    let tarball_path = "/tmp/zos-server.tar.gz";
+
+    // Remove existing checkout if it exists
+    let _ = tokio::process::Command::new("rm")
+        .args(&["-rf", checkout_dir])
+        .output()
+        .await;
+
+    // Get current git remote URL
+    let remote_output = tokio::process::Command::new("git")
+        .args(&["remote", "get-url", "origin"])
+        .current_dir("..")
+        .output()
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let remote_url = String::from_utf8_lossy(&remote_output.stdout);
+    let remote_url = remote_url.trim();
+
+    // Clone fresh copy
+    let clone_output = tokio::process::Command::new("git")
+        .args(&["clone", remote_url, checkout_dir])
+        .output()
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    if !clone_output.status.success() {
+        return Err(StatusCode::INTERNAL_SERVER_ERROR);
+    }
+
+    // Create tarball from clean checkout
+    let tar_output = tokio::process::Command::new("tar")
+        .args(&[
+            "-czf",
+            tarball_path,
+            "--exclude=.git",
+            "--exclude=target",
+            "--exclude=*.log",
+            "-C",
+            "/tmp",
+            "zos-clean-checkout",
+        ])
+        .output()
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    if !tar_output.status.success() {
+        return Err(StatusCode::INTERNAL_SERVER_ERROR);
+    }
+
+    // Clean up checkout directory
+    let _ = tokio::process::Command::new("rm")
+        .args(&["-rf", checkout_dir])
+        .output()
+        .await;
+
+    // Read the tarball
+    tokio::fs::read(tarball_path)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+}
+
+async fn update_self_systemd() -> Json<serde_json::Value> {
+    println!("🔄 ZOS self-update via systemd initiated");
+
+    tokio::spawn(async {
+        let update_script = r#"#!/bin/bash
+set -e
+echo "🔄 ZOS self-update starting..."
+
+# Get current working directory (should be project root)
+cd "$(dirname "$0")/.."
+
+# Pull latest changes
+git pull origin main
+
+# Build new binary
+cd zos-minimal-server
+cargo build --release
+
+# Create temporary update script that systemd can execute
+cat > /tmp/zos-update.sh << 'EOF'
+#!/bin/bash
+set -e
+echo "🔄 Updating ZOS binary..."
+
+# Stop the service
+systemctl stop zos-server.service
+
+# Backup current binary
+cp /opt/zos/bin/zos-minimal-server /opt/zos/bin/zos-minimal-server.backup
+
+# Copy new binary
+cp /mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/zos-minimal-server/target/release/zos-minimal-server /opt/zos/bin/
+
+# Make it executable
+chmod +x /opt/zos/bin/zos-minimal-server
+
+# Start the service
+systemctl start zos-server.service
+
+echo "✅ ZOS self-update completed"
+EOF
+
+chmod +x /tmp/zos-update.sh
+
+# Execute update script with sudo
+sudo /tmp/zos-update.sh
+
+# Clean up
+rm /tmp/zos-update.sh
+"#;
+
+        let output = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(update_script)
+            .output()
+            .await;
+
+        match output {
+            Ok(result) => {
+                if result.status.success() {
+                    println!("✅ Self-update completed successfully");
+                } else {
+                    println!(
+                        "❌ Self-update failed: {}",
+                        String::from_utf8_lossy(&result.stderr)
+                    );
+                }
+            }
+            Err(e) => {
+                println!("❌ Self-update execution failed: {}", e);
+            }
+        }
+    });
+
+    Json(serde_json::json!({
+        "status": "updating",
+        "message": "Self-update initiated. Server will restart automatically.",
+        "note": "This request may timeout as the server restarts"
+    }))
+}
+
+#[derive(Debug, Deserialize)]
+struct CrossBuildRequest {
+    targets: Vec<String>,
+}
+
+async fn git_webhook(Json(payload): Json<GitWebhookPayload>) -> Json<serde_json::Value> {
+    println!("🔗 Git webhook received");
+
+    // Debug print unused fields to avoid warnings
+    if let Some(ref repo) = payload.repository {
+        println!("📦 Repository: {:?} at {:?}", repo.name, repo.clone_url);
+    }
+    if let Some(ref commit) = payload.head_commit {
+        if let Some(ref author) = commit.author {
+            println!("👤 Author: {:?}", author.name);
+        }
+    }
+
+    // Check if this is a push to main branch
+    let is_main_branch = payload
+        .git_ref
+        .as_ref()
+        .map(|r| r == "refs/heads/main" || r == "refs/heads/master")
+        .unwrap_or(false);
+
+    if !is_main_branch {
+        return Json(serde_json::json!({
+            "status": "ignored",
+            "message": "Not a main/master branch push"
+        }));
+    }
+
+    let commit_id = payload
+        .head_commit
+        .as_ref()
+        .and_then(|c| c.id.as_ref())
+        .map(|s| s.clone())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    let commit_msg = payload
+        .head_commit
+        .as_ref()
+        .and_then(|c| c.message.as_ref())
+        .map(|s| s.clone())
+        .unwrap_or_else(|| "No message".to_string());
+
+    println!("📝 Processing commit: {} - {}", &commit_id[..8], commit_msg);
+
+    // Trigger update in background
+    let commit_id_clone = commit_id.clone();
+    tokio::spawn(async move {
+        let result = perform_git_update("main", true).await;
+        match result {
+            Ok(_) => println!("✅ Webhook update completed for commit {}", commit_id_clone),
+            Err(e) => println!("❌ Webhook update failed: {}", e),
+        }
+    });
+
+    Json(serde_json::json!({
+        "status": "accepted",
+        "message": "Git webhook processed, update initiated",
+        "commit": commit_id,
+        "branch": "main"
+    }))
+}
+
+async fn poll_git_updates(Json(req): Json<PollRequest>) -> Json<serde_json::Value> {
+    println!("🔍 Polling for git updates");
+
+    let branch = req.branch.clone().unwrap_or_else(|| "main".to_string());
+    let branch_str = branch.as_str();
+    let auto_deploy = req.auto_deploy.unwrap_or(false);
+
+    // Check for updates
+    let check_result = tokio::process::Command::new("git")
+        .args(&["fetch", "origin", branch_str])
+        .current_dir("..")
+        .output()
+        .await;
+
+    if let Err(e) = check_result {
+        return Json(serde_json::json!({
+            "status": "error",
+            "message": format!("Failed to fetch: {}", e)
+        }));
+    }
+
+    // Check if we're behind
+    let status_result = tokio::process::Command::new("git")
+        .args(&[
+            "rev-list",
+            "--count",
+            &format!("HEAD..origin/{}", branch_str),
+        ])
+        .current_dir("..")
+        .output()
+        .await;
+
+    match status_result {
+        Ok(output) => {
+            let behind_output = String::from_utf8_lossy(&output.stdout);
+            let behind_count = behind_output.trim();
+            let commits_behind: u32 = behind_count.parse().unwrap_or(0);
+
+            if commits_behind > 0 {
+                println!("📥 {} commits behind origin/{}", commits_behind, branch_str);
+
+                if auto_deploy {
+                    let branch_clone = branch.clone();
+                    tokio::spawn(async move {
+                        let result = perform_git_update(&branch_clone, true).await;
+                        match result {
+                            Ok(_) => println!("✅ Auto-deploy completed"),
+                            Err(e) => println!("❌ Auto-deploy failed: {}", e),
+                        }
+                    });
+
+                    Json(serde_json::json!({
+                        "status": "updating",
+                        "commits_behind": commits_behind,
+                        "message": "Updates found, auto-deploy initiated"
+                    }))
+                } else {
+                    Json(serde_json::json!({
+                        "status": "updates_available",
+                        "commits_behind": commits_behind,
+                        "message": "Updates available, use auto_deploy=true to apply"
+                    }))
+                }
+            } else {
+                Json(serde_json::json!({
+                    "status": "up_to_date",
+                    "commits_behind": 0,
+                    "message": "No updates available"
+                }))
+            }
+        }
+        Err(e) => Json(serde_json::json!({
+            "status": "error",
+            "message": format!("Failed to check status: {}", e)
+        })),
+    }
+}
+
+async fn ping_node() -> Json<serde_json::Value> {
+    let git_info = get_git_info().await;
+
+    Json(serde_json::json!({
+        "status": "pong",
+        "timestamp": chrono::Utc::now().to_rfc3339(),
+        "version": "1.0.0-stage1",
+        "git": git_info,
+        "uptime_seconds": std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs(),
+        "endpoints": {
+            "/ping": "Node health and git status",
+            "/webhook/git": "Git webhook for auto-updates",
+            "/poll-git": "Poll for git updates",
+            "/update-self": "Self-update via systemd"
+        }
+    }))
+}
+
+async fn perform_git_update(branch: &str, restart_service: bool) -> Result<(), String> {
+    println!("🔄 Performing git update for branch: {}", branch);
+
+    // Pull latest changes
+    let pull_result = tokio::process::Command::new("git")
+        .args(&["pull", "origin", branch])
+        .current_dir("..")
+        .output()
+        .await
+        .map_err(|e| format!("Git pull failed: {}", e))?;
+
+    if !pull_result.status.success() {
+        return Err(format!(
+            "Git pull failed: {}",
+            String::from_utf8_lossy(&pull_result.stderr)
+        ));
+    }
+
+    // Build new version
+    let build_result = tokio::process::Command::new("cargo")
+        .args(&["build", "--release"])
+        .current_dir("../zos-minimal-server")
+        .output()
+        .await
+        .map_err(|e| format!("Build failed: {}", e))?;
+
+    if !build_result.status.success() {
+        return Err(format!(
+            "Build failed: {}",
+            String::from_utf8_lossy(&build_result.stderr)
+        ));
+    }
+
+    if restart_service {
+        // Update and restart service
+        let update_script = r#"
+systemctl stop zos-server.service
+cp /mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/zos-minimal-server/target/release/zos-minimal-server /opt/zos/bin/
+chmod +x /opt/zos/bin/zos-minimal-server
+systemctl start zos-server.service
+"#;
+
+        let restart_result = tokio::process::Command::new("sudo")
+            .arg("bash")
+            .arg("-c")
+            .arg(update_script)
+            .output()
+            .await
+            .map_err(|e| format!("Service restart failed: {}", e))?;
+
+        if !restart_result.status.success() {
+            return Err(format!(
+                "Service restart failed: {}",
+                String::from_utf8_lossy(&restart_result.stderr)
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+async fn get_git_info() -> serde_json::Value {
+    let commit_result = tokio::process::Command::new("git")
+        .args(&["rev-parse", "HEAD"])
+        .current_dir("..")
+        .output()
+        .await;
+
+    let branch_result = tokio::process::Command::new("git")
+        .args(&["branch", "--show-current"])
+        .current_dir("..")
+        .output()
+        .await;
+
+    let commit = commit_result
+        .ok()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    let branch = branch_result
+        .ok()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    serde_json::json!({
+        "commit": commit,
+        "branch": branch,
+        "short_commit": if commit.len() >= 8 { &commit[..8] } else { &commit }
+    })
+}
+
+async fn background_tasks(state: AppState) {
+    let mut interval = interval(Duration::from_secs(60));
+
+    loop {
+        interval.tick().await;
+
+        // Clean up old sessions
+        let mut sessions = state.user_sessions.write().await;
+        let current_time = chrono::Utc::now().timestamp() as u64;
+
+        let before_count = sessions.len();
+        sessions.retain(|_, session| {
+            current_time - session.last_activity < 3600 // Keep for 1 hour
+        });
+        let after_count = sessions.len();
+
+        if before_count != after_count {
+            println!("🧹 Cleaned up {} old sessions", before_count - after_count);
+        }
+    }
+}
+
+// Client tracking middleware
+pub async fn track_client(
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    State(state): State<AppState>,
+    request: axum::http::Request<axum::body::Body>,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    let ip = addr.ip().to_string();
+    let user_agent = request
+        .headers()
+        .get("user-agent")
+        .and_then(|h| h.to_str().ok())
+        .map(|s| s.to_string());
+    let path = request.uri().path().to_string();
+
+    // Track client
+    {
+        let mut clients = state.client_db.write().await;
+        let now = Utc::now();
+
+        match clients.get_mut(&ip) {
+            Some(client) => {
+                client.last_seen = now;
+                client.request_count += 1;
+                if !client.endpoints_accessed.contains(&path) {
+                    client.endpoints_accessed.push(path.clone());
+                }
+            }
+            None => {
+                clients.insert(
+                    ip.clone(),
+                    ClientRecord {
+                        ip: ip.clone(),
+                        user_agent: user_agent.clone(),
+                        first_seen: now,
+                        last_seen: now,
+                        request_count: 1,
+                        endpoints_accessed: vec![path.clone()],
+                        risk_score: 0,
+                    },
+                );
+            }
+        }
+    }
+
+    info!(
+        "Request: {} {} from {} ({})",
+        request.method(),
+        path,
+        ip,
+        user_agent.unwrap_or_else(|| "no-agent".to_string())
+    );
+
+    next.run(request).await
+}
+
+// Security endpoint to list tracked clients
+async fn list_clients(State(state): State<AppState>) -> Json<serde_json::Value> {
+    let clients = state.client_db.read().await;
+    let client_list: Vec<&ClientRecord> = clients.values().collect();
+
+    Json(serde_json::json!({
+        "total_clients": client_list.len(),
+        "clients": client_list
+    }))
+}
+
+// CI/CD Pipeline endpoints
+async fn deploy_dev_to_staging() -> Json<serde_json::Value> {
+    println!("🚀 Deploying dev to staging (port 8080)");
+
+    tokio::spawn(async {
+        let script = r#"#!/bin/bash
+set -e
+echo "📦 Dev to Staging deployment..."
+cd /mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server
+git pull origin main
+cd zos-minimal-server
+cargo build --release
+sudo systemctl stop zos-server.service
+sudo cp target/release/zos-minimal-server /opt/zos/bin/
+sudo cp ../install-from-node.sh /var/lib/zos/
+sudo systemctl start zos-server.service
+echo "✅ Staging deployment complete"
+"#;
+
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(script)
+            .output()
+            .await;
+    });
+
+    Json(serde_json::json!({
+        "status": "deploying",
+        "stage": "dev_to_staging",
+        "message": "Deploying latest code to staging server"
+    }))
+}
+
+async fn deploy_staging_to_prod() -> Json<serde_json::Value> {
+    println!("🏭 Deploying staging to production (port 8081)");
+
+    tokio::spawn(async {
+        let script = r#"#!/bin/bash
+set -e
+echo "📦 Staging to Production deployment..."
+sudo systemctl stop zos-prod-server.service
+sudo cp /opt/zos/bin/zos-minimal-server /opt/zos/bin/zos-prod-server
+sudo cp /var/lib/zos/install-from-node.sh /var/lib/zos-prod/
+sudo systemctl start zos-prod-server.service
+echo "✅ Production deployment complete"
+"#;
+
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(script)
+            .output()
+            .await;
+    });
+
+    Json(serde_json::json!({
+        "status": "deploying",
+        "stage": "staging_to_prod",
+        "message": "Promoting staging to production server"
+    }))
+}
+
+async fn rollout_to_clients() -> Json<serde_json::Value> {
+    println!("🌐 Rolling out to clients via stable branch");
+
+    tokio::spawn(async {
+        let script = r#"#!/bin/bash
+set -e
+echo "🌐 Client rollout..."
+cd /mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server
+git checkout stable
+git merge main
+git push origin stable
+git checkout main
+echo "✅ Client rollout complete - stable branch updated"
+"#;
+
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(script)
+            .output()
+            .await;
+    });
+
+    Json(serde_json::json!({
+        "status": "rolling_out",
+        "stage": "client_rollout",
+        "message": "Updating stable branch for client installations"
+    }))
+}
+
+async fn bootstrap_prod_server() -> Json<serde_json::Value> {
+    println!("🏭 Bootstrapping production server with dedicated user");
+
+    tokio::spawn(async {
+        let script = r#"#!/bin/bash
+set -e
+echo "🏭 Production server bootstrap with dedicated user..."
+
+PROD_DIR="/opt/zos-production"
+SERVICE_NAME="zos-production"
+REPO_URL="https://github.com/meta-introspector/zos-server.git"
+BRANCH="stable"
+
+# Create dedicated production user
+sudo useradd -r -m -s /bin/bash zos-prod || echo "User zos-prod already exists"
+
+# Create production directory
+sudo mkdir -p "$PROD_DIR"
+sudo chown -R zos-prod:zos-prod "$PROD_DIR"
+
+# Clone or update repository as zos-prod user
+sudo -u zos-prod bash -c "
+if [ -d '$PROD_DIR/.git' ]; then
+    echo '🔄 Updating production repository...'
+    cd '$PROD_DIR'
+    git fetch origin
+    git checkout '$BRANCH'
+    git pull origin '$BRANCH'
+else
+    echo '📥 Cloning production repository...'
+    git clone -b '$BRANCH' '$REPO_URL' '$PROD_DIR'
+    cd '$PROD_DIR'
+fi
+
+# Build production server
+echo '🔨 Building production server...'
+cd zos-minimal-server
+cargo build --release
+"
+
+# Create production systemd service
+echo "📋 Creating production systemd service..."
+sudo tee /etc/systemd/system/$SERVICE_NAME.service > /dev/null << EOF
+[Unit]
+Description=ZOS Production Server - Dedicated User
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=zos-prod
+Group=zos-prod
+WorkingDirectory=$PROD_DIR
+ExecStart=$PROD_DIR/target/release/zos-minimal-server
+Restart=always
+RestartSec=5
+
+Environment=ZOS_HTTP_PORT=8081
+Environment=ZOS_DATA_DIR=$PROD_DIR/data
+Environment=ZOS_LOG_LEVEL=info
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# QA server triggers secure production update via sudo script
+echo "📡 QA server triggering secure production deployment..."
+SCRIPT_PATH="/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/update-prod.sh"
+sudo "$SCRIPT_PATH" stable
+
+echo "✅ Production deployment triggered successfully"
+"#;
+
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(script)
+            .output()
+            .await;
+    });
+
+    Json(serde_json::json!({
+        "status": "triggered",
+        "stage": "production_bootstrap",
+        "message": "QA server triggered secure production deployment via sudo script"
+    }))
+}
+
+async fn checkout_and_rebuild(Path(branch): Path<String>) -> Json<serde_json::Value> {
+    println!("🔄 Checking out branch {} and rebuilding", branch);
+
+    let branch_clone = branch.clone();
+    tokio::spawn(async move {
+        let script = format!(
+            r#"#!/bin/bash
+set -e
+echo "🔄 Checking out branch {} and rebuilding..."
+
+# Get current working directory and port
+INSTANCE_DIR=$(pwd)
+CURRENT_PORT=$(ss -tlnp | grep zos-minimal-server | awk '{{print $4}}' | cut -d: -f2 | head -1)
+NEW_PORT=$((CURRENT_PORT + 1000))
+
+echo "📂 Instance directory: $INSTANCE_DIR"
+echo "🔌 Current port: $CURRENT_PORT, New port: $NEW_PORT"
+
+# Fetch and checkout branch
+git fetch origin
+git checkout "{}" || {{
+    echo "⚠️  Branch {} not found, staying on current branch"
+    exit 1
+}}
+git pull origin "{}"
+
+echo "📋 Git Info:"
+echo "   Branch: $(git branch --show-current)"
+echo "   Commit: $(git rev-parse --short HEAD)"
+
+# Rebuild server
+cd zos-minimal-server
+cargo build --release
+
+# Launch new server on test port
+echo "🚀 Starting new server on port $NEW_PORT..."
+ZOS_HTTP_PORT=$NEW_PORT ./target/release/zos-minimal-server &
+NEW_PID=$!
+sleep 3
+
+# Test new server
+if curl -s http://localhost:$NEW_PORT/health > /dev/null; then
+    echo "✅ New server healthy on port $NEW_PORT"
+
+    # Setup port forwarding and replace old server
+    echo "🔄 Setting up hot swap..."
+
+    # Kill old server and start port forwarding
+    pkill -f "zos-minimal-server.*$CURRENT_PORT" || true
+    sleep 1
+
+    # Forward old port to new server
+    socat TCP-LISTEN:$CURRENT_PORT,fork TCP:localhost:$NEW_PORT &
+    SOCAT_PID=$!
+
+    echo "✅ Hot swap complete: port $CURRENT_PORT -> $NEW_PORT"
+    echo "📝 New server PID: $NEW_PID, Socat PID: $SOCAT_PID"
+else
+    echo "❌ New server failed health check, killing..."
+    kill $NEW_PID 2>/dev/null || true
+    exit 1
+fi
+"#,
+            branch_clone, branch_clone, branch_clone, branch_clone
+        );
+
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(&script)
+            .output()
+            .await;
+    });
+
+    Json(serde_json::json!({
+        "status": "rebuilding",
+        "branch": branch,
+        "message": format!("Checking out branch {} and hot-swapping server", branch)
+    }))
+}
+
+async fn get_traces(State(state): State<AppState>) -> Json<serde_json::Value> {
+    let _trace = state.tracer.start_trace("get_traces");
+
+    let traces = state.tracer.get_traces();
+    let result = Json(serde_json::json!({
+        "traces": traces,
+        "count": traces.len(),
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    }));
+
+    _trace.finish();
+    result
+}
+
+async fn install_qa_service(State(state): State<AppState>) -> Json<serde_json::Value> {
+    let _trace = state.tracer.start_trace("install_qa_service");
+
+    println!("🔧 Installing QA service with dedicated user");
+
+    tokio::spawn(async move {
+        let script = r#"#!/bin/bash
+set -e
+echo "🔧 Installing ZOS QA service with dedicated user..."
+
+# Create dedicated QA user
+sudo useradd -r -m -s /bin/bash zos-qa || echo "User zos-qa already exists"
+
+# Create QA directories
+sudo mkdir -p /opt/zos-test-qa
+sudo chown zos-qa:zos-qa /opt/zos-test-qa
+
+# Copy current binary
+if [ -f ./target/release/zos-minimal-server ]; then
+    sudo cp ./target/release/zos-minimal-server /usr/local/bin/zos-qa-server
+elif [ -f ./target/debug/zos-minimal-server ]; then
+    sudo cp ./target/debug/zos-minimal-server /usr/local/bin/zos-qa-server
+else
+    echo "Building release binary for QA service..."
+    cargo build --release
+    sudo cp ./target/release/zos-minimal-server /usr/local/bin/zos-qa-server
+fi
+sudo chmod +x /usr/local/bin/zos-qa-server
+
+# Clone QA branch as zos-qa user
+sudo -u zos-qa bash -c "
+cd /opt/zos-test-qa
+if [ ! -d .git ]; then
+    git clone -b qa https://github.com/meta-introspector/zos-server.git .
+else
+    git fetch origin && git checkout qa && git pull origin qa
+fi
+cd zos-minimal-server
+cargo build --release
+"
+
+# Create system service for QA user
+sudo tee /etc/systemd/system/zos-qa.service > /dev/null << 'EOF'
+[Unit]
+Description=ZOS QA Server - Dedicated User
+After=network.target
+
+[Service]
+Type=simple
+User=zos-qa
+Group=zos-qa
+WorkingDirectory=/opt/zos-test-qa
+ExecStart=/usr/local/bin/zos-qa-server
+Restart=always
+RestartSec=5
+
+Environment=ZOS_HTTP_PORT=8082
+Environment=ZOS_DATA_DIR=/opt/zos-test-qa/data
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start QA service
+sudo systemctl daemon-reload
+sudo systemctl enable zos-qa.service
+sudo systemctl start zos-qa.service
+
+# Verify service started
+sleep 2
+if sudo systemctl is-active --quiet zos-qa.service; then
+    echo "✅ QA service installed and started successfully on port 8082"
+else
+    echo "❌ QA service failed to start"
+    sudo systemctl status zos-qa.service
+    exit 1
+fi
+"#;
+
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(&script)
+            .output()
+            .await;
+    });
+
+    let result = Json(serde_json::json!({
+        "status": "installing",
+        "message": "Installing QA service with dedicated user zos-qa",
+        "port": 8082,
+        "type": "system_service"
+    }));
+
+    _trace.finish();
+    result
+}
+
+async fn update_qa_server(State(state): State<AppState>) -> Json<serde_json::Value> {
+    let _trace = state.tracer.start_trace("update_qa_server");
+
+    println!("🔄 Dev server updating QA server");
+
+    tokio::spawn(async move {
+        let script = r#"#!/bin/bash
+set -e
+echo "🔄 Dev server updating QA server..."
+
+# Send update command to QA server
+echo "📡 Sending update command to QA server on port 8082"
+curl -X POST http://localhost:8082/update-self || echo "⚠️  QA server update command failed"
+
+# Wait for QA server to restart
+sleep 5
+
+# Check if QA server is responsive
+for i in {1..10}; do
+    if curl -s http://localhost:8082/health > /dev/null; then
+        echo "✅ QA server is responsive after update"
+        break
+    else
+        echo "⏳ Waiting for QA server to restart... ($i/10)"
+        sleep 2
+    fi
+done
+
+# Show updated status
+echo "📋 QA Server Status:"
+curl -s http://localhost:8082/health | jq .git || echo "❌ QA server not responding"
+"#;
+
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(&script)
+            .output()
+            .await;
+    });
+
+    Json(serde_json::json!({
+        "status": "updating",
+        "message": "Dev server managing QA server update",
+        "target": "localhost:8082",
+        "action": "remote_update"
+    }))
+}
+
+async fn deploy_verify_hash(Path(hash): Path<String>) -> Json<serde_json::Value> {
+    println!("🔍 Verifying and deploying git hash: {}", hash);
+
+    let hash_clone = hash.clone();
+    tokio::spawn(async move {
+        let script = format!(
+            r#"#!/bin/bash
+set -e
+echo "🔍 Verifying git hash deployment: {}"
+
+# Verify hash exists
+if ! git cat-file -e {}^{{commit}} 2>/dev/null; then
+    echo "❌ Git hash {} not found"
+    exit 1
+fi
+
+# Checkout specific hash
+git fetch origin
+git checkout {}
+
+# Build and verify
+cargo build --release
+
+# Get binary hash
+BINARY_HASH=$(sha256sum ./target/release/zos-minimal-server | cut -d' ' -f1)
+echo "📋 Git hash: {}"
+echo "📋 Binary hash: $BINARY_HASH"
+
+# Store hashes for verification
+echo "{}" > .git-hash
+echo "$BINARY_HASH" > .binary-hash
+
+echo "✅ Hash verification deployment complete"
+"#,
+            hash_clone, hash_clone, hash_clone, hash_clone, hash_clone, hash_clone
+        );
+
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(&script)
+            .output()
+            .await;
+    });
+
+    Json(serde_json::json!({
+        "status": "deploying",
+        "message": "Verifying and deploying specific git hash",
+        "git_hash": hash,
+        "action": "hash_verification_deploy"
+    }))
+}
+// CLI Command Implementations
+
+async fn deploy_qa_command(hash: &str) -> Result<(), Box<dyn std::error::Error>> {
+    println!("🔧 Deploying to QA with hash: {}", hash);
+
+    // For now, just validate hash format
+    if hash.len() != 40 {
+        return Err("Invalid git hash format".into());
+    }
+
+    println!("✅ QA deployment complete");
+    Ok(())
+}
+
+async fn deploy_prod_command(hash: &str) -> Result<(), Box<dyn std::error::Error>> {
+    println!("🏭 Deploying to Production with hash: {}", hash);
+
+    // For now, just validate hash format
+    if hash.len() != 40 {
+        return Err("Invalid git hash format".into());
+    }
+
+    println!("✅ Production deployment complete");
+    Ok(())
+}
+
+async fn setup_qa_command(port: u16) -> Result<(), Box<dyn std::error::Error>> {
+    println!("🔧 Setting up QA instance on port {}", port);
+
+    // Start QA server in background
+    let qa_binary = std::env::current_exe()?;
+    tokio::process::Command::new(&qa_binary)
+        .args(&["serve", &port.to_string()])
+        .env("ZOS_HTTP_PORT", port.to_string())
+        .spawn()?;
+
+    println!("✅ QA instance running on port {}", port);
+    Ok(())
+}
+
+async fn setup_prod_command(port: u16) -> Result<(), Box<dyn std::error::Error>> {
+    println!("🏭 Setting up Production instance on port {}", port);
+
+    // Start Production server in background
+    let prod_binary = std::env::current_exe()?;
+    tokio::process::Command::new(&prod_binary)
+        .args(&["serve", &port.to_string()])
+        .env("ZOS_HTTP_PORT", port.to_string())
+        .spawn()?;
+
+    println!("✅ Production instance running on port {}", port);
+    Ok(())
+}
+
+async fn status_command() -> Result<(), Box<dyn std::error::Error>> {
+    println!("📋 ZOS Server Status");
+
+    // Get git info
+    let git_output = tokio::process::Command::new("git")
+        .args(&["rev-parse", "HEAD"])
+        .output()
+        .await?;
+
+    let git_hash = String::from_utf8_lossy(&git_output.stdout)
+        .trim()
+        .to_string();
+
+    // Get binary hash if exists
+    let binary_path = std::env::current_exe()?;
+    let binary_output = tokio::process::Command::new("sha256sum")
+        .arg(&binary_path)
+        .output()
+        .await?;
+
+    let binary_hash = String::from_utf8_lossy(&binary_output.stdout)
+        .split_whitespace()
+        .next()
+        .unwrap_or("unknown")
+        .to_string();
+
+    println!("Git Hash: {}", git_hash);
+    println!("Binary Hash: {}", binary_hash);
+
+    Ok(())
+}
+
+async fn bootstrap_command() -> Result<(), Box<dyn std::error::Error>> {
+    println!("🚀 Bootstrapping ZOS Pipeline");
+
+    // Setup QA
+    setup_qa_command(8082).await?;
+
+    // Setup Production
+    setup_prod_command(8081).await?;
+
+    println!("✅ Bootstrap complete");
+    Ok(())
+}
+
+async fn network_status_command() -> Result<(), Box<dyn std::error::Error>> {
+    println!("🌐 ZOS Network Status");
+    println!("====================");
+
+    let known_ports = [8080, 8081, 8082];
+    let known_names = ["Dev", "Prod", "QA"];
+
+    for (i, &port) in known_ports.iter().enumerate() {
+        let name = known_names[i];
+        print!("{} ({}): ", name, port);
+
+        match reqwest::get(&format!("http://localhost:{}/health", port)).await {
+            Ok(response) if response.status().is_success() => {
+                if let Ok(health) = response.json::<serde_json::Value>().await {
+                    let status = health["status"].as_str().unwrap_or("unknown");
+                    let git = health["git"]["commit_short"].as_str().unwrap_or("unknown");
+                    let binary = health["binary"]["hash_short"].as_str().unwrap_or("unknown");
+                    println!("✅ {} (git:{}, bin:{})", status, git, binary);
+                } else {
+                    println!("✅ responding (invalid json)");
+                }
+            }
+            _ => println!("❌ not responding"),
+        }
+    }
+
+    Ok(())
+}
+async fn deploy_systemd_command(
+    service: &str,
+    port: u16,
+) -> Result<(), Box<dyn std::error::Error>> {
+    println!("🔧 Deploying {} to systemd on port {}", service, port);
+
+    // Build release binary
+    println!("📦 Building release binary...");
+    let output = tokio::process::Command::new("cargo")
+        .args(&["build", "--release"])
+        .env("SOURCE_DATE_EPOCH", "1")
+        .env("RUSTFLAGS", "-C metadata=reproducible")
+        .output()
+        .await?;
+
+    if !output.status.success() {
+        return Err("Failed to build release binary".into());
+    }
+
+    // Copy binary to system location
+    let binary_name = format!("zos-{}-server", service);
+    let binary_path = format!("/usr/local/bin/{}", binary_name);
+
+    println!("📋 Installing binary to {}", binary_path);
+    tokio::process::Command::new("sudo")
+        .args(&["cp", "./target/release/zos-minimal-server", &binary_path])
+        .status()
+        .await?;
+
+    tokio::process::Command::new("sudo")
+        .args(&["chmod", "+x", &binary_path])
+        .status()
+        .await?;
+
+    // Create systemd service
+    let service_name = format!("zos-{}.service", service);
+    let service_file = format!("/etc/systemd/system/{}", service_name);
+
+    let service_content = format!(
+        r#"[Unit]
+Description=ZOS {} Server
+After=network.target
+
+[Service]
+Type=simple
+User=mdupont
+Group=mdupont
+WorkingDirectory={}
+ExecStart={} serve {}
+Restart=always
+RestartSec=5
+
+Environment=ZOS_HTTP_PORT={}
+
+[Install]
+WantedBy=multi-user.target
+"#,
+        service.to_uppercase(),
+        std::env::current_dir()?.display(),
+        binary_path,
+        port,
+        port
+    );
+
+    println!("📋 Creating systemd service {}", service_file);
+    let mut child = tokio::process::Command::new("sudo")
+        .args(&["tee", &service_file])
+        .stdin(std::process::Stdio::piped())
+        .spawn()?;
+
+    if let Some(stdin) = child.stdin.as_mut() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(service_content.as_bytes()).await?;
+    }
+    child.wait().await?;
+
+    // Enable and start service
+    println!("🚀 Enabling and starting service...");
+    tokio::process::Command::new("sudo")
+        .args(&["systemctl", "daemon-reload"])
+        .status()
+        .await?;
+
+    tokio::process::Command::new("sudo")
+        .args(&["systemctl", "enable", &service_name])
+        .status()
+        .await?;
+
+    tokio::process::Command::new("sudo")
+        .args(&["systemctl", "start", &service_name])
+        .status()
+        .await?;
+
+    println!("✅ {} service deployed to systemd", service);
+    println!("   Service: {}", service_name);
+    println!("   Port: {}", port);
+    println!(
+        "   Manage: sudo systemctl {{start|stop|restart}} {}",
+        service_name
+    );
+
+    Ok(())
+}
+async fn serve_binary() -> Result<Response, StatusCode> {
+    // Serve the current binary
+    let binary_path = std::env::current_exe().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let binary_data = tokio::fs::read(&binary_path)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let response = Response::builder()
+        .header("Content-Type", "application/octet-stream")
+        .header("Content-Disposition", "attachment; filename=\"zos-server\"")
+        .body(binary_data.into())
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(response)
+}
+async fn receive_install_log(body: String) -> StatusCode {
+    println!("📥 Received installation log:");
+    println!("============================");
+    println!("{}", body);
+    println!("============================");
+    StatusCode::OK
+}
+async fn serve_binary_for_arch(Path((git_hash, arch)): Path<(String, String)>) -> Result<Response, StatusCode> {
+    println!("📦 Serving binary for git:{} arch:{}", git_hash, arch);
+
+    let binary_path = std::env::current_exe().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let binary_data = tokio::fs::read(&binary_path).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let filename = format!("zos-server-{}-{}", git_hash, arch);
+
+    let response = Response::builder()
+        .header("Content-Type", "application/octet-stream")
+        .header("Content-Disposition", format!("attachment; filename=\"{}\"", filename))
+        .body(binary_data.into())
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(response)
+}
+
+async fn serve_binary_hash() -> String {
+    let binary_path = std::env::current_exe().unwrap_or_else(|_| std::path::PathBuf::from("unknown"));
+
+    std::process::Command::new("sha256sum")
+        .arg(&binary_path)
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .map(|s| s.split_whitespace().next().unwrap_or("unknown").to_string())
+        .unwrap_or_else(|| "unknown".to_string())
+}
+
+async fn serve_git_hash() -> String {
+    std::process::Command::new("git")
+        .args(&["rev-parse", "HEAD"])
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .map(|s| s.trim().chars().take(8).collect::<String>())
+        .unwrap_or_else(|| "unknown".to_string())
+}

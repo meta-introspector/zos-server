@@ -3174,23 +3174,23 @@ dependencies = [
 
 [[package]]
 name = "zos-server"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
+ "async-trait",
  "axum",
  "chrono",
+ "libc",
+ "rand",
  "reqwest",
  "serde",
  "serde_json",
+ "sha2",
  "tokio",
+ "toml",
  "tower",
  "tower-http",
  "tracing",
  "tracing-subscriber",
- "uuid",
- "zos-build-macros",
- "zos-macros",
- "zos-traits",
- "zos-types",
 ]
 
 [[package]]
