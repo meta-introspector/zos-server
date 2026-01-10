@@ -1060,12 +1060,26 @@ sudo mkdir -p /usr/local/bin
 sudo mv zos-server /usr/local/bin/zos-server
 sudo chmod +x /usr/local/bin/zos-server
 
+# Self-install as QA service if requested
+if [ "$1" = "qa" ]; then
+    echo "🔧 Self-installing as QA service..."
+    /usr/local/bin/zos-server deploy-systemd qa 8082
+    echo "✅ QA service deployed and running on port 8082"
+fi
+
 echo "✅ ZOS Installation Complete!"
 echo ""
 echo "Installed version:"
 echo "  Git commit: $EXPECTED_GIT"
 echo "  Binary hash: $EXPECTED_HASH"
 echo ""
+if [ "$1" = "qa" ]; then
+    echo "QA Service:"
+    echo "  Status: sudo systemctl status zos-qa.service"
+    echo "  Logs: sudo journalctl -u zos-qa.service -f"
+    echo "  Health: curl http://localhost:8082/health"
+    echo ""
+fi
 echo "Usage:"
 echo "  zos-server serve [port]           - Start server"
 echo "  zos-server status                 - Show git/binary hashes"
