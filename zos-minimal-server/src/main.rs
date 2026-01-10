@@ -94,6 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/deploy/staging-to-prod", post(deploy_staging_to_prod))
         .route("/deploy/rollout", post(rollout_to_clients))
         .route("/bootstrap/prod", post(bootstrap_prod_server))
+        .route("/instance/checkout/:branch", post(checkout_and_rebuild))
         .route("/webhook/git", post(git_webhook))
         .route("/poll-git", post(poll_git_updates))
         .route("/ping", get(ping_node))
@@ -179,10 +180,21 @@ async fn health() -> Json<serde_json::Value> {
         .map(|s| s.trim().to_string())
         .unwrap_or_else(|| "unknown".to_string());
 
+    let cwd = std::env::current_dir()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|_| "unknown".to_string());
+
+    let port = std::env::var("ZOS_HTTP_PORT").unwrap_or_else(|_| "8080".to_string());
+
     Json(serde_json::json!({
         "status": "healthy",
         "version": "1.0.0-stage1",
         "timestamp": chrono::Utc::now().to_rfc3339(),
+        "env": {
+            "cwd": cwd,
+            "port": port,
+            "pid": std::process::id()
+        },
         "git": {
             "commit": git_commit,
             "commit_short": git_commit_short,
@@ -1441,5 +1453,85 @@ echo "✅ Production server bootstrapped on port 8081"
         "status": "bootstrapping",
         "stage": "production_bootstrap",
         "message": "Creating independent production server with own git state"
+    }))
+}
+
+async fn checkout_and_rebuild(Path(branch): Path<String>) -> Json<serde_json::Value> {
+    println!("🔄 Checking out branch {} and rebuilding", branch);
+
+    let branch_clone = branch.clone();
+    tokio::spawn(async move {
+        let script = format!(
+            r#"#!/bin/bash
+set -e
+echo "🔄 Checking out branch {} and rebuilding..."
+
+# Get current working directory and port
+INSTANCE_DIR=$(pwd)
+CURRENT_PORT=$(ss -tlnp | grep zos-minimal-server | awk '{{print $4}}' | cut -d: -f2 | head -1)
+NEW_PORT=$((CURRENT_PORT + 1000))
+
+echo "📂 Instance directory: $INSTANCE_DIR"
+echo "🔌 Current port: $CURRENT_PORT, New port: $NEW_PORT"
+
+# Fetch and checkout branch
+git fetch origin
+git checkout "{}" || {{
+    echo "⚠️  Branch {} not found, staying on current branch"
+    exit 1
+}}
+git pull origin "{}"
+
+echo "📋 Git Info:"
+echo "   Branch: $(git branch --show-current)"
+echo "   Commit: $(git rev-parse --short HEAD)"
+
+# Rebuild server
+cd zos-minimal-server
+cargo build --release
+
+# Launch new server on test port
+echo "🚀 Starting new server on port $NEW_PORT..."
+ZOS_HTTP_PORT=$NEW_PORT ./target/release/zos-minimal-server &
+NEW_PID=$!
+sleep 3
+
+# Test new server
+if curl -s http://localhost:$NEW_PORT/health > /dev/null; then
+    echo "✅ New server healthy on port $NEW_PORT"
+
+    # Setup port forwarding and replace old server
+    echo "🔄 Setting up hot swap..."
+
+    # Kill old server and start port forwarding
+    pkill -f "zos-minimal-server.*$CURRENT_PORT" || true
+    sleep 1
+
+    # Forward old port to new server
+    socat TCP-LISTEN:$CURRENT_PORT,fork TCP:localhost:$NEW_PORT &
+    SOCAT_PID=$!
+
+    echo "✅ Hot swap complete: port $CURRENT_PORT -> $NEW_PORT"
+    echo "📝 New server PID: $NEW_PID, Socat PID: $SOCAT_PID"
+else
+    echo "❌ New server failed health check, killing..."
+    kill $NEW_PID 2>/dev/null || true
+    exit 1
+fi
+"#,
+            branch_clone, branch_clone, branch_clone, branch_clone
+        );
+
+        let _ = tokio::process::Command::new("bash")
+            .arg("-c")
+            .arg(&script)
+            .output()
+            .await;
+    });
+
+    Json(serde_json::json!({
+        "status": "rebuilding",
+        "branch": branch,
+        "message": format!("Checking out branch {} and hot-swapping server", branch)
     }))
 }
