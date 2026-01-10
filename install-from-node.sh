@@ -11,7 +11,7 @@ if [[ -n "$BASH_SOURCE" ]]; then
     # Try to extract from the URL this script was downloaded from
     SCRIPT_URL=$(ps -o args= -p $PPID | grep -o 'http://[^/]*' || echo "")
     if [[ -n "$SCRIPT_URL" ]]; then
-        ZOS_SERVER=$(echo "$SCRIPT_URL" | sed 's|http://||')
+        ZOS_SERVER=${SCRIPT_URL#http://}
     fi
 fi
 
@@ -122,8 +122,6 @@ fi
 echo "📥 Downloading ZOS source..."
 send_install_feedback "downloading" "Downloading source code" ""
 if command -v git >/dev/null 2>&1; then
-    echo "📂 Cloning from Git..."
-if command -v git >/dev/null 2>&1; then
     echo "📂 Cloning from Git (branch: $ZOS_BRANCH)..."
     if [ -d "zos-server" ]; then
         echo "🔄 Updating existing zos-server repository..."
@@ -143,7 +141,7 @@ if command -v git >/dev/null 2>&1; then
     cd zos-server
 else
     echo "📦 Downloading tarball..."
-    curl -L http://$ZOS_SERVER/tarball -o zos-server.tar.gz
+    curl -L "http://$ZOS_SERVER/tarball" -o zos-server.tar.gz
     tar -xzf zos-server.tar.gz
     cd zos-server
 fi
