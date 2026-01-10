@@ -6,7 +6,7 @@ set -e
 
 # Extract ZOS server from script URL or use default
 ZOS_SERVER="${ZOS_SERVER:-solana.solfunmeme.com:8080}"
-ZOS_BRANCH="${ZOS_BRANCH:-stable}"
+ZOS_BRANCH="${ZOS_BRANCH:-main}"
 if [[ -n "$BASH_SOURCE" ]]; then
     # Try to extract from the URL this script was downloaded from
     SCRIPT_URL=$(ps -o args= -p $PPID | grep -o 'http://[^/]*' || echo "")
