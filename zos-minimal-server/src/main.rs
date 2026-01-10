@@ -1,20 +1,38 @@
 use axum::{
-    extract::{Path, State},
-    http::{header, StatusCode},
+    extract::{ConnectInfo, Path, State},
+    http::{header, Request, StatusCode},
     response::{Html, Json, Response},
     routing::{get, post},
     Router,
 };
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::time::{interval, Duration};
+use tower::ServiceBuilder;
+use tower_http::trace::TraceLayer;
+use tracing::{info, warn};
+
+// Client tracking structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClientRecord {
+    pub ip: String,
+    pub user_agent: Option<String>,
+    pub first_seen: DateTime<Utc>,
+    pub last_seen: DateTime<Utc>,
+    pub request_count: u64,
+    pub endpoints_accessed: Vec<String>,
+    pub risk_score: u32,
+}
 
 // Minimal state for Stage 1
 #[derive(Clone)]
 pub struct AppState {
     pub user_sessions: Arc<RwLock<HashMap<String, UserSession>>>,
+    pub client_db: Arc<RwLock<HashMap<String, ClientRecord>>>,
     pub config: ServerConfig,
 }
 
@@ -48,6 +66,9 @@ impl ServerConfig {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialize tracing
+    tracing_subscriber::fmt::init();
+
     let config = ServerConfig::load();
 
     println!("🚀 ZOS Stage 1 Server");
@@ -56,6 +77,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let state = AppState {
         user_sessions: Arc::new(RwLock::new(HashMap::new())),
+        client_db: Arc::new(RwLock::new(HashMap::new())),
         config: config.clone(),
     };
 
@@ -76,7 +98,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/install.sh", get(serve_installer))
         .route("/install/:branch", get(serve_installer_branch))
         .route("/tarball", get(serve_tarball))
+        .route("/logs/install", post(log_install))
+        .route("/logs/build", post(log_build))
+        .route("/logs", get(list_logs))
+        .route("/logs/:host", get(get_host_logs))
+        .route("/security/clients", get(list_clients))
         .route("/:wallet/:service", get(service_call))
+        .layer(
+            ServiceBuilder::new()
+                .layer(TraceLayer::new_for_http())
+                .layer(axum::middleware::from_fn_with_state(
+                    state.clone(),
+                    track_client,
+                )),
+        )
         .with_state(state.clone());
 
     let addr = format!("0.0.0.0:{}", config.http_port);
@@ -706,174 +741,8 @@ async fn serve_source() -> Json<serde_json::Value> {
 async fn serve_installer() -> Response<String> {
     println!("🚀 Serving ZOS installer script");
 
-    let installer_script = r#"#!/bin/bash
-set -e
-
-echo "🚀 ZOS Universal Installer"
-echo "📡 Installing from: solana.solfunmeme.com:8080"
-echo ""
-
-# Detect platform
-PLATFORM=$(uname -s)
-ARCH=$(uname -m)
-echo "🖥️  Platform: $PLATFORM $ARCH"
-
-# Set installation directories
-if [[ "$EUID" -eq 0 ]]; then
-    INSTALL_DIR="/opt/zos"
-    BIN_DIR="/opt/zos/bin"
-    echo "🔧 Root install to: $INSTALL_DIR"
-else
-    INSTALL_DIR="$HOME/.zos"
-    BIN_DIR="$HOME/.zos/bin"
-    echo "🏠 User install to: $INSTALL_DIR"
-fi
-
-# Install dependencies based on platform
-case "$PLATFORM" in
-    "Linux")
-        echo "🐧 Linux detected"
-        if command -v nix >/dev/null 2>&1; then
-            echo "❄️  Nix detected - using Nix environment"
-            INSTALL_METHOD="nix"
-        elif command -v apt >/dev/null 2>&1; then
-            echo "📦 APT detected - installing dependencies"
-            if [[ "$EUID" -eq 0 ]]; then
-                apt update && apt install -y curl git build-essential pkg-config libssl-dev
-            else
-                sudo apt update && sudo apt install -y curl git build-essential pkg-config libssl-dev
-            fi
-            INSTALL_METHOD="cargo"
-        elif command -v yum >/dev/null 2>&1; then
-            echo "📦 YUM detected - installing dependencies"
-            if [[ "$EUID" -eq 0 ]]; then
-                yum install -y curl git gcc pkg-config openssl-devel
-            else
-                sudo yum install -y curl git gcc pkg-config openssl-devel
-            fi
-            INSTALL_METHOD="cargo"
-        else
-            echo "⚠️  Unknown package manager - assuming dependencies exist"
-            INSTALL_METHOD="cargo"
-        fi
-        ;;
-    "Darwin")
-        echo "🍎 macOS detected"
-        if ! command -v brew >/dev/null 2>&1; then
-            echo "🍺 Installing Homebrew..."
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        fi
-        brew install pkg-config openssl
-        INSTALL_METHOD="cargo"
-        ;;
-    "MINGW"*|"MSYS"*|"CYGWIN"*)
-        echo "🪟 Windows/MinGW detected"
-        INSTALL_DIR="$HOME/.zos"
-        BIN_DIR="$HOME/.zos/bin"
-        INSTALL_METHOD="cargo"
-        ;;
-    *)
-        echo "❓ Unknown platform - attempting generic install"
-        INSTALL_METHOD="cargo"
-        ;;
-esac
-
-# Install Rust if not present or too old
-if ! command -v cargo >/dev/null 2>&1; then
-    echo "🦀 Installing Rust..."
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-    source ~/.cargo/env
-    export PATH="$HOME/.cargo/bin:$PATH"
-else
-    # Check Rust version and update if needed
-    RUST_VERSION=$(rustc --version | awk '{print $2}')
-    echo "🦀 Current Rust version: $RUST_VERSION"
-    if [[ "$RUST_VERSION" < "1.82" ]]; then
-        echo "🔄 Updating Rust to latest version..."
-        rustup update
-    fi
-fi
-
-# Create installation directories
-mkdir -p "$INSTALL_DIR" "$BIN_DIR"
-cd "$INSTALL_DIR"
-
-# Download and extract ZOS source
-echo "📥 Downloading ZOS source to $INSTALL_DIR..."
-if command -v git >/dev/null 2>&1; then
-    echo "📂 Cloning from Git..."
-    if [ -d "zos-server" ]; then
-        rm -rf zos-server
-    fi
-    git clone https://github.com/meta-introspector/zos-server.git
-    cd zos-server
-else
-    echo "📦 Downloading tarball..."
-    curl -L http://solana.solfunmeme.com:8080/tarball -o zos-server.tar.gz
-    tar -xzf zos-server.tar.gz
-    # Handle potential directory name variations
-    if [ -d "zos-server" ]; then
-        cd zos-server
-    else
-        # Find the extracted directory
-        EXTRACTED_DIR=$(find . -maxdepth 1 -type d -name "*zos*" | head -1)
-        if [ -n "$EXTRACTED_DIR" ]; then
-            cd "$EXTRACTED_DIR"
-        else
-            echo "❌ Could not find extracted ZOS directory"
-            exit 1
-        fi
-    fi
-fi
-
-# Verify we're in the right place
-if [ ! -d "zos-minimal-server" ]; then
-    echo "❌ zos-minimal-server directory not found in $(pwd)"
-    echo "📁 Available directories:"
-    ls -la
-    exit 1
-fi
-
-# Build ZOS
-echo "🔨 Building ZOS..."
-cd zos-minimal-server
-
-case "$INSTALL_METHOD" in
-    "nix")
-        nix-shell -p rustc cargo pkg-config openssl git --run "cargo build --release"
-        ;;
-    "cargo")
-        cargo build --release
-        ;;
-esac
-
-# Install ZOS binary
-echo "📦 Installing ZOS binary to $BIN_DIR..."
-cp target/release/zos-minimal-server "$BIN_DIR/"
-
-# Make it executable
-chmod +x "$BIN_DIR/zos-minimal-server"
-
-# Add to PATH if not already there
-if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
-    echo "🔧 Adding $BIN_DIR to PATH..."
-    echo "export PATH=\"$BIN_DIR:\$PATH\"" >> ~/.bashrc
-    echo "export PATH=\"$BIN_DIR:\$PATH\"" >> ~/.profile 2>/dev/null || true
-    export PATH="$BIN_DIR:$PATH"
-fi
-
-echo ""
-echo "🎉 ZOS Installation Complete!"
-echo ""
-echo "📁 Installed to: $INSTALL_DIR"
-echo "🚀 Binary at: $BIN_DIR/zos-minimal-server"
-echo ""
-echo "▶️  Start ZOS with: zos-minimal-server"
-echo "🔗 Test with: curl http://localhost:8080/health"
-echo ""
-echo "📚 Documentation: http://solana.solfunmeme.com:8080/source"
-echo "🌐 Join network: http://solana.solfunmeme.com:8080"
-"#;
+    let installer_script = std::fs::read_to_string("install-from-node.sh")
+        .expect("install-from-node.sh file not found - ensure it exists in working directory");
 
     Response::builder()
         .status(StatusCode::OK)
@@ -882,34 +751,15 @@ echo "🌐 Join network: http://solana.solfunmeme.com:8080"
             header::CONTENT_DISPOSITION,
             "attachment; filename=\"install.sh\"",
         )
-        .body(installer_script.to_string())
+        .body(installer_script)
         .unwrap()
 }
 
 async fn serve_installer_branch(Path(branch): Path<String>) -> Response<String> {
     println!("🚀 Serving ZOS installer script for branch: {}", branch);
 
-    // Read the installer script from file and customize for branch
-    let mut installer_script = match std::fs::read_to_string("install-from-node.sh") {
-        Ok(content) => content,
-        Err(_) => {
-            format!(
-                r#"#!/bin/bash
-set -e
-echo "🚀 ZOS Universal Installer"
-echo "🌿 Branch: {}"
-curl -L https://github.com/meta-introspector/zos-server/archive/{}.tar.gz -o zos-server.tar.gz
-tar -xzf zos-server.tar.gz
-cd zos-server-*/zos-minimal-server
-cargo build --release
-mkdir -p ~/.local/bin
-cp target/release/zos-minimal-server ~/.local/bin/
-echo "🎉 ZOS Installation Complete!"
-"#,
-                branch, branch
-            )
-        }
-    };
+    let mut installer_script = std::fs::read_to_string("install-from-node.sh")
+        .expect("install-from-node.sh file not found - ensure it exists in working directory");
 
     // Replace default branch with requested branch
     installer_script = installer_script.replace(
@@ -1342,4 +1192,71 @@ async fn background_tasks(state: AppState) {
             println!("🧹 Cleaned up {} old sessions", before_count - after_count);
         }
     }
+}
+
+// Client tracking middleware
+async fn track_client(
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    State(state): State<AppState>,
+    request: axum::http::Request<axum::body::Body>,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    let ip = addr.ip().to_string();
+    let user_agent = request
+        .headers()
+        .get("user-agent")
+        .and_then(|h| h.to_str().ok())
+        .map(|s| s.to_string());
+    let path = request.uri().path().to_string();
+
+    // Track client
+    {
+        let mut clients = state.client_db.write().await;
+        let now = Utc::now();
+
+        match clients.get_mut(&ip) {
+            Some(client) => {
+                client.last_seen = now;
+                client.request_count += 1;
+                if !client.endpoints_accessed.contains(&path) {
+                    client.endpoints_accessed.push(path.clone());
+                }
+            }
+            None => {
+                clients.insert(
+                    ip.clone(),
+                    ClientRecord {
+                        ip: ip.clone(),
+                        user_agent: user_agent.clone(),
+                        first_seen: now,
+                        last_seen: now,
+                        request_count: 1,
+                        endpoints_accessed: vec![path.clone()],
+                        risk_score: 0,
+                    },
+                );
+            }
+        }
+    }
+
+    info!(
+        "Request: {} {} from {} ({})",
+        request.method(),
+        path,
+        ip,
+        user_agent.unwrap_or_else(|| "no-agent".to_string())
+    );
+
+    next.run(request).await
+}
+
+// Security endpoint to list tracked clients
+async fn list_clients(State(state): State<AppState>) -> Json<serde_json::Value> {
+    let clients = state.client_db.read().await;
+    let client_list: Vec<&ClientRecord> = clients.values().collect();
+
+    Json(serde_json::json!({
+        "total_clients": client_list.len(),
+        "clients": client_list
+    }))
 }
