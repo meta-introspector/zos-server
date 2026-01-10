@@ -1719,7 +1719,15 @@ sudo mkdir -p /opt/zos-test-qa
 sudo chown zos-qa:zos-qa /opt/zos-test-qa
 
 # Copy current binary
-sudo cp ./target/release/zos-minimal-server /usr/local/bin/zos-qa-server
+if [ -f ./target/release/zos-minimal-server ]; then
+    sudo cp ./target/release/zos-minimal-server /usr/local/bin/zos-qa-server
+elif [ -f ./target/debug/zos-minimal-server ]; then
+    sudo cp ./target/debug/zos-minimal-server /usr/local/bin/zos-qa-server
+else
+    echo "Building release binary for QA service..."
+    cargo build --release
+    sudo cp ./target/release/zos-minimal-server /usr/local/bin/zos-qa-server
+fi
 sudo chmod +x /usr/local/bin/zos-qa-server
 
 # Clone QA branch as zos-qa user
@@ -1761,7 +1769,15 @@ sudo systemctl daemon-reload
 sudo systemctl enable zos-qa.service
 sudo systemctl start zos-qa.service
 
-echo "✅ QA service installed with dedicated user 'zos-qa' on port 8082"
+# Verify service started
+sleep 2
+if sudo systemctl is-active --quiet zos-qa.service; then
+    echo "✅ QA service installed and started successfully on port 8082"
+else
+    echo "❌ QA service failed to start"
+    sudo systemctl status zos-qa.service
+    exit 1
+fi
 "#;
 
         let _ = tokio::process::Command::new("bash")
