@@ -103,14 +103,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/tarball", get(serve_tarball))
         .route("/security/clients", get(list_clients))
         .route("/:wallet/:service", get(service_call))
-        .layer(
-            ServiceBuilder::new()
-                .layer(TraceLayer::new_for_http())
-                .layer(axum::middleware::from_fn_with_state(
-                    state.clone(),
-                    track_client,
-                )),
-        )
+        .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
         .with_state(state.clone());
 
     let addr = format!("0.0.0.0:{}", config.http_port);
@@ -160,11 +153,25 @@ async fn health() -> Json<serde_json::Value> {
         .output()
         .ok()
         .and_then(|output| String::from_utf8(output.stdout).ok())
-        .map(|s| s.trim().chars().take(8).collect::<String>())
+        .map(|s| s.trim().to_string())
         .unwrap_or_else(|| "unknown".to_string());
+
+    let git_commit_short = if git_commit != "unknown" {
+        git_commit.chars().take(8).collect::<String>()
+    } else {
+        "unknown".to_string()
+    };
 
     let git_branch = std::process::Command::new("git")
         .args(&["branch", "--show-current"])
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    let commit_age = std::process::Command::new("git")
+        .args(&["log", "-1", "--format=%cr"])
         .output()
         .ok()
         .and_then(|output| String::from_utf8(output.stdout).ok())
@@ -175,8 +182,12 @@ async fn health() -> Json<serde_json::Value> {
         "status": "healthy",
         "version": "1.0.0-stage1",
         "timestamp": chrono::Utc::now().to_rfc3339(),
-        "git_commit": git_commit,
-        "git_branch": git_branch
+        "git": {
+            "commit": git_commit,
+            "commit_short": git_commit_short,
+            "branch": git_branch,
+            "age": commit_age
+        }
     }))
 }
 
