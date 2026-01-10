@@ -52,18 +52,28 @@ echo ""
 echo "💻 Stage 1: Development Server"
 echo "-----------------------------"
 
-# Build and start dev server
+# Build dev server
+echo "Building dev server..."
 cd zos-minimal-server
-cargo build --release
+if ! cargo build; then
+    echo "❌ Dev server build failed"
+    exit 1
+fi
 cd ..
 
 echo "Starting dev server on port $DEV_PORT..."
-ZOS_HTTP_PORT=$DEV_PORT ./zos-minimal-server/target/release/zos-minimal-server &
+cd zos-minimal-server
+ZOS_HTTP_PORT=$DEV_PORT cargo run &
 DEV_PID=$!
+cd ..
 echo "Dev Server PID: $DEV_PID"
 
 # Wait for dev server
-wait_for_service $DEV_PORT "Dev"
+if ! wait_for_service $DEV_PORT "Dev"; then
+    echo "❌ Dev server failed to start"
+    kill $DEV_PID 2>/dev/null || true
+    exit 1
+fi
 
 # Stage 2: Install QA Service
 echo ""
@@ -71,19 +81,36 @@ echo "🔧 Stage 2: Install QA Service"
 echo "------------------------------"
 
 echo "Installing QA service..."
-curl -X POST "http://localhost:$DEV_PORT/install/qa-service" | jq . || echo "QA installation triggered"
+if ! curl -X POST "http://localhost:$DEV_PORT/install/qa-service" | jq .; then
+    echo "❌ QA installation failed"
+    kill $DEV_PID 2>/dev/null || true
+    exit 1
+fi
 
 # Wait for QA service
 sleep 15
-wait_for_service $QA_PORT "QA"
+if ! wait_for_service $QA_PORT "QA"; then
+    echo "❌ QA service failed to start"
+    kill $DEV_PID 2>/dev/null || true
+    exit 1
+fi
 
 # Stage 3: Test Current State
 echo ""
 echo "🧪 Stage 3: Test Current State"
 echo "-----------------------------"
 
-test_api $DEV_PORT "/health" "Dev Health"
-test_api $QA_PORT "/health" "QA Health"
+if ! test_api $DEV_PORT "/health" "Dev Health"; then
+    echo "❌ Dev health check failed"
+    kill $DEV_PID 2>/dev/null || true
+    exit 1
+fi
+
+if ! test_api $QA_PORT "/health" "QA Health"; then
+    echo "❌ QA health check failed"
+    kill $DEV_PID 2>/dev/null || true
+    exit 1
+fi
 
 # Stage 4: Simulate Code Change and Update
 echo ""

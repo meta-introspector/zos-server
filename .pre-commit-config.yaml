@@ -13,7 +13,7 @@ repos:
     hooks:
       - id: shellcheck
         name: shellcheck
-        entry: bash -c 'if command -v shellcheck >/dev/null 2>&1; then shellcheck --severity=warning "$@"; else echo "⚠️  shellcheck not available, skipping"; fi'
+        entry: bash -c 'if ! command -v shellcheck >/dev/null 2>&1; then echo "❌ shellcheck is required but not installed"; exit 1; elif [ "$#" -eq 0 ]; then echo "⚠️  no shell files to check"; else shellcheck --severity=warning "$@"; fi'
         language: system
         files: \.sh$
 
