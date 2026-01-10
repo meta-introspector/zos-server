@@ -201,3 +201,37 @@ curl http://localhost:8082/health
 # Manual git update
 sudo -u zos-qa bash -c "cd /opt/zos-test-qa && git pull origin qa"
 ```
+
+## Hash Verification and Deployment
+
+### Hash-Based Deployment
+ZOS now implements cryptographic verification of deployments using git commit hashes and binary hashes to ensure integrity across the pipeline.
+
+#### Verification Endpoints
+- `GET /health` - Returns git hash, binary hash, and verification status
+- `POST /deploy/verify-hash/:hash` - Deploy specific git commit hash with verification
+
+#### Hash Flow
+```
+1. Dev commits → Git Hash: abc123...
+2. QA fetches abc123, builds, verifies binary hash
+3. Prod deploys only verified hash combinations
+4. All services report current hashes in /health
+```
+
+#### Current Verified Hash
+- **Git**: `81038be429724d9e980698e4d3dd7eddeedd8802`
+- **Short**: `81038be`
+- **Message**: "Add git hash and binary hash verification"
+
+### Usage
+```bash
+# Get current deployment hash
+HASH=$(curl -s http://localhost:8080/health | jq -r .git.commit)
+
+# Deploy to QA with verification
+curl -X POST "http://localhost:8080/deploy/verify-hash/$HASH"
+
+# Verify QA deployment
+curl -s http://localhost:8082/health | jq '.git.commit_short'
+```

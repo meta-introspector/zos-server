@@ -21,13 +21,34 @@
 - ZOS processes stopped (PIDs: 1317859, 1318091)
 - ZOS QA service stopped and inactive
 
-## Current CI/CD Pipeline Architecture
+## Hash Verification System
 
-### Pipeline Flow:
+### Current Deployment Hashes
+- **Git Hash**: `81038be429724d9e980698e4d3dd7eddeedd8802` (short: `81038be`)
+- **Commit**: "Add git hash and binary hash verification with proper borrow handling"
+- **Date**: 2026-01-10T16:09:47+00:00
+
+### Hash Verification Features
+- **Health Endpoint**: `/health` now includes git commit hash and binary hash
+- **Hash Deployment**: `/deploy/verify-hash/:hash` deploys specific git hash
+- **Binary Verification**: SHA256 hash of running binary included in health check
+- **Git Integrity**: Verifies git hash exists before deployment
+
+### Pipeline Hash Flow
 ```
-Dev (Local) → QA Service → Production Service
-    ↓             ↓              ↓
-Port 8080    Port 8082     Port 8084
+Dev (git: 81038be) → QA (verify: 81038be + build) → Prod (verify: binary hash matches)
+```
+
+### Verification Commands
+```bash
+# Check current server hashes
+curl -s http://localhost:8080/health | jq '.git + .binary'
+
+# Deploy specific git hash to QA
+curl -X POST http://localhost:8080/deploy/verify-hash/81038be429724d9e980698e4d3dd7eddeedd8802
+
+# Verify QA has correct hash
+curl -s http://localhost:8082/health | jq '.git.commit_short'
 ```
 
 ### Available Endpoints:
