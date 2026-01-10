@@ -747,29 +747,67 @@ echo "🌐 Join network: http://solana.solfunmeme.com:8080"
 }
 
 async fn serve_tarball() -> Result<Vec<u8>, StatusCode> {
-    println!("📦 Creating and serving ZOS tarball");
+    println!("📦 Creating and serving ZOS tarball from clean git checkout");
 
-    // Create tarball of current source
-    let output = tokio::process::Command::new("tar")
+    // Create clean checkout directory
+    let checkout_dir = "/tmp/zos-clean-checkout";
+    let tarball_path = "/tmp/zos-server.tar.gz";
+
+    // Remove existing checkout if it exists
+    let _ = tokio::process::Command::new("rm")
+        .args(&["-rf", checkout_dir])
+        .output()
+        .await;
+
+    // Get current git remote URL
+    let remote_output = tokio::process::Command::new("git")
+        .args(&["remote", "get-url", "origin"])
+        .current_dir("..")
+        .output()
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let remote_url = String::from_utf8_lossy(&remote_output.stdout).trim();
+
+    // Clone fresh copy
+    let clone_output = tokio::process::Command::new("git")
+        .args(&["clone", remote_url, checkout_dir])
+        .output()
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    if !clone_output.status.success() {
+        return Err(StatusCode::INTERNAL_SERVER_ERROR);
+    }
+
+    // Create tarball from clean checkout
+    let tar_output = tokio::process::Command::new("tar")
         .args(&[
             "-czf",
-            "/tmp/zos-server.tar.gz",
-            "--exclude=target",
+            tarball_path,
             "--exclude=.git",
+            "--exclude=target",
             "--exclude=*.log",
-            "--exclude=Cargo.lock",
-            ".",
+            "-C",
+            "/tmp",
+            "zos-clean-checkout",
         ])
         .output()
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    if !output.status.success() {
+    if !tar_output.status.success() {
         return Err(StatusCode::INTERNAL_SERVER_ERROR);
     }
 
+    // Clean up checkout directory
+    let _ = tokio::process::Command::new("rm")
+        .args(&["-rf", checkout_dir])
+        .output()
+        .await;
+
     // Read the tarball
-    tokio::fs::read("/tmp/zos-server.tar.gz")
+    tokio::fs::read(tarball_path)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
