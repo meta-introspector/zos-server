@@ -7,7 +7,7 @@ set -e
 # Extract ZOS server from script URL or use default
 ZOS_SERVER="${ZOS_SERVER:-solana.solfunmeme.com:8080}"
 ZOS_BRANCH="${ZOS_BRANCH:-main}"
-if [[ -n "$BASH_SOURCE" ]]; then
+if [[ -n "${BASH_SOURCE[0]}" ]]; then
     # Try to extract from the URL this script was downloaded from
     SCRIPT_URL=$(ps -o args= -p $PPID | grep -o 'http://[^/]*' || echo "")
     if [[ -n "$SCRIPT_URL" ]]; then
@@ -114,6 +114,7 @@ esac
 if ! command -v cargo >/dev/null 2>&1; then
     echo "🦀 Installing Rust..."
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    # shellcheck source=/dev/null
     source ~/.cargo/env
     export PATH="$HOME/.cargo/bin:$PATH"
 fi

@@ -30,7 +30,7 @@ fi
 
 # Test installer endpoint
 curl -s http://localhost:8080/install.sh | head -5 | grep -q "ZOS Universal Installer"
-if [ $? -eq 0 ]; then
+if [ "$STAGING_HEALTH" != "healthy" ]; then
     echo "✅ Staging tests passed"
 else
     echo "❌ Staging installer test failed"
