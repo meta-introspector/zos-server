@@ -1,14 +1,14 @@
 // ZOS Server - Zero Ontology System with Plugin Architecture
 // AGPL-3.0 License
 
+use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use std::collections::HashMap;
 use std::env;
+use std::sync::mpsc::channel;
+use std::thread;
 
-mod minimal_server_plugin;
-mod traits;
-
-use crate::minimal_server_plugin::MinimalServerPlugin;
-use crate::traits::{ZOSPlugin, ZOSPluginRegistry};
+use zos_server::minimal_server_plugin::MinimalServerPlugin;
+use zos_server::traits::{ZOSPlugin, ZOSPluginRegistry};
 
 struct ZOSCore {
     plugins: HashMap<String, Box<dyn ZOSPlugin>>,
@@ -111,6 +111,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let command = &args[1];
     let cmd_args = args[2..].to_vec();
 
+    // Start file watcher only if --reload flag is present
+    if command == "serve" && cmd_args.contains(&"--reload".to_string()) {
+        start_file_watcher();
+        println!("🔄 Auto-reload enabled for development");
+    }
+
     match core.execute_command(command, cmd_args).await {
         Ok(_) => Ok(()),
         Err(e) => {
@@ -118,4 +124,42 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             std::process::exit(1);
         }
     }
+}
+
+fn start_file_watcher() {
+    thread::spawn(|| {
+        let (tx, rx) = channel();
+        let mut watcher = RecommendedWatcher::new(
+            tx,
+            notify::Config::default().with_poll_interval(std::time::Duration::from_secs(1)),
+        )
+        .unwrap();
+        watcher
+            .watch(std::path::Path::new("src"), RecursiveMode::Recursive)
+            .unwrap();
+
+        loop {
+            match rx.recv() {
+                Ok(_) => {
+                    println!("🔄 Files changed, recompiling...");
+                    let output = std::process::Command::new("cargo")
+                        .args(&["build", "--bin", "zos_server"])
+                        .output();
+
+                    match output {
+                        Ok(result) if result.status.success() => {
+                            println!("✅ Recompiled successfully - restarting server...");
+                            std::process::exit(0); // Exit to trigger restart
+                        }
+                        Ok(result) => {
+                            println!("❌ Compilation failed:");
+                            println!("{}", String::from_utf8_lossy(&result.stderr));
+                        }
+                        Err(e) => println!("❌ Failed to run cargo: {}", e),
+                    }
+                }
+                Err(e) => println!("Watch error: {:?}", e),
+            }
+        }
+    });
 }

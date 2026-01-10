@@ -1,0 +1,3 @@
+[submodule "cargo-watch"]
+	path = cargo-watch
+	url = https://github.com/meta-introspector/cargo-watch.git

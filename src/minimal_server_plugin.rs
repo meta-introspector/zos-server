@@ -5,7 +5,12 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
+use std::net::SocketAddr;
 use std::path::Path;
+use std::sync::Arc;
+
+// Re-import the types we need from common modules
+use crate::common::ServerState;
 
 #[derive(Debug, serde::Deserialize)]
 struct ZOSConfig {
@@ -28,8 +33,8 @@ struct AuthConfig {
 
 #[derive(Debug, serde::Deserialize)]
 struct DeploymentConfig {
-    qa_port: u16,
-    prod_port: u16,
+    #[serde(default)]
+    environments: std::collections::HashMap<String, u16>, // env_name -> port
 }
 
 // Import the minimal server functionality directly
@@ -40,10 +45,8 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
-use std::net::SocketAddr;
-use std::sync::Arc;
+use chrono::Utc;
+// // use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::sync::RwLock;
 use tower::ServiceBuilder;
@@ -52,26 +55,6 @@ use tower_http::trace::TraceLayer;
 pub struct MinimalServerPlugin {
     state: Arc<ServerState>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ClientRecord {
-    pub ip: String,
-    pub user_agent: Option<String>,
-    pub first_seen: DateTime<Utc>,
-    pub last_seen: DateTime<Utc>,
-    pub request_count: u64,
-    pub endpoints_accessed: Vec<String>,
-    pub risk_score: u32,
-}
-
-#[derive(Debug, Clone, Serialize)]
-struct ResourceTrace {
-    verb: String,
-    start_time: DateTime<Utc>,
-    duration_ms: u64,
-}
-
-type ServerState = RwLock<HashMap<String, ClientRecord>>;
 
 impl MinimalServerPlugin {
     pub fn new() -> Self {
@@ -94,14 +77,18 @@ impl MinimalServerPlugin {
             server: ServerConfig {
                 host: "0.0.0.0".to_string(),
                 port: 8080,
-                domain: "localhost".to_string(),
+                domain: "solana.solfunmeme.com".to_string(),
             },
             auth: AuthConfig {
                 session_duration_hours: 2,
             },
             deployment: DeploymentConfig {
-                qa_port: 8082,
-                prod_port: 8081,
+                environments: {
+                    let mut envs = std::collections::HashMap::new();
+                    envs.insert("qa".to_string(), 8082);
+                    envs.insert("prod".to_string(), 8081);
+                    envs
+                },
             },
         }
     }
