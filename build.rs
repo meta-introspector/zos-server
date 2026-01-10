@@ -1,7 +1,7 @@
 // ZOS Server build.rs - Universal Context Expansion
 // AGPL-3.0 License
 
-use zos_build_macros::{mkbuild, mklayer, mkscript};
+use zos_build_macros::mkbuild;
 
 mkbuild! {
     // Universal macro definitions that expand to multiple contexts

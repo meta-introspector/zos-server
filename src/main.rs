@@ -1,7 +1,7 @@
 // ZOS Server - Minimal foundation build
 // AGPL-3.0 License
 
-use zos_traits::{LMFDBOrbitRef, Plugin, SecurityVerifier};
+// ZOS Server - Main binary for plugin system
 use zos_types::{PluginMeta, SecurityLevel};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

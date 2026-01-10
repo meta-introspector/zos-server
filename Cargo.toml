@@ -30,6 +30,18 @@ zos-oracle = { path = "zos-oracle" }
 zos-unix-accounts = { path = "zos-unix-accounts" }
 zos-retro-games = { path = "zos-retro-games" }
 
+# Standalone server dependencies
+axum = "0.7"
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace", "request-id"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
 [package]
 name = "zos-server"
 version = "0.1.0"
@@ -42,17 +54,30 @@ repository = "https://github.com/meta-introspector/zos-server"
 name = "zos_server"
 path = "src/main.rs"
 
+[[bin]]
+name = "zos-minimal-server"
+path = "zos-minimal-server/src/main.rs"
+
 [dependencies]
 # Foundation (zero deps)
 zos-macros = { workspace = true }
 zos-traits = { workspace = true }
 zos-types = { workspace = true }
 
+# Standalone server dependencies
+axum = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+reqwest = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
 # Optional runtime deps
-serde = { version = "1.0", features = ["derive"], optional = true }
-serde_json = { version = "1.0", optional = true }
 uuid = { version = "1.0", features = ["v4"], optional = true }
-tokio = { version = "1.0", features = ["rt", "macros"], optional = true }
 
 [build-dependencies]
 zos-build-macros = { workspace = true }
@@ -137,8 +162,8 @@ cross_layer_communication = []
 recursive_verification = []
 
 # Runtime dependencies (optional)
-serde = ["dep:serde", "dep:serde_json"]
-runtime = ["dep:uuid", "dep:tokio"]
+serde = []
+runtime = ["dep:uuid"]
 full = ["serde", "runtime"]
 
 # Complete layer sets

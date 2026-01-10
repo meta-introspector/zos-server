@@ -3049,9 +3049,16 @@ dependencies = [
 name = "zos-server"
 version = "0.1.0"
 dependencies = [
+ "axum",
+ "chrono",
+ "reqwest",
  "serde",
  "serde_json",
  "tokio",
+ "tower",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
  "uuid",
  "zos-build-macros",
  "zos-macros",
