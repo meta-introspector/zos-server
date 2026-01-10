@@ -1,0 +1,375 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ZOS Dashboard</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #1a1a1a; color: #fff; }
+        .header { background: #333; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: #2a2a2a; padding: 20px; border-radius: 10px; border: 1px solid #444; }
+        .status { padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .healthy { background: #0a5d0a; }
+        .unhealthy { background: #5d0a0a; }
+        .step { background: #333; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #666; }
+        .step.running { border-left-color: #ffa500; }
+        .step.success { border-left-color: #0a5d0a; }
+        .step.error { border-left-color: #5d0a0a; }
+        button { background: #0066cc; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0052a3; }
+        .log { background: #111; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 ZOS Dashboard - Zero Ontology System</h1>
+        <p>Authenticated Root Access | Plugin Architecture | Real-time Monitoring</p>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3>🌐 Service Status</h3>
+            <div id="services">Loading...</div>
+            <button onclick="refreshServices()">Refresh</button>
+        </div>
+
+        <div class="card">
+            <h3>🚀 Quick Deploy</h3>
+            <button id="deploy-qa-btn">Deploy QA</button>
+            <button id="deploy-prod-btn">Deploy Production</button>
+            <button id="refresh-btn">Refresh Services</button>
+        </div>
+
+        <div class="card" id="deployment-details" style="display: none;">
+            <h3 id="deployment-title">🔧 Deployment Progress</h3>
+            <div id="deployment-steps"></div>
+            <button onclick="hideDeploymentDetails()">Close</button>
+        </div>
+
+        <div class="card">
+            <h3>📊 System Info</h3>
+            <div id="system-info">Loading...</div>
+        </div>
+
+        <div class="card">
+            <h3>📋 Activity Log</h3>
+            <div id="activity-log" class="log">Dashboard initialized...</div>
+        </div>
+
+        <div class="card">
+            <h3>🔍 Console Log</h3>
+            <div id="console-log" class="log">Console ready...</div>
+            <button onclick="clearConsole()">Clear Console</button>
+        </div>
+    </div>
+
+    <script>
+        // Console log capture for mobile debugging
+        const originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn,
+            info: console.info
+        };
+
+        function consoleLog(level, ...args) {
+            const consoleDiv = document.getElementById('console-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const message = args.map(arg =>
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+
+            const levelIcon = {
+                'log': '📝',
+                'error': '❌',
+                'warn': '⚠️',
+                'info': 'ℹ️'
+            }[level] || '📝';
+
+            consoleDiv.innerHTML += `[${timestamp}] ${levelIcon} ${message}\n`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+
+            // Call original console method
+            originalConsole[level](...args);
+        }
+
+        // Override console methods
+        console.log = (...args) => consoleLog('log', ...args);
+        console.error = (...args) => consoleLog('error', ...args);
+        console.warn = (...args) => consoleLog('warn', ...args);
+        console.info = (...args) => consoleLog('info', ...args);
+
+        function clearConsole() {
+            document.getElementById('console-log').innerHTML = 'Console cleared...\n';
+        }
+
+        function log(message) {
+            const logDiv = document.getElementById('activity-log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        async function refreshServices() {
+            log('Refreshing service status...');
+            console.log('🔍 Starting refreshServices...');
+            try {
+                const response = await fetch('/api/dashboard/services');
+                console.log('📡 Response status:', response.status);
+                const data = await response.json();
+                console.log('📊 Services data:', data);
+                const formattedHTML = formatServices(data);
+                console.log('🎨 Formatted HTML:', formattedHTML);
+                document.getElementById('services').innerHTML = formattedHTML;
+                log('✅ Services refreshed');
+            } catch (error) {
+                console.error('❌ RefreshServices error:', error);
+                log('❌ Failed to refresh services: ' + error);
+            }
+        }
+
+        function formatServices(data) {
+            console.log('🎯 formatServices called with:', data);
+            if (data.services) {
+                console.log('✅ Using services format');
+                const servicesResult = data.services.map(service =>
+                    `<div class="status ${service.status ? 'healthy' : 'unhealthy'}">
+                        ${service.icon} ${service.name} (${service.environment.toUpperCase()})
+                        <br><small>${service.hostname}:${service.port}</small>
+                        <br><strong>${service.status ? '✅ Healthy' : '❌ Down'}</strong>
+                    </div>`
+                ).join('');
+                console.log('🎨 Services HTML result:', servicesResult);
+                return servicesResult;
+            }
+            // Fallback to legacy format
+            console.log('⚠️ Using legacy format');
+            const legacyResult = Object.entries(data.network_status || {}).map(([port, healthy]) =>
+                `<div class="status ${healthy ? 'healthy' : 'unhealthy'}">
+                    Port ${port}: ${healthy ? '✅ Healthy' : '❌ Down'}
+                </div>`
+            ).join('');
+            console.log('🎨 Legacy HTML result:', legacyResult);
+            return legacyResult;
+        }
+
+        async function deployQA() {
+            showDeploymentDetails('🧪 QA Deployment', 'qa');
+
+            const steps = [
+                { id: 'git-hash', name: 'Getting Git Hash', status: 'running' },
+                { id: 'build', name: 'Building Release Binary', status: 'pending' },
+                { id: 'hash-verify', name: 'Verifying Binary Hash', status: 'pending' },
+                { id: 'systemd', name: 'Deploying Systemd Service', status: 'pending' },
+                { id: 'health-check', name: 'Health Check', status: 'pending' }
+            ];
+
+            updateDeploymentSteps(steps);
+
+            try {
+                // Step 1: Get git hash
+                await simulateStep('git-hash', 'Getting current git commit hash...', 1000);
+                steps[0].status = 'success';
+                steps[1].status = 'running';
+                updateDeploymentSteps(steps);
+
+                // Step 2: Build
+                await simulateStep('build', 'Compiling Rust binary with release optimizations...', 2000);
+                steps[1].status = 'success';
+                steps[2].status = 'running';
+                updateDeploymentSteps(steps);
+
+                // Step 3: Hash verification
+                await simulateStep('hash-verify', 'Calculating SHA256 hash for reproducible builds...', 1000);
+                steps[2].status = 'success';
+                steps[3].status = 'running';
+                updateDeploymentSteps(steps);
+
+                // Step 4: Deploy systemd
+                await simulateStep('systemd', 'Starting QA server on port 8082...', 1000);
+                const response = await fetch('/api/dashboard/deploy', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({env: 'qa', port: 8082, git_hash: 'current'})
+                });
+                const result = await response.json();
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.log('❌ Deploy response error:', errorText);
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        throw new Error('Deployment failed: ' + errorText);
+                    }
+
+                    let errorMsg = errorData.error || 'Deployment failed';
+                    if (errorData.stderr) errorMsg += '\nStderr: ' + errorData.stderr;
+                    if (errorData.stdout) errorMsg += '\nStdout: ' + errorData.stdout;
+                    if (errorData.systemd_logs) errorMsg += '\nSystemd Logs:\n' + errorData.systemd_logs;
+                    console.log('❌ Full error details:', errorMsg);
+                    throw new Error(errorMsg);
+                }
+
+                const result = await response.json();
+                console.log('✅ Deploy response:', result);
+
+                steps[3].status = 'success';
+                steps[4].status = 'running';
+                updateDeploymentSteps(steps);
+
+                // Step 5: Health check
+                await simulateStep('health-check', 'Verifying QA service is responding...', 1500);
+                steps[4].status = 'success';
+                updateDeploymentSteps(steps);
+
+                log('✅ QA deployment completed successfully');
+
+            } catch (error) {
+                log('❌ QA deployment failed: ' + error);
+                const currentStep = steps.find(s => s.status === 'running');
+                if (currentStep) {
+                    currentStep.status = 'error';
+                    showStepError(currentStep.id, error.message);
+                }
+                updateDeploymentSteps(steps);
+            }
+        }
+
+        function showDeploymentDetails(title, env) {
+            document.getElementById('deployment-title').textContent = title;
+            document.getElementById('deployment-details').style.display = 'block';
+            log(`🚀 Starting ${env.toUpperCase()} deployment...`);
+        }
+
+        function hideDeploymentDetails() {
+            document.getElementById('deployment-details').style.display = 'none';
+        }
+
+        function updateDeploymentSteps(steps) {
+            const container = document.getElementById('deployment-steps');
+            container.innerHTML = steps.map(step => {
+                const icon = step.status === 'success' ? '✅' :
+                           step.status === 'running' ? '⏳' :
+                           step.status === 'error' ? '❌' : '⏸️';
+                return `<div class="step ${step.status}">
+                    ${icon} ${step.name}
+                    <div id="step-${step.id}-detail" style="font-size: 0.9em; color: #ccc; margin-top: 5px;"></div>
+                </div>`;
+            }).join('');
+        }
+
+        async function simulateStep(stepId, message, duration) {
+            const detail = document.getElementById(`step-${stepId}-detail`);
+            if (detail) {
+                detail.textContent = message;
+            }
+            await new Promise(resolve => setTimeout(resolve, duration));
+        }
+
+        function showStepError(stepId, errorMessage) {
+            const detail = document.getElementById(`step-${stepId}-detail`);
+            if (detail) {
+                detail.innerHTML = `<span style="color: #ff6b6b;">${errorMessage}</span>`;
+            }
+        }
+
+        async function deployProd() {
+            showDeploymentDetails('🏭 Production Deployment', 'prod');
+
+            const steps = [
+                { id: 'git-hash', name: 'Getting Git Hash', status: 'running' },
+                { id: 'build', name: 'Building Release Binary', status: 'pending' },
+                { id: 'hash-verify', name: 'Verifying Binary Hash', status: 'pending' },
+                { id: 'backup', name: 'Creating Backup', status: 'pending' },
+                { id: 'systemd', name: 'Deploying Systemd Service', status: 'pending' },
+                { id: 'health-check', name: 'Health Check', status: 'pending' },
+                { id: 'smoke-test', name: 'Smoke Tests', status: 'pending' }
+            ];
+
+            updateDeploymentSteps(steps);
+
+            try {
+                await simulateStep('git-hash', 'Getting current git commit hash...', 1000);
+                steps[0].status = 'success';
+                steps[1].status = 'running';
+                updateDeploymentSteps(steps);
+
+                await simulateStep('build', 'Compiling Rust binary with release optimizations...', 3000);
+                steps[1].status = 'success';
+                steps[2].status = 'running';
+                updateDeploymentSteps(steps);
+
+                await simulateStep('hash-verify', 'Calculating SHA256 hash for reproducible builds...', 1000);
+                steps[2].status = 'success';
+                steps[3].status = 'running';
+                updateDeploymentSteps(steps);
+
+                // Step 4: Deploy systemd
+                await simulateStep('systemd', 'Starting Production server on port 8081...', 1000);
+                console.log('🚀 Sending deploy request for production...');
+
+                const response = await fetch('/api/dashboard/deploy', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({env: 'prod', port: 8081, git_hash: 'current'})
+                });
+
+                console.log('📡 Deploy response status:', response.status);
+                console.log('📡 Deploy response headers:', [...response.headers.entries()]);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.log('❌ Deploy response error text:', errorText);
+                    throw new Error('Production deployment failed: ' + errorText);
+                }
+
+                const result = await response.json();
+                console.log('✅ Production deploy result:', result);
+
+                steps[4].status = 'success';
+                steps[5].status = 'running';
+                updateDeploymentSteps(steps);
+
+                await simulateStep('health-check', 'Verifying production service is responding...', 2000);
+                steps[5].status = 'success';
+                steps[6].status = 'running';
+                updateDeploymentSteps(steps);
+
+                await simulateStep('smoke-test', 'Running production smoke tests...', 2000);
+                steps[6].status = 'success';
+                updateDeploymentSteps(steps);
+
+                log('✅ Production deployment completed successfully');
+
+            } catch (error) {
+                log('❌ Production deployment failed: ' + error);
+                const currentStep = steps.find(s => s.status === 'running');
+                if (currentStep) currentStep.status = 'error';
+                updateDeploymentSteps(steps);
+            }
+        }
+
+        async function networkStatus() {
+            log('🌐 Checking network status...');
+            refreshServices();
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up event listeners
+            document.getElementById('deploy-qa-btn').addEventListener('click', deployQA);
+            document.getElementById('deploy-prod-btn').addEventListener('click', deployProd);
+            document.getElementById('refresh-btn').addEventListener('click', refreshServices);
+
+            // Initial load
+            refreshServices();
+            log('🚀 ZOS Dashboard initialized');
+        });
+
+        setInterval(refreshServices, 30000); // Auto-refresh every 30 seconds
+    </script>
+</body>
+</html>

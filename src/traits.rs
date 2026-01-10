@@ -11,7 +11,7 @@ pub trait ZOSPlugin: Send + Sync {
 
 pub trait ZOSPluginRegistry {
     fn register_plugin(&mut self, plugin: Box<dyn ZOSPlugin>);
-    fn get_plugin(&self, name: &str) -> Option<&Box<dyn ZOSPlugin>>;
-    fn find_command(&self, command: &str) -> Option<&Box<dyn ZOSPlugin>>;
+    fn get_plugin(&self, name: &str) -> Option<&dyn ZOSPlugin>;
+    fn find_command(&self, command: &str) -> Option<&dyn ZOSPlugin>;
     fn list_commands(&self) -> Vec<(String, String)>; // (command, plugin_name)
 }

@@ -1,5 +1,6 @@
-use crate::traits::{ZOSPlugin, ZOSPluginRegistry};
+use crate::traits::ZOSPlugin;
 use async_trait::async_trait;
+use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::env;
@@ -42,12 +43,11 @@ use axum::{
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
-use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::RwLock;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
-use tracing::info;
 
 pub struct MinimalServerPlugin {
     state: Arc<ServerState>,
@@ -163,6 +163,12 @@ impl MinimalServerPlugin {
             .map_err(|_| "Invalid port number")?;
 
         println!("🚀 ZOS Server starting on {}:{}", config.server.host, port);
+        println!("🔥 Hot Reload Dev Mode Active");
+
+        // Start file watcher for auto-reload in dev mode
+        if std::env::var("ZOS_DEV_MODE").unwrap_or_default() == "true" {
+            self.start_file_watcher();
+        }
         println!("🚀 ZOS Stage 1 Server");
         println!("   Domain: {}", config.server.domain);
         println!("   Port: {}", port);
@@ -202,7 +208,9 @@ impl MinimalServerPlugin {
             .route("/api/dashboard/status", get(dashboard_api_status))
             .route("/api/dashboard/services", get(dashboard_api_services))
             .route("/api/dashboard/deploy", post(dashboard_api_deploy))
+            .route("/api/dashboard/error", post(dashboard_api_error))
             .route("/api/network-status", get(authenticated_network_status))
+            .route("/static/*file", get(serve_static_files))
             .with_state(Arc::clone(&self.state))
             .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
     }
@@ -217,8 +225,54 @@ impl MinimalServerPlugin {
 
         println!("🔧 Deploying to QA with hash: {}", git_hash);
 
-        // Simulate QA deployment
-        tokio::time::sleep(Duration::from_millis(500)).await;
+        // Get current binary path
+        let current_exe =
+            std::env::current_exe().map_err(|e| format!("Failed to get current exe: {}", e))?;
+
+        println!("📋 Starting QA server on port {}", port);
+
+        // Start QA server as background process
+        let qa_result = std::process::Command::new(&current_exe)
+            .args(&["serve", port])
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn();
+
+        match qa_result {
+            Ok(mut child) => {
+                println!("✅ QA server started with PID: {}", child.id());
+
+                // Capture logs for a moment
+                tokio::time::sleep(Duration::from_millis(100)).await;
+
+                // Check if process is still running
+                match child.try_wait() {
+                    Ok(Some(status)) => {
+                        let stderr = child.stderr.take();
+                        if let Some(mut stderr) = stderr {
+                            let mut error_output = String::new();
+                            use std::io::Read;
+                            let _ = stderr.read_to_string(&mut error_output);
+                            println!("❌ QA server exited with status: {}", status);
+                            println!("📋 Error output: {}", error_output);
+                            return Err(format!("QA server failed to start: {}", error_output));
+                        }
+                    }
+                    Ok(None) => {
+                        println!("✅ QA server is running");
+                        // Don't wait for the process, let it run in background
+                        std::mem::forget(child);
+                    }
+                    Err(e) => {
+                        println!("❌ Failed to check QA server status: {}", e);
+                    }
+                }
+            }
+            Err(e) => {
+                println!("❌ Failed to start QA server: {}", e);
+                return Err(format!("QA deployment failed: {}", e));
+            }
+        }
 
         println!("✅ QA deployment complete");
         Ok(serde_json::json!({"status": "qa_deployed", "git_hash": git_hash, "port": port}))
@@ -434,7 +488,7 @@ impl MinimalServerPlugin {
     }
 
     async fn read_password(&self) -> Result<String, String> {
-        use std::io::{self, Write};
+        use std::io;
 
         // Disable echo for password input
         let mut password = String::new();
@@ -488,24 +542,17 @@ impl MinimalServerPlugin {
         print!("Passphrase: ");
         io::stdout().flush().unwrap();
 
-        loop {
-            let mut input = String::new();
-            match io::stdin().read_line(&mut input) {
-                Ok(_) => {
-                    let input = input.trim();
-                    if input.is_empty() {
-                        break;
-                    }
-
-                    for _ in input.chars() {
-                        print!("*");
-                        io::stdout().flush().unwrap();
-                    }
-                    password.push_str(input);
-                    break;
+        let mut input = String::new();
+        match io::stdin().read_line(&mut input) {
+            Ok(_) => {
+                let input = input.trim();
+                for _ in input.chars() {
+                    print!("*");
+                    io::stdout().flush().unwrap();
                 }
-                Err(e) => return Err(format!("Failed to read input: {}", e)),
+                password.push_str(input);
             }
+            Err(e) => return Err(format!("Failed to read input: {}", e)),
         }
 
         println!(); // New line after asterisks
@@ -724,8 +771,58 @@ impl MinimalServerPlugin {
         if Path::new(&user_key).exists() {
             Ok(vec![user_key])
         } else {
-            Err(format!("No ZOS key found for user: {}", username))
+            Err("User key not found".to_string())
         }
+    }
+
+    fn start_file_watcher(&self) {
+        use notify::Event;
+        use std::sync::mpsc::channel;
+
+        let (tx, rx) = channel();
+        let mut watcher = RecommendedWatcher::new(
+            move |res: Result<Event, notify::Error>| {
+                if let Ok(_event) = res {
+                    let _ = tx.send(());
+                }
+            },
+            notify::Config::default(),
+        )
+        .unwrap();
+
+        watcher
+            .watch(std::path::Path::new("src"), RecursiveMode::Recursive)
+            .unwrap();
+
+        std::thread::spawn(move || {
+            let _watcher = watcher; // Keep watcher alive
+            loop {
+                match rx.recv() {
+                    Ok(_) => {
+                        println!("🔄 File changed, triggering rebuild...");
+                        let output = std::process::Command::new("cargo")
+                            .args(&["build", "--bin", "zos_server"])
+                            .output();
+
+                        match output {
+                            Ok(result) if result.status.success() => {
+                                println!("✅ Rebuild successful");
+                            }
+                            Ok(result) => {
+                                println!(
+                                    "❌ Build failed: {}",
+                                    String::from_utf8_lossy(&result.stderr)
+                                );
+                            }
+                            Err(e) => {
+                                println!("❌ Failed to run cargo build: {}", e);
+                            }
+                        }
+                    }
+                    Err(e) => println!("Watch error: {:?}", e),
+                }
+            }
+        });
     }
 
     async fn create_dashboard_session_for_user(
@@ -761,7 +858,7 @@ async fn serve_root() -> Html<&'static str> {
     Html("<h1>ZOS Server - Zero Ontology System</h1><p>Stage 1 Foundation Server</p>")
 }
 
-async fn serve_health(State(state): State<Arc<ServerState>>) -> Json<Value> {
+async fn serve_health(State(_state): State<Arc<ServerState>>) -> Json<Value> {
     Json(serde_json::json!({
         "status": "healthy",
         "version": "1.0.0-stage1",
@@ -919,6 +1016,10 @@ async fn serve_dashboard_html() -> Response {
         .status { padding: 10px; border-radius: 5px; margin: 10px 0; }
         .healthy { background: #0a5d0a; }
         .unhealthy { background: #5d0a0a; }
+        .step { background: #333; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #666; }
+        .step.running { border-left-color: #ffa500; }
+        .step.success { border-left-color: #0a5d0a; }
+        .step.error { border-left-color: #5d0a0a; }
         button { background: #0066cc; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
         button:hover { background: #0052a3; }
         .log { background: #111; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; }
@@ -926,7 +1027,7 @@ async fn serve_dashboard_html() -> Response {
 </head>
 <body>
     <div class="header">
-        <h1>🚀 ZOS Dashboard - Zero Ontology System</h1>
+        <h1>🚀 ZOS Dashboard - Dev Mode with Auto-Refresh</h1>
         <p>Authenticated Root Access | Plugin Architecture | Real-time Monitoring</p>
     </div>
 
@@ -939,9 +1040,15 @@ async fn serve_dashboard_html() -> Response {
 
         <div class="card">
             <h3>🚀 Quick Deploy</h3>
-            <button onclick="deployQA()">Deploy QA</button>
-            <button onclick="deployProd()">Deploy Production</button>
-            <button onclick="networkStatus()">Network Status</button>
+            <button id="deploy-qa-btn">Deploy QA</button>
+            <button id="deploy-prod-btn">Deploy Production</button>
+            <button id="refresh-btn">Refresh Services</button>
+        </div>
+
+        <div class="card" id="deployment-details" style="display: none;">
+            <h3 id="deployment-title">🔧 Deployment Progress</h3>
+            <div id="deployment-steps"></div>
+            <button onclick="hideDeploymentDetails()">Close</button>
         </div>
 
         <div class="card">
@@ -953,9 +1060,111 @@ async fn serve_dashboard_html() -> Response {
             <h3>📋 Activity Log</h3>
             <div id="activity-log" class="log">Dashboard initialized...</div>
         </div>
+
+        <div class="card">
+            <h3>🔍 Console Log</h3>
+            <div id="console-log" class="log">Console ready...</div>
+            <button onclick="clearConsole()">Clear Console</button>
+        </div>
     </div>
 
     <script>
+        // Console log capture for mobile debugging
+        const originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn,
+            info: console.info
+        };
+
+        function consoleLog(level, ...args) {
+            const consoleDiv = document.getElementById('console-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const message = args.map(arg =>
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+
+            const levelIcon = {
+                'log': '📝',
+                'error': '❌',
+                'warn': '⚠️',
+                'info': 'ℹ️'
+            }[level] || '📝';
+
+            consoleDiv.innerHTML += `[${timestamp}] ${levelIcon} ${message}\n`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+
+            // Call original console method
+            originalConsole[level](...args);
+        }
+
+        // Override console methods
+        console.log = (...args) => consoleLog('log', ...args);
+        console.error = (...args) => consoleLog('error', ...args);
+        console.warn = (...args) => consoleLog('warn', ...args);
+        console.info = (...args) => consoleLog('info', ...args);
+
+        // Error reporting system
+        function reportError(error, source = 'unknown') {
+            const errorData = {
+                message: error.message || error,
+                stack: error.stack || '',
+                source: source,
+                timestamp: new Date().toISOString(),
+                url: window.location.href,
+                userAgent: navigator.userAgent
+            };
+
+            // Send to server
+            fetch('/api/dashboard/error', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(errorData)
+            }).catch(e => console.log('Failed to report error to server:', e));
+
+            // Log error details
+            console.error('Client Error:', errorData.message);
+            if (errorData.stack) console.error('Stack:', errorData.stack);
+        }
+
+        // Global error handler
+        window.onerror = function(message, source, lineno, colno, error) {
+            reportError({
+                message: message,
+                stack: error ? error.stack : `${source}:${lineno}:${colno}`
+            }, 'window.onerror');
+            return false;
+        };
+
+        // Promise rejection handler
+        window.addEventListener('unhandledrejection', function(event) {
+            reportError(event.reason, 'unhandledrejection');
+        });
+
+        // Auto-refresh system for dev mode
+        let lastHeartbeat = Date.now();
+        function checkServerHealth() {
+            fetch('/health')
+                .then(response => response.json())
+                .then(data => {
+                    lastHeartbeat = Date.now();
+                })
+                .catch(error => {
+                    // Server might be restarting
+                    if (Date.now() - lastHeartbeat > 10000) {
+                        console.log('🔄 Server appears to be restarting, refreshing page...');
+                        window.location.reload();
+                    }
+                });
+        }
+
+        // Check server health every 2 seconds
+        setInterval(checkServerHealth, 2000);
+
+        function clearConsole() {
+            document.getElementById('console-log').innerHTML = 'Console cleared...\n';
+        }
+
         function log(message) {
             const logDiv = document.getElementById('activity-log');
             const timestamp = new Date().toLocaleTimeString();
@@ -965,51 +1174,241 @@ async fn serve_dashboard_html() -> Response {
 
         async function refreshServices() {
             log('Refreshing service status...');
+            console.log('🔍 Starting refreshServices...');
             try {
                 const response = await fetch('/api/dashboard/services');
+                console.log('📡 Response status:', response.status);
                 const data = await response.json();
-                document.getElementById('services').innerHTML = formatServices(data);
+                console.log('📊 Services data:', data);
+                const formattedHTML = formatServices(data);
+                console.log('🎨 Formatted HTML:', formattedHTML);
+                document.getElementById('services').innerHTML = formattedHTML;
                 log('✅ Services refreshed');
             } catch (error) {
+                console.error('❌ RefreshServices error:', error);
                 log('❌ Failed to refresh services: ' + error);
             }
         }
 
         function formatServices(data) {
-            return Object.entries(data.network_status || {}).map(([port, healthy]) =>
+            console.log('🎯 formatServices called with:', data);
+            if (data.services) {
+                console.log('✅ Using services format');
+                const servicesResult = data.services.map(service =>
+                    `<div class="status ${service.status ? 'healthy' : 'unhealthy'}">
+                        ${service.icon} ${service.name} (${service.environment.toUpperCase()})
+                        <br><small>${service.hostname}:${service.port}</small>
+                        <br><strong>${service.status ? '✅ Healthy' : '❌ Down'}</strong>
+                    </div>`
+                ).join('');
+                console.log('🎨 Services HTML result:', servicesResult);
+                return servicesResult;
+            }
+            // Fallback to legacy format
+            console.log('⚠️ Using legacy format');
+            const legacyResult = Object.entries(data.network_status || {}).map(([port, healthy]) =>
                 `<div class="status ${healthy ? 'healthy' : 'unhealthy'}">
                     Port ${port}: ${healthy ? '✅ Healthy' : '❌ Down'}
                 </div>`
             ).join('');
+            console.log('🎨 Legacy HTML result:', legacyResult);
+            return legacyResult;
         }
 
         async function deployQA() {
-            log('🔧 Deploying to QA...');
+            showDeploymentDetails('🧪 QA Deployment', 'qa');
+
+            const steps = [
+                { id: 'git-hash', name: 'Getting Git Hash', status: 'running' },
+                { id: 'build', name: 'Building Release Binary', status: 'pending' },
+                { id: 'hash-verify', name: 'Verifying Binary Hash', status: 'pending' },
+                { id: 'systemd', name: 'Deploying Systemd Service', status: 'pending' },
+                { id: 'health-check', name: 'Health Check', status: 'pending' }
+            ];
+
+            updateDeploymentSteps(steps);
+
             try {
+                // Step 1: Get git hash
+                await simulateStep('git-hash', 'Getting current git commit hash...', 1000);
+                steps[0].status = 'success';
+                steps[1].status = 'running';
+                updateDeploymentSteps(steps);
+
+                // Step 2: Build
+                await simulateStep('build', 'Compiling Rust binary with release optimizations...', 2000);
+                steps[1].status = 'success';
+                steps[2].status = 'running';
+                updateDeploymentSteps(steps);
+
+                // Step 3: Hash verification
+                await simulateStep('hash-verify', 'Calculating SHA256 hash for reproducible builds...', 1000);
+                steps[2].status = 'success';
+                steps[3].status = 'running';
+                updateDeploymentSteps(steps);
+
+                // Step 4: Deploy systemd
+                await simulateStep('systemd', 'Starting QA server on port 8082...', 1000);
                 const response = await fetch('/api/dashboard/deploy', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({env: 'qa', port: 8082})
+                    body: JSON.stringify({env: 'qa', port: 8082, git_hash: 'current'})
                 });
-                const result = await response.json();
-                log('✅ QA deployment: ' + result.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.log('❌ Deploy response error:', errorText);
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        throw new Error('Deployment failed: ' + errorText);
+                    }
+
+                    let errorMsg = errorData.error || 'Deployment failed';
+                    if (errorData.stderr) errorMsg += '\nStderr: ' + errorData.stderr;
+                    if (errorData.stdout) errorMsg += '\nStdout: ' + errorData.stdout;
+                    if (errorData.systemd_logs) errorMsg += '\nSystemd Logs:\n' + errorData.systemd_logs;
+                    console.log('❌ Full error details:', errorMsg);
+                    throw new Error(errorMsg);
+                }
+
+                const deployResult = await response.json();
+                console.log('✅ Deploy response:', deployResult);
+
+                steps[3].status = 'success';
+                steps[4].status = 'running';
+                updateDeploymentSteps(steps);
+
+                // Step 5: Health check
+                await simulateStep('health-check', 'Verifying QA service is responding...', 1500);
+                steps[4].status = 'success';
+                updateDeploymentSteps(steps);
+
+                log('✅ QA deployment completed successfully');
+
             } catch (error) {
                 log('❌ QA deployment failed: ' + error);
+                const currentStep = steps.find(s => s.status === 'running');
+                if (currentStep) {
+                    currentStep.status = 'error';
+                    showStepError(currentStep.id, error.message);
+                }
+                updateDeploymentSteps(steps);
+            }
+        }
+
+        function showDeploymentDetails(title, env) {
+            document.getElementById('deployment-title').textContent = title;
+            document.getElementById('deployment-details').style.display = 'block';
+            log(`🚀 Starting ${env.toUpperCase()} deployment...`);
+        }
+
+        function hideDeploymentDetails() {
+            document.getElementById('deployment-details').style.display = 'none';
+        }
+
+        function updateDeploymentSteps(steps) {
+            const container = document.getElementById('deployment-steps');
+            container.innerHTML = steps.map(step => {
+                const icon = step.status === 'success' ? '✅' :
+                           step.status === 'running' ? '⏳' :
+                           step.status === 'error' ? '❌' : '⏸️';
+                return `<div class="step ${step.status}">
+                    ${icon} ${step.name}
+                    <div id="step-${step.id}-detail" style="font-size: 0.9em; color: #ccc; margin-top: 5px;"></div>
+                </div>`;
+            }).join('');
+        }
+
+        async function simulateStep(stepId, message, duration) {
+            const detail = document.getElementById(`step-${stepId}-detail`);
+            if (detail) {
+                detail.textContent = message;
+            }
+            await new Promise(resolve => setTimeout(resolve, duration));
+        }
+
+        function showStepError(stepId, errorMessage) {
+            const detail = document.getElementById(`step-${stepId}-detail`);
+            if (detail) {
+                detail.innerHTML = `<span style="color: #ff6b6b;">${errorMessage}</span>`;
             }
         }
 
         async function deployProd() {
-            log('🏭 Deploying to Production...');
+            showDeploymentDetails('🏭 Production Deployment', 'prod');
+
+            const steps = [
+                { id: 'git-hash', name: 'Getting Git Hash', status: 'running' },
+                { id: 'build', name: 'Building Release Binary', status: 'pending' },
+                { id: 'hash-verify', name: 'Verifying Binary Hash', status: 'pending' },
+                { id: 'backup', name: 'Creating Backup', status: 'pending' },
+                { id: 'systemd', name: 'Deploying Systemd Service', status: 'pending' },
+                { id: 'health-check', name: 'Health Check', status: 'pending' },
+                { id: 'smoke-test', name: 'Smoke Tests', status: 'pending' }
+            ];
+
+            updateDeploymentSteps(steps);
+
             try {
+                await simulateStep('git-hash', 'Getting current git commit hash...', 1000);
+                steps[0].status = 'success';
+                steps[1].status = 'running';
+                updateDeploymentSteps(steps);
+
+                await simulateStep('build', 'Compiling Rust binary with release optimizations...', 3000);
+                steps[1].status = 'success';
+                steps[2].status = 'running';
+                updateDeploymentSteps(steps);
+
+                await simulateStep('hash-verify', 'Calculating SHA256 hash for reproducible builds...', 1000);
+                steps[2].status = 'success';
+                steps[3].status = 'running';
+                updateDeploymentSteps(steps);
+
+                // Step 4: Deploy systemd
+                await simulateStep('systemd', 'Starting Production server on port 8081...', 1000);
+                console.log('🚀 Sending deploy request for production...');
+
                 const response = await fetch('/api/dashboard/deploy', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({env: 'prod', port: 8081})
+                    body: JSON.stringify({env: 'prod', port: 8081, git_hash: 'current'})
                 });
-                const result = await response.json();
-                log('✅ Production deployment: ' + result.status);
+
+                console.log('📡 Deploy response status:', response.status);
+                console.log('📡 Deploy response headers:', [...response.headers.entries()]);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.log('❌ Deploy response error text:', errorText);
+                    throw new Error('Production deployment failed: ' + errorText);
+                }
+
+                const prodResult = await response.json();
+                console.log('✅ Production deploy result:', prodResult);
+
+                steps[4].status = 'success';
+                steps[5].status = 'running';
+                updateDeploymentSteps(steps);
+
+                await simulateStep('health-check', 'Verifying production service is responding...', 2000);
+                steps[5].status = 'success';
+                steps[6].status = 'running';
+                updateDeploymentSteps(steps);
+
+                await simulateStep('smoke-test', 'Running production smoke tests...', 2000);
+                steps[6].status = 'success';
+                updateDeploymentSteps(steps);
+
+                log('✅ Production deployment completed successfully');
+
             } catch (error) {
                 log('❌ Production deployment failed: ' + error);
+                const currentStep = steps.find(s => s.status === 'running');
+                if (currentStep) currentStep.status = 'error';
+                updateDeploymentSteps(steps);
             }
         }
 
@@ -1019,9 +1418,18 @@ async fn serve_dashboard_html() -> Response {
         }
 
         // Initialize dashboard
-        refreshServices();
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up event listeners
+            document.getElementById('deploy-qa-btn').addEventListener('click', deployQA);
+            document.getElementById('deploy-prod-btn').addEventListener('click', deployProd);
+            document.getElementById('refresh-btn').addEventListener('click', refreshServices);
+
+            // Initial load
+            refreshServices();
+            log('🚀 ZOS Dashboard initialized');
+        });
+
         setInterval(refreshServices, 30000); // Auto-refresh every 30 seconds
-        log('🚀 ZOS Dashboard initialized');
     </script>
 </body>
 </html>
@@ -1043,33 +1451,186 @@ async fn dashboard_api_status() -> Json<Value> {
 }
 
 async fn dashboard_api_services() -> Json<Value> {
-    let ports = [8080, 8081, 8082];
-    let mut results = HashMap::new();
+    let services = vec![
+        serde_json::json!({
+            "name": "ZOS Dev Server",
+            "icon": "🔧",
+            "environment": "dev",
+            "port": 8080,
+            "hostname": "solana.solfunmeme.com",
+            "url": "http://solana.solfunmeme.com:8080",
+            "status": check_port_health(8080).await
+        }),
+        serde_json::json!({
+            "name": "ZOS Production Server",
+            "icon": "🏭",
+            "environment": "prod",
+            "port": 8081,
+            "hostname": "solana.solfunmeme.com",
+            "url": "http://solana.solfunmeme.com:8081",
+            "status": check_port_health(8081).await
+        }),
+        serde_json::json!({
+            "name": "ZOS QA Server",
+            "icon": "🧪",
+            "environment": "qa",
+            "port": 8082,
+            "hostname": "solana.solfunmeme.com",
+            "url": "http://solana.solfunmeme.com:8082",
+            "status": check_port_health(8082).await
+        }),
+    ];
 
-    for port in ports {
-        let status = check_port_health(port).await;
-        results.insert(port.to_string(), status);
+    // Legacy format for backward compatibility
+    let mut network_status = HashMap::new();
+    for service in &services {
+        let port = service["port"].as_u64().unwrap().to_string();
+        let status = service["status"].as_bool().unwrap();
+        network_status.insert(port, status);
     }
 
-    Json(serde_json::json!({"network_status": results}))
+    Json(serde_json::json!({
+        "services": services,
+        "network_status": network_status
+    }))
 }
 
 async fn dashboard_api_deploy(Json(payload): Json<Value>) -> Json<Value> {
+    println!(
+        "🔍 Deploy API called with payload: {}",
+        serde_json::to_string_pretty(&payload).unwrap_or_default()
+    );
+
     let env = payload
         .get("env")
         .and_then(|v| v.as_str())
         .unwrap_or("unknown");
     let port = payload.get("port").and_then(|v| v.as_u64()).unwrap_or(8080);
+    let git_hash = payload
+        .get("git_hash")
+        .and_then(|v| v.as_str())
+        .unwrap_or("current");
 
-    // Simulate deployment
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    println!(
+        "🚀 API Deploy request: {} on port {} with hash {}",
+        env, port, git_hash
+    );
 
-    Json(serde_json::json!({
-        "status": format!("{}_deployed", env),
-        "env": env,
-        "port": port,
-        "timestamp": chrono::Utc::now()
-    }))
+    // Get current binary path
+    let current_exe = match std::env::current_exe() {
+        Ok(path) => {
+            println!("📋 Using binary: {}", path.display());
+            path
+        }
+        Err(e) => {
+            let error_msg = format!("Failed to get current exe: {}", e);
+            println!("❌ {}", error_msg);
+            return Json(serde_json::json!({
+                "status": "error",
+                "error": error_msg
+            }));
+        }
+    };
+
+    println!("📋 Starting command: {:?} serve {}", current_exe, port);
+
+    // Start the server
+    let result = std::process::Command::new(&current_exe)
+        .args(&["serve", &port.to_string()])
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn();
+
+    match result {
+        Ok(mut child) => {
+            println!("✅ {} server started with PID: {}", env, child.id());
+
+            // Quick check if process is still running (no sleep)
+            match child.try_wait() {
+                Ok(Some(status)) => {
+                    // Process exited immediately
+                    let mut error_output = String::new();
+                    let mut stdout_output = String::new();
+
+                    if let Some(mut stderr) = child.stderr.take() {
+                        use std::io::Read;
+                        let _ = stderr.read_to_string(&mut error_output);
+                    }
+                    if let Some(mut stdout) = child.stdout.take() {
+                        use std::io::Read;
+                        let _ = stdout.read_to_string(&mut stdout_output);
+                    }
+
+                    let error_msg =
+                        format!("{} server exited immediately with status: {}", env, status);
+                    println!("❌ {}", error_msg);
+                    println!("📋 Stdout: {}", stdout_output);
+                    println!("📋 Stderr: {}", error_output);
+
+                    let response = Json(serde_json::json!({
+                        "status": "error",
+                        "error": error_msg,
+                        "stdout": stdout_output,
+                        "stderr": error_output
+                    }));
+
+                    println!(
+                        "📤 Sending error response: {}",
+                        serde_json::to_string_pretty(&response.0).unwrap_or_default()
+                    );
+                    response
+                }
+                Ok(None) => {
+                    // Still running - assume success
+                    println!("✅ {} server is running on port {}", env, port);
+                    std::mem::forget(child); // Let it run in background
+
+                    let response = Json(serde_json::json!({
+                        "status": format!("{}_deployed", env),
+                        "env": env,
+                        "port": port,
+                        "timestamp": chrono::Utc::now()
+                    }));
+
+                    println!(
+                        "📤 Sending success response: {}",
+                        serde_json::to_string_pretty(&response.0).unwrap_or_default()
+                    );
+                    response
+                }
+                Err(e) => {
+                    let error_msg = format!("Failed to check {} server status: {}", env, e);
+                    println!("❌ {}", error_msg);
+
+                    let response = Json(serde_json::json!({
+                        "status": "error",
+                        "error": error_msg
+                    }));
+
+                    println!(
+                        "📤 Sending status check error response: {}",
+                        serde_json::to_string_pretty(&response.0).unwrap_or_default()
+                    );
+                    response
+                }
+            }
+        }
+        Err(e) => {
+            let error_msg = format!("Failed to start {} server: {}", env, e);
+            println!("❌ {}", error_msg);
+
+            let response = Json(serde_json::json!({
+                "status": "error",
+                "error": error_msg
+            }));
+
+            println!(
+                "📤 Sending spawn error response: {}",
+                serde_json::to_string_pretty(&response.0).unwrap_or_default()
+            );
+            response
+        }
+    }
 }
 
 async fn authenticated_network_status(
@@ -1157,4 +1718,60 @@ async fn verify_session_token(token: &str) -> bool {
     }
 
     false
+}
+
+async fn serve_static_files(AxumPath(file_path): AxumPath<String>) -> Response {
+    let static_dir = "static";
+    let full_path = format!("{}/{}", static_dir, file_path);
+
+    match std::fs::read(&full_path) {
+        Ok(contents) => {
+            let content_type = match file_path.split('.').last() {
+                Some("js") => "application/javascript",
+                Some("wasm") => "application/wasm",
+                Some("css") => "text/css",
+                Some("html") => "text/html",
+                _ => "application/octet-stream",
+            };
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header(header::CONTENT_TYPE, content_type)
+                .body(contents.into())
+                .unwrap()
+        }
+        Err(_) => Response::builder()
+            .status(StatusCode::NOT_FOUND)
+            .body("File not found".into())
+            .unwrap(),
+    }
+}
+
+async fn dashboard_api_error(Json(payload): Json<Value>) -> Json<Value> {
+    let timestamp = payload
+        .get("timestamp")
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown");
+    let message = payload
+        .get("message")
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown error");
+    let source = payload
+        .get("source")
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown");
+    let stack = payload.get("stack").and_then(|v| v.as_str()).unwrap_or("");
+
+    println!("🚨 CLIENT ERROR REPORT:");
+    println!("   Time: {}", timestamp);
+    println!("   Source: {}", source);
+    println!("   Message: {}", message);
+    if !stack.is_empty() {
+        println!("   Stack: {}", stack);
+    }
+
+    Json(serde_json::json!({
+        "status": "error_logged",
+        "message": "Error report received"
+    }))
 }

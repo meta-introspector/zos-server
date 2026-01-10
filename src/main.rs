@@ -3,7 +3,6 @@
 
 use std::collections::HashMap;
 use std::env;
-use tokio;
 
 mod minimal_server_plugin;
 mod traits;
@@ -21,14 +20,14 @@ impl ZOSPluginRegistry for ZOSCore {
         self.plugins.insert(name, plugin);
     }
 
-    fn get_plugin(&self, name: &str) -> Option<&Box<dyn ZOSPlugin>> {
-        self.plugins.get(name)
+    fn get_plugin(&self, name: &str) -> Option<&dyn ZOSPlugin> {
+        self.plugins.get(name).map(|p| p.as_ref())
     }
 
-    fn find_command(&self, command: &str) -> Option<&Box<dyn ZOSPlugin>> {
+    fn find_command(&self, command: &str) -> Option<&dyn ZOSPlugin> {
         for plugin in self.plugins.values() {
             if plugin.commands().contains(&command) {
-                return Some(plugin);
+                return Some(plugin.as_ref());
             }
         }
         None
