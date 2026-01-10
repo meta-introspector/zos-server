@@ -255,6 +255,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "network-status" => {
             network_status_command().await?;
         }
+        "deploy-systemd" => {
+            let service = params.get(0).unwrap_or(&"qa".to_string()).clone();
+            let port = params
+                .get(1)
+                .unwrap_or(&"8082".to_string())
+                .parse()
+                .unwrap_or(8082);
+            deploy_systemd_command(&service, port).await?;
+        }
         _ => {
             println!("ZOS Server Commands:");
             println!("  serve [port]           - Start HTTP server (default: 8080)");
@@ -265,6 +274,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("  status                 - Get current git and binary hashes");
             println!("  bootstrap              - Bootstrap entire pipeline");
             println!("  network-status         - Show all known servers");
+            println!("  deploy-systemd [qa|prod] [port] - Deploy service to systemd");
         }
     }
 
@@ -2123,6 +2133,107 @@ async fn network_status_command() -> Result<(), Box<dyn std::error::Error>> {
             _ => println!("❌ not responding"),
         }
     }
+
+    Ok(())
+}
+async fn deploy_systemd_command(
+    service: &str,
+    port: u16,
+) -> Result<(), Box<dyn std::error::Error>> {
+    println!("🔧 Deploying {} to systemd on port {}", service, port);
+
+    // Build release binary
+    println!("📦 Building release binary...");
+    let output = tokio::process::Command::new("cargo")
+        .args(&["build", "--release"])
+        .output()
+        .await?;
+
+    if !output.status.success() {
+        return Err("Failed to build release binary".into());
+    }
+
+    // Copy binary to system location
+    let binary_name = format!("zos-{}-server", service);
+    let binary_path = format!("/usr/local/bin/{}", binary_name);
+
+    println!("📋 Installing binary to {}", binary_path);
+    tokio::process::Command::new("sudo")
+        .args(&["cp", "./target/release/zos-minimal-server", &binary_path])
+        .status()
+        .await?;
+
+    tokio::process::Command::new("sudo")
+        .args(&["chmod", "+x", &binary_path])
+        .status()
+        .await?;
+
+    // Create systemd service
+    let service_name = format!("zos-{}.service", service);
+    let service_file = format!("/etc/systemd/system/{}", service_name);
+
+    let service_content = format!(
+        r#"[Unit]
+Description=ZOS {} Server
+After=network.target
+
+[Service]
+Type=simple
+User=mdupont
+Group=mdupont
+WorkingDirectory={}
+ExecStart={} serve {}
+Restart=always
+RestartSec=5
+
+Environment=ZOS_HTTP_PORT={}
+
+[Install]
+WantedBy=multi-user.target
+"#,
+        service.to_uppercase(),
+        std::env::current_dir()?.display(),
+        binary_path,
+        port,
+        port
+    );
+
+    println!("📋 Creating systemd service {}", service_file);
+    let mut child = tokio::process::Command::new("sudo")
+        .args(&["tee", &service_file])
+        .stdin(std::process::Stdio::piped())
+        .spawn()?;
+
+    if let Some(stdin) = child.stdin.as_mut() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(service_content.as_bytes()).await?;
+    }
+    child.wait().await?;
+
+    // Enable and start service
+    println!("🚀 Enabling and starting service...");
+    tokio::process::Command::new("sudo")
+        .args(&["systemctl", "daemon-reload"])
+        .status()
+        .await?;
+
+    tokio::process::Command::new("sudo")
+        .args(&["systemctl", "enable", &service_name])
+        .status()
+        .await?;
+
+    tokio::process::Command::new("sudo")
+        .args(&["systemctl", "start", &service_name])
+        .status()
+        .await?;
+
+    println!("✅ {} service deployed to systemd", service);
+    println!("   Service: {}", service_name);
+    println!("   Port: {}", port);
+    println!(
+        "   Manage: sudo systemctl {{start|stop|restart}} {}",
+        service_name
+    );
 
     Ok(())
 }
