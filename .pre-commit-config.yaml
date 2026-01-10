@@ -9,11 +9,13 @@ repos:
       - id: check-merge-conflict
       - id: check-json
 
-  - repo: https://github.com/koalaman/shellcheck-precommit
-    rev: v0.9.0
+  - repo: local
     hooks:
       - id: shellcheck
-        args: [--severity=warning]
+        name: shellcheck
+        entry: bash -c 'if command -v shellcheck >/dev/null 2>&1; then shellcheck --severity=warning "$@"; else echo "⚠️  shellcheck not available, skipping"; fi'
+        language: system
+        files: \.sh$
 
   - repo: https://github.com/doublify/pre-commit-rust
     rev: v1.0

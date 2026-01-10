@@ -8,9 +8,9 @@ use axum::{
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use std::net::SocketAddr;
 use tokio::sync::RwLock;
 use tokio::time::interval;
 use tower::ServiceBuilder;
@@ -74,7 +74,10 @@ impl ResourceTracer {
     }
 
     fn get_traces(&self) -> Vec<ResourceTrace> {
-        self.traces.lock().unwrap_or_else(|_| panic!("Lock poisoned")).clone()
+        self.traces
+            .lock()
+            .unwrap_or_else(|_| panic!("Lock poisoned"))
+            .clone()
     }
 }
 
@@ -147,7 +150,11 @@ fn get_required_permissions(verb: &str) -> Vec<String> {
     match verb {
         "health" => vec!["read".to_string()],
         "install" => vec!["read".to_string(), "network".to_string()],
-        "deploy" => vec!["read".to_string(), "write".to_string(), "execute".to_string()],
+        "deploy" => vec![
+            "read".to_string(),
+            "write".to_string(),
+            "execute".to_string(),
+        ],
         "git_webhook" => vec!["read".to_string(), "write".to_string()],
         _ => vec!["read".to_string()],
     }
@@ -1682,23 +1689,23 @@ fi
 
 async fn get_traces(State(state): State<AppState>) -> Json<serde_json::Value> {
     let _trace = state.tracer.start_trace("get_traces");
-    
+
     let traces = state.tracer.get_traces();
     let result = Json(serde_json::json!({
         "traces": traces,
         "count": traces.len(),
         "timestamp": chrono::Utc::now().to_rfc3339()
     }));
-    
+
     _trace.finish();
     result
 }
 
 async fn install_qa_service(State(state): State<AppState>) -> Json<serde_json::Value> {
     let _trace = state.tracer.start_trace("install_qa_service");
-    
+
     println!("🔧 Installing QA service with dedicated user");
-    
+
     tokio::spawn(async move {
         let script = r#"#!/bin/bash
 set -e
@@ -1708,8 +1715,8 @@ echo "🔧 Installing ZOS QA service with dedicated user..."
 sudo useradd -r -m -s /bin/bash zos-qa || echo "User zos-qa already exists"
 
 # Create QA directories
-sudo mkdir -p /opt/zos-qa
-sudo chown zos-qa:zos-qa /opt/zos-qa
+sudo mkdir -p /opt/zos-test-qa
+sudo chown zos-qa:zos-qa /opt/zos-test-qa
 
 # Copy current binary
 sudo cp ./target/release/zos-minimal-server /usr/local/bin/zos-qa-server
@@ -1717,7 +1724,7 @@ sudo chmod +x /usr/local/bin/zos-qa-server
 
 # Clone QA branch as zos-qa user
 sudo -u zos-qa bash -c "
-cd /opt/zos-qa
+cd /opt/zos-test-qa
 if [ ! -d .git ]; then
     git clone -b qa https://github.com/meta-introspector/zos-server.git .
 else
@@ -1737,13 +1744,13 @@ After=network.target
 Type=simple
 User=zos-qa
 Group=zos-qa
-WorkingDirectory=/opt/zos-qa
+WorkingDirectory=/opt/zos-test-qa
 ExecStart=/usr/local/bin/zos-qa-server
 Restart=always
 RestartSec=5
 
 Environment=ZOS_HTTP_PORT=8082
-Environment=ZOS_DATA_DIR=/opt/zos-qa/data
+Environment=ZOS_DATA_DIR=/opt/zos-test-qa/data
 
 [Install]
 WantedBy=multi-user.target
@@ -1756,30 +1763,30 @@ sudo systemctl start zos-qa.service
 
 echo "✅ QA service installed with dedicated user 'zos-qa' on port 8082"
 "#;
-        
+
         let _ = tokio::process::Command::new("bash")
             .arg("-c")
             .arg(&script)
             .output()
             .await;
     });
-    
+
     let result = Json(serde_json::json!({
         "status": "installing",
         "message": "Installing QA service with dedicated user zos-qa",
         "port": 8082,
         "type": "system_service"
     }));
-    
+
     _trace.finish();
     result
 }
 
 async fn update_qa_server(State(state): State<AppState>) -> Json<serde_json::Value> {
     let _trace = state.tracer.start_trace("update_qa_server");
-    
+
     println!("🔄 Dev server updating QA server");
-    
+
     tokio::spawn(async move {
         let script = r#"#!/bin/bash
 set -e
@@ -1807,14 +1814,14 @@ done
 echo "📋 QA Server Status:"
 curl -s http://localhost:8082/health | jq .git || echo "❌ QA server not responding"
 "#;
-        
+
         let _ = tokio::process::Command::new("bash")
             .arg("-c")
             .arg(&script)
             .output()
             .await;
     });
-    
+
     Json(serde_json::json!({
         "status": "updating",
         "message": "Dev server managing QA server update",

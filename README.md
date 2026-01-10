@@ -24,6 +24,27 @@ A complete plugin-based computation platform with mathematical proofs, zero-know
 
 ## 🚀 Quick Start
 
+### Development Server
+```bash
+cd zos-minimal-server
+cargo build --release
+./target/release/zos-minimal-server
+```
+
+### CI/CD Pipeline Setup
+```bash
+# Install QA service
+curl -X POST http://localhost:8080/install/qa-service
+
+# Update QA from git
+curl -X POST http://localhost:8080/manage/qa/update
+
+# Deploy to production
+curl -X POST http://localhost:8080/deploy/staging-to-prod
+```
+
+See [PIPELINE.md](PIPELINE.md) for complete CI/CD documentation.
+
 ### Build with Nix
 ```bash
 nix-build default.nix

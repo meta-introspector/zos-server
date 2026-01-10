@@ -5,7 +5,7 @@
 set -e
 
 PROD_USER="zos-prod"
-PROD_DIR="/opt/zos-production"
+PROD_DIR="/opt/zos-test-production"
 BRANCH="${1:-stable}"
 
 echo "🏭 Production update triggered by QA server"
