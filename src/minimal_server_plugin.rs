@@ -1,5 +1,9 @@
+#![allow(unused)]
+
+use crate::auth::{AuthSession, Backend, User};
 use crate::traits::ZOSPlugin;
 use async_trait::async_trait;
+use axum_login::AuthManagerLayerBuilder;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -8,6 +12,7 @@ use std::fs;
 use std::net::SocketAddr;
 use std::path::Path;
 use std::sync::Arc;
+use tower_sessions::{MemoryStore, SessionManagerLayer};
 
 // Re-import the types we need from common modules
 use crate::common::ServerState;
@@ -143,14 +148,31 @@ impl ZOSPlugin for MinimalServerPlugin {
 impl MinimalServerPlugin {
     async fn serve(&self, args: Vec<String>) -> Result<Value, String> {
         let config = Self::load_config();
-        let port: u16 = args
-            .get(0)
-            .unwrap_or(&config.server.port.to_string())
+        let default_port = config.server.port.to_string();
+        let port_str = args.get(0).unwrap_or(&default_port);
+        let port: u16 = port_str
             .parse()
-            .map_err(|_| "Invalid port number")?;
+            .map_err(|_| format!("Invalid port number: '{}'", port_str))?;
 
-        println!("🚀 ZOS Server starting on {}:{}", config.server.host, port);
-        println!("🔥 Hot Reload Dev Mode Active");
+        println!(
+            "🚀 ZOS Server v{} starting on {}:{}",
+            env!("CARGO_PKG_VERSION"),
+            config.server.host,
+            port
+        );
+
+        // Show version info
+        let version_info = crate::version::VersionInfo::get();
+        println!(
+            "📦 Version: {} ({})",
+            version_info.version, version_info.git_commit
+        );
+        if version_info.git_status.change_count > 0 {
+            println!(
+                "⚠️  {} dirty files detected",
+                version_info.git_status.change_count
+            );
+        }
 
         // Start file watcher for auto-reload in dev mode
         if std::env::var("ZOS_DEV_MODE").unwrap_or_default() == "true" {
@@ -947,12 +969,44 @@ async fn handle_install_log(Json(payload): Json<Value>) -> Json<Value> {
 
 async fn serve_dashboard(
     axum::extract::Query(params): axum::extract::Query<HashMap<String, String>>,
+    headers: axum::http::HeaderMap,
 ) -> Response {
-    let token = params.get("token");
+    // Check for session cookie first
+    if let Some(cookie_header) = headers.get("cookie") {
+        if let Ok(cookie_str) = cookie_header.to_str() {
+            for cookie in cookie_str.split(';') {
+                let cookie = cookie.trim();
+                if let Some(session_id) = cookie.strip_prefix("zos_session=") {
+                    if verify_session_token(session_id).await {
+                        return serve_dashboard_html().await;
+                    }
+                }
+            }
+        }
+    }
+
+    // Check for token in Authorization header or query param for initial login
+    let token = headers
+        .get("Authorization")
+        .and_then(|h| h.to_str().ok())
+        .and_then(|h| h.strip_prefix("Bearer "))
+        .or_else(|| params.get("token").map(|s| s.as_str()));
 
     if let Some(token) = token {
         if verify_session_token(token).await {
-            return serve_dashboard_html().await;
+            // Set session cookie and redirect to clean URL
+            return Response::builder()
+                .status(StatusCode::FOUND)
+                .header("Location", "/dashboard")
+                .header(
+                    "Set-Cookie",
+                    format!(
+                        "zos_session={}; HttpOnly; Secure; SameSite=Strict; Max-Age=3600",
+                        token
+                    ),
+                )
+                .body("Redirecting...".into())
+                .unwrap();
         }
     }
 
@@ -961,6 +1015,7 @@ async fn serve_dashboard(
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
     <title>ZOS Dashboard - Login Required</title>
     <style>
         body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
@@ -983,7 +1038,7 @@ async fn serve_dashboard(
 
     Response::builder()
         .status(StatusCode::UNAUTHORIZED)
-        .header(header::CONTENT_TYPE, "text/html")
+        .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
         .body(login_html.into())
         .unwrap()
 }

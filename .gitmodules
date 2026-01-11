@@ -1,3 +1,18 @@
 [submodule "cargo-watch"]
 	path = cargo-watch
 	url = https://github.com/meta-introspector/cargo-watch.git
+[submodule "submodules/rust-clippy"]
+	path = submodules/rust-clippy
+	url = https://github.com/rust-lang/rust-clippy.git
+[submodule "submodules/marker"]
+	path = submodules/marker
+	url = https://github.com/rust-marker/marker.git
+[submodule "submodules/MIRAI"]
+	path = submodules/MIRAI
+	url = https://github.com/endorlabs/MIRAI.git
+[submodule "submodules/iree"]
+	path = submodules/iree
+	url = https://github.com/iree-org/iree.git
+[submodule "submodules/lean4"]
+	path = submodules/lean4
+	url = https://github.com/leanprover/lean4.git

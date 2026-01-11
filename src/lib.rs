@@ -2,12 +2,39 @@
 // AGPL-3.0 License
 
 // Foundation library for ZOS server
+pub mod auth;
 pub mod common;
+pub mod core;
 pub mod minimal_server_plugin;
+pub mod security_audit;
+pub mod telemetry;
+pub mod web;
+
+// Clip2Secure modules
+pub mod automorphic_compiler;
+pub mod clip2secure_lints;
+pub mod complexity_types;
+pub mod convergence_analyzer;
+pub mod cpu_optimizer;
+pub mod dual_model_prover;
+pub mod iree_kleene_backend;
+pub mod kleene_detector;
+pub mod kleene_memory;
+pub mod lean4_foundation;
+pub mod meta_fixed_point;
+pub mod meta_introspector_capstone;
+pub mod modular_form_spec;
+pub mod nidex_builder;
+pub mod nvidia_kleene;
+pub mod plantation_filter;
+
+// Re-export key types for macro usage
+pub use complexity_types::*;
 pub mod p2p;
 pub mod plugins;
 pub mod services;
 pub mod session;
 pub mod traits;
+pub mod version;
 // Test auto-reload Sat Jan 10 06:31:40 PM EST 2026
 // Auto-reload test Sat Jan 10 06:35:52 PM EST 2026
