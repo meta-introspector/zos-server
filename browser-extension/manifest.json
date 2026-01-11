@@ -1,7 +1,3 @@
-// ZOS Browser Extension - Advanced UI Helpers
-// Browser plugin for interacting with ZOS network
-
-// manifest.json
 {
   "manifest_version": 3,
   "name": "ZOS Network Helper",

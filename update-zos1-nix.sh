@@ -1,4 +1,4 @@
-#!/usr/bin/env nix-shell
+#!/usr/bin/env bash
 #!nix-shell -i bash -p rustc cargo pkg-config openssl git systemd
 
 set -e

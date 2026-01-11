@@ -16,7 +16,7 @@ struct CompileContext {
 impl ContextualUsageAnalyzer {
     pub fn analyze_actual_usage(&mut self, source: &str) -> Vec<UnusedItem> {
         let mut unused = Vec::new();
-        
+
         // Parse for conditional compilation
         for line in source.lines() {
             if line.contains("#[cfg(") && !self.is_cfg_active(line) {
@@ -26,25 +26,25 @@ impl ContextualUsageAnalyzer {
                     reason: "Disabled by current cfg".to_string(),
                 });
             }
-            
+
             if line.contains("#[cfg(feature =") && !self.is_feature_enabled(line) {
                 unused.push(UnusedItem {
-                    item_type: "feature_disabled".to_string(), 
+                    item_type: "feature_disabled".to_string(),
                     name: extract_item_name(line),
                     reason: "Feature not enabled in current build".to_string(),
                 });
             }
         }
-        
+
         unused
     }
-    
+
     fn is_cfg_active(&self, line: &str) -> bool {
         // Check if cfg condition matches current context
         self.current_context.cfg_flags.iter()
             .any(|flag| line.contains(flag))
     }
-    
+
     fn is_feature_enabled(&self, line: &str) -> bool {
         // Extract feature name and check if enabled
         if let Some(feature) = extract_feature_name(line) {
@@ -58,7 +58,7 @@ impl ContextualUsageAnalyzer {
 #[derive(Debug)]
 struct UnusedItem {
     item_type: String,
-    name: String, 
+    name: String,
     reason: String,
 }
 

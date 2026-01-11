@@ -1,4 +1,4 @@
-#!/usr/bin/env nix-shell
+#!/usr/bin/env bash
 #!nix-shell shell.nix -i bash
 
 set -e
@@ -79,5 +79,5 @@ echo "📁 Binaries available in target/cross-builds/"
 # Create deployment package
 echo "📦 Creating deployment package..."
 cd target/cross-builds
-tar -czf ../zos-cross-platform-$(date +%Y%m%d-%H%M%S).tar.gz */
+tar -czf "../zos-cross-platform-$(date +%Y%m%d-%H%M%S).tar.gz" */
 echo "✅ Deployment package created: target/zos-cross-platform-*.tar.gz"

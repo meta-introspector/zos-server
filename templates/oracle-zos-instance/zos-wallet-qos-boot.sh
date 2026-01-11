@@ -23,6 +23,7 @@ tc class add dev eth0 parent 1:1 classid 1:30 htb rate 10mbit ceil 20mbit  # Pub
 
 # Install ZOS and create wallet auth system
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+# shellcheck source=/dev/null
 source ~/.cargo/env
 
 useradd -m -s /bin/bash zos || true

@@ -10,6 +10,7 @@ echo "🚀 ZOS Oracle Instance with Rust Wallet Auth"
 dnf update -y
 dnf install -y git curl wget tmux iptables-services tc nginx
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+# shellcheck source=/dev/null
 source ~/.cargo/env
 
 # Create ZOS user and directories

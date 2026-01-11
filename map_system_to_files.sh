@@ -7,7 +7,7 @@ echo "=" | tr '\n' '=' | head -c 60; echo
 # Our system components to map
 SYSTEM_COMPONENTS=(
     "security_lattice_filter"
-    "kleene_algebra_convergence" 
+    "kleene_algebra_convergence"
     "monster_group_ontology"
     "clifford_memory_model"
     "unity_convergence"
@@ -23,7 +23,7 @@ echo "🔍 Analyzing patterns in ~/nix/index/allrs.txt..."
 
 for component in "${SYSTEM_COMPONENTS[@]}"; do
     echo "📋 Mapping: $component"
-    
+
     case $component in
         "security_lattice_filter")
             echo "   🔒 Searching for security, filter, lattice patterns..."

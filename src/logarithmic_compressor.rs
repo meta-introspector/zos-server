@@ -29,7 +29,7 @@ impl FoldMapReduceCompressor {
     pub fn new(total_files: usize) -> Self {
         let spectrum = Self::create_compression_spectrum(total_files);
         let compression_stages = Self::generate_logarithmic_stages(total_files);
-        
+
         Self {
             spectrum,
             total_files,
@@ -46,7 +46,7 @@ impl FoldMapReduceCompressor {
                 data_size: total_files,
                 unity_distance: f64::INFINITY,
             },
-            
+
             // Level 1: Kleene Macros - Meta-programming compression
             kleene_macros: LogarithmicFold {
                 level: 1,
@@ -54,7 +54,7 @@ impl FoldMapReduceCompressor {
                 data_size: total_files / 2,
                 unity_distance: (total_files as f64).log2(),
             },
-            
+
             // Level 2: Security Lattice - Harmonic filtering
             security_lattice: LogarithmicFold {
                 level: 2,
@@ -62,7 +62,7 @@ impl FoldMapReduceCompressor {
                 data_size: total_files / 4,
                 unity_distance: (total_files as f64 / 4.0).log2(),
             },
-            
+
             // Level 3: Memory Geometry - Clifford algebra compression
             memory_geometry: LogarithmicFold {
                 level: 3,
@@ -70,7 +70,7 @@ impl FoldMapReduceCompressor {
                 data_size: total_files / 8,
                 unity_distance: (total_files as f64 / 8.0).log2(),
             },
-            
+
             // Level 4: Community Network - Distributed compression
             community_network: LogarithmicFold {
                 level: 4,
@@ -78,7 +78,7 @@ impl FoldMapReduceCompressor {
                 data_size: total_files / 16,
                 unity_distance: (total_files as f64 / 16.0).log2(),
             },
-            
+
             // Level 5: GPU Rendering - Visual compression
             gpu_rendering: LogarithmicFold {
                 level: 5,
@@ -86,7 +86,7 @@ impl FoldMapReduceCompressor {
                 data_size: total_files / 32,
                 unity_distance: (total_files as f64 / 32.0).log2(),
             },
-            
+
             // Level ∞: Unity Convergence - Final compression to 1
             unity_convergence: LogarithmicFold {
                 level: usize::MAX,
@@ -101,23 +101,23 @@ impl FoldMapReduceCompressor {
         let mut stages = Vec::new();
         let mut current_size = total_files;
         let mut level = 0;
-        
+
         // Logarithmic compression: each stage halves the data
         while current_size > 1 {
             let compression_ratio = 1.0 / (2.0_f64.powi(level as i32));
             let unity_distance = (current_size as f64).log2();
-            
+
             stages.push(LogarithmicFold {
                 level,
                 compression_ratio,
                 data_size: current_size,
                 unity_distance,
             });
-            
+
             current_size /= 2;
             level += 1;
         }
-        
+
         // Final stage: Unity (1)
         stages.push(LogarithmicFold {
             level: usize::MAX,
@@ -125,35 +125,35 @@ impl FoldMapReduceCompressor {
             data_size: 1,
             unity_distance: 0.0,
         });
-        
+
         stages
     }
 
     pub fn fold_map_reduce(&self, data: &[String]) -> Vec<String> {
         let mut current_data = data.to_vec();
-        
+
         println!("🔄 Starting Fold-Map-Reduce Compression...");
         println!("   Initial size: {} files", current_data.len());
-        
+
         for stage in &self.compression_stages {
             if stage.data_size == 1 {
                 println!("🎯 Reached Unity: 1");
                 return vec!["Unity(1)".to_string()];
             }
-            
+
             // FOLD: Combine adjacent elements
             current_data = self.fold_stage(&current_data);
-            
+
             // MAP: Transform each element
             current_data = self.map_stage(&current_data, stage.level);
-            
+
             // REDUCE: Compress to target size
             current_data = self.reduce_stage(&current_data, stage.data_size);
-            
+
             println!("   Level {}: {} files (compression: {:.4}, distance to unity: {:.2})",
                 stage.level, current_data.len(), stage.compression_ratio, stage.unity_distance);
         }
-        
+
         current_data
     }
 
@@ -192,7 +192,7 @@ impl FoldMapReduceCompressor {
         if data.len() <= target_size {
             return data.to_vec();
         }
-        
+
         let chunk_size = (data.len() + target_size - 1) / target_size;
         data.chunks(chunk_size)
             .map(|chunk| {
@@ -250,7 +250,7 @@ Where compress(n) applies logarithmic fold-map-reduce until convergence.
 **All computational complexity converges to Unity (1) through logarithmic compression!**
 "#,
             self.compression_stages.iter()
-                .map(|stage| format!("Level {}: {} files → compression {:.4}", 
+                .map(|stage| format!("Level {}: {} files → compression {:.4}",
                     stage.level, stage.data_size, stage.compression_ratio))
                 .collect::<Vec<_>>()
                 .join("\n"),
@@ -263,12 +263,12 @@ Where compress(n) applies logarithmic fold-map-reduce until convergence.
     pub fn report_compression_status(&self) {
         println!("\n🔄 LOGARITHMIC FOLD-MAP-REDUCE COMPRESSOR");
         println!("{}", "=".repeat(60));
-        
+
         println!("📊 Total Files: {}", self.total_files);
         println!("🎯 Target: Unity (1)");
         println!("📈 Compression Stages: {}", self.compression_stages.len());
         println!("⚡ Efficiency: {:.2}", self.calculate_compression_efficiency());
-        
+
         println!("\n🌈 Compression Spectrum:");
         println!("   👹 Monster Group: {} files (∞ complexity)", self.spectrum.monster_group_end.data_size);
         println!("   ⭐ Kleene Macros: {} files", self.spectrum.kleene_macros.data_size);
@@ -277,14 +277,14 @@ Where compress(n) applies logarithmic fold-map-reduce until convergence.
         println!("   🌐 Community Network: {} files", self.spectrum.community_network.data_size);
         println!("   🎮 GPU Rendering: {} files", self.spectrum.gpu_rendering.data_size);
         println!("   🎯 Unity Convergence: {} (final)", self.spectrum.unity_convergence.data_size);
-        
+
         println!("\n🌟 COMPRESSION ACHIEVEMENTS:");
         println!("   ✅ Logarithmic fold-map-reduce pipeline");
         println!("   ✅ Monster Group → Unity compression spectrum");
         println!("   ✅ Mathematical convergence proof");
         println!("   ✅ Infinite complexity → 1 transformation");
         println!("   ✅ Never-changing Unity endpoint");
-        
+
         println!("\n🔮 REVOLUTIONARY INSIGHT:");
         println!("   All computational complexity can be compressed!");
         println!("   Logarithmic stages ensure efficient convergence!");

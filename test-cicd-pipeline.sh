@@ -9,7 +9,7 @@ echo "===================================="
 # Configuration
 DEV_PORT=8080
 QA_PORT=8082
-PROD_PORT=8084
+export PROD_PORT=8084
 
 # Function to wait for service
 wait_for_service() {
@@ -37,7 +37,8 @@ test_api() {
     local name=$3
 
     echo "🧪 Testing $name: $endpoint"
-    local response=$(curl -s --max-time 5 "http://localhost:$port$endpoint" || echo "FAILED")
+    local response
+    response=$(curl -s --max-time 5 "http://localhost:$port$endpoint" || echo "FAILED")
     if [[ "$response" != "FAILED" ]] && echo "$response" | jq . >/dev/null 2>&1; then
         echo "✅ $name test passed"
         return 0

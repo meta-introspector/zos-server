@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-STACK_DIR="~/terraform/accounts/solfunmeme-oci"
+STACK_DIR="$HOME/terraform/accounts/solfunmeme-oci"
 TEMPLATE_DIR="templates/oracle-zos-instance"
 
 echo "🚀 Deploying ZOS Oracle Cloud Stack"

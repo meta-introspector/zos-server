@@ -4,8 +4,8 @@
 
 set -e
 
-ZOS_DOMAIN="${zos_domain}"
-ZOS_VERSION="1.0.0"
+ZOS_DOMAIN="${ZOS_DOMAIN:-example.com}"
+export ZOS_VERSION="1.0.0"
 
 echo "🚀 ZOS Server Bootstrap Starting..."
 echo "Domain: $ZOS_DOMAIN"
@@ -26,6 +26,7 @@ dnf install -y \
 
 # Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+# shellcheck source=/dev/null
 source ~/.cargo/env
 
 # Configure firewall

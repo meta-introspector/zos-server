@@ -1,4 +1,4 @@
-#!/usr/bin/env nix-shell
+#!/usr/bin/env bash
 #!nix-shell shell.nix -i bash
 
 set -e

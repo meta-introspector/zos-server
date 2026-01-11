@@ -1,4 +1,4 @@
-#!/usr/bin/env nix-shell
+#!/usr/bin/env bash
 #!nix-shell -i bash -p git rustc cargo pkg-config openssl curl
 
 # ZOS Bootstrap Version 3: Nix (Reproducible)

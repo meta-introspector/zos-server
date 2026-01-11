@@ -5,6 +5,7 @@ echo "🖥️ Deploying to Linux Server..."
 
 # Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+# shellcheck source=/dev/null
 source ~/.cargo/env
 
 # Install WireGuard

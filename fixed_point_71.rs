@@ -28,14 +28,14 @@ struct ProofStep {
 
 fn find_fixed_point_71(input: &str) -> FixedPoint71 {
     println!("🔍 Searching for Fixed Point 71 in input...");
-    
+
     let mut fp71 = FixedPoint71 {
         input_occurrence: Vec::new(),
         code_preservation: Vec::new(),
         proof_chain: Vec::new(),
         is_preserved: false,
     };
-    
+
     // Find all occurrences of 71 in input
     for (i, window) in input.chars().collect::<Vec<_>>().windows(2).enumerate() {
         if window[0] == '7' && window[1] == '1' {
@@ -43,23 +43,23 @@ fn find_fixed_point_71(input: &str) -> FixedPoint71 {
             println!("📍 Found '71' at position {}", i);
         }
     }
-    
+
     // Trace through code transformations
     for &pos in &fp71.input_occurrence {
         let trace = trace_71_through_code(input, pos);
         fp71.code_preservation.push(trace);
     }
-    
+
     // Build proof chain
     fp71.proof_chain = build_proof_chain(&fp71.input_occurrence, &fp71.code_preservation);
     fp71.is_preserved = fp71.proof_chain.iter().all(|step| step.invariant_71);
-    
+
     if fp71.is_preserved {
         println!("✅ Fixed Point 71 PRESERVED through transformation!");
     } else {
         println!("❌ Fixed Point 71 NOT preserved");
     }
-    
+
     fp71
 }
 
@@ -67,11 +67,11 @@ fn trace_71_through_code(input: &str, start_pos: usize) -> CodeTrace {
     let context_start = start_pos.saturating_sub(5);
     let context_end = (start_pos + 7).min(input.len());
     let context = input[context_start..context_end].to_string();
-    
+
     // Simulate code transformation (parsing, compilation, etc.)
     let transformation = transform_context(&context);
     let preserved_71 = transformation.contains("71");
-    
+
     CodeTrace {
         position: start_pos,
         context,
@@ -98,7 +98,7 @@ fn transform_context(context: &str) -> String {
 
 fn build_proof_chain(input_positions: &[usize], traces: &[CodeTrace]) -> Vec<ProofStep> {
     let mut proof_chain = Vec::new();
-    
+
     for (i, (&input_pos, trace)) in input_positions.iter().zip(traces.iter()).enumerate() {
         let step = ProofStep {
             step: i + 1,
@@ -108,14 +108,14 @@ fn build_proof_chain(input_positions: &[usize], traces: &[CodeTrace]) -> Vec<Pro
         };
         proof_chain.push(step);
     }
-    
+
     proof_chain
 }
 
 fn main() {
     println!("🔢 Fixed Point 71 Preservation Proof");
     println!("{}", "=".repeat(40));
-    
+
     // Test with sample input containing 71
     let sample_inputs = vec![
         "const PRIME_71 = 71;",
@@ -123,20 +123,20 @@ fn main() {
         "struct Data { value: 71 }",
         "// Monster Group prime 71",
     ];
-    
+
     for (i, input) in sample_inputs.iter().enumerate() {
         println!("\n📝 Input {}: {}", i + 1, input);
         let fp71 = find_fixed_point_71(input);
-        
+
         println!("📊 Results:");
         println!("   Occurrences: {}", fp71.input_occurrence.len());
         println!("   Preserved: {}", fp71.is_preserved);
-        
+
         for step in &fp71.proof_chain {
-            println!("   Step {}: pos {} → {} (71={})", 
+            println!("   Step {}: pos {} → {} (71={})",
                 step.step, step.input_pos, step.output_pos, step.invariant_71);
         }
     }
-    
+
     println!("\n🎯 Fixed Point 71 carries specification through code transformation!");
 }
