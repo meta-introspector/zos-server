@@ -27,7 +27,6 @@ pub fn create_router(core: AppState) -> Router {
         )
         .route("/health", get(health_handler))
         .merge(create_plugin_router())
-        .with_state((core, registry))
 }
 
 fn setup_plugins() -> Arc<PluginRegistry> {

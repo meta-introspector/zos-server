@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+# ZOS CLI - Command line interface for ZOS server
+# Usage: ./zos-cli <command> [args]
+
+ZOS_SERVER=${ZOS_SERVER:-"http://localhost:8080"}
+
+case "$1" in
+    "projects"|"p")
+        echo "📋 Fetching projects..."
+        curl -s "$ZOS_SERVER/api/projects" | jq '.'
+        ;;
+    "lattice-status"|"ls")
+        echo "⚙️ Lattice status..."
+        curl -s "$ZOS_SERVER/api/lattice/status" | jq '.'
+        ;;
+    "lattice-start"|"start")
+        echo "🚀 Starting lattice process..."
+        curl -s -X POST "$ZOS_SERVER/api/lattice/start" | jq '.'
+        ;;
+    "projects-compact"|"pc")
+        echo "📋 Projects (compact)..."
+        curl -s "$ZOS_SERVER/api/projects" | jq -r '.data.projects[] | "\(.name) \(.owner)/\(.org) \(.branch) \(.git) \(.lattice) \(.rustc) fork:\(.fork) files:\(.files)"'
+        ;;
+    "projects-by-owner"|"po")
+        echo "👥 Projects by owner..."
+        curl -s "$ZOS_SERVER/api/projects" | jq -r '.data.projects | group_by(.owner) | .[] | "\(.[0].owner): \(length) projects"'
+        ;;
+    "forks"|"f")
+        echo "🍴 Fork analysis..."
+        curl -s "$ZOS_SERVER/api/git-analysis" | jq -r '.data.projects[] | select(.is_fork == true) | "\(.name) - \(.commits_last_12_months) commits"' | head -10
+        ;;
+    "git-analysis"|"ga")
+        echo "📊 Git analysis (last 12 months)..."
+        curl -s "$ZOS_SERVER/api/git-analysis" | jq '.data | "Total: \(.total_projects) | Forks: \(.forks_count) | Active: \(.active_projects) | Recent commits: \(.recent_commits | length)"'
+        ;;
+    "recent-commits"|"rc")
+        echo "🕒 Recent commits (last 12 months)..."
+        curl -s "$ZOS_SERVER/api/git-analysis" | jq -r '.data.recent_commits[:20][] | "\(.date[:10]) \(.project) \(.hash) \(.message[:60])"'
+        ;;
+    "active-projects"|"ap")
+        echo "🔥 Most active projects..."
+        curl -s "$ZOS_SERVER/api/git-analysis" | jq -r '.data.projects[] | select(.commits_last_12_months > 0) | "\(.commits_last_12_months) \(.name)"' | sort -nr | head -10
+        ;;
+    "owners"|"o")
+        echo "👑 Project owners..."
+        curl -s "$ZOS_SERVER/api/owners" | jq -r '.data[] | "\(.[1]) \(.[0])"' | sort -nr
+        ;;
+    "top-owners"|"to")
+        echo "🏆 Top repository owners..."
+        curl -s "$ZOS_SERVER/api/owners" | jq -r '.data[:10][] | "  \(.[1]) repos - \(.[0])"'
+        ;;
+    "stats"|"s")
+        echo "📊 Project statistics..."
+        curl -s "$ZOS_SERVER/api/projects" | jq -r '.data | "Total: \(.total) | Indexed: \(.indexed) | Compiled: \(.compiled)"'
+        ;;
+    "health"|"h")
+        echo "💚 Server health..."
+        curl -s "$ZOS_SERVER/health"
+        ;;
+    "help"|"--help"|"-h"|"")
+        echo "ZOS CLI - Zero Ontology System Command Line Interface"
+        echo ""
+        echo "Usage: $0 <command>"
+        echo ""
+        echo "Commands:"
+        echo "  projects, p          List all projects (full JSON)"
+        echo "  projects-compact, pc List projects (compact format)"
+        echo "  projects-by-owner, po Group projects by owner"
+        echo "  forks, f             List fork projects with activity"
+        echo "  git-analysis, ga     Git analysis summary (12 months)"
+        echo "  recent-commits, rc   Recent commits across all projects"
+        echo "  active-projects, ap  Most active projects by commits"
+        echo "  owners, o            List project owners with counts"
+        echo "  top-owners, to       Top repository owners"
+        echo "  stats, s             Show project statistics"
+        echo "  lattice-status, ls   Show lattice process status"
+        echo "  lattice-start, start Start lattice process"
+        echo "  health, h            Check server health"
+        echo "  help                 Show this help"
+        echo ""
+        echo "Environment:"
+        echo "  ZOS_SERVER          Server URL (default: http://localhost:8080)"
+        ;;
+    *)
+        echo "❌ Unknown command: $1"
+        echo "Run '$0 help' for usage information"
+        exit 1
+        ;;
+esac

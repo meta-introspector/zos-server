@@ -4,12 +4,18 @@
 // Foundation library for ZOS server
 pub mod auth;
 pub mod cache;
+pub mod cicd_dashboard;
 pub mod common;
 pub mod core;
+pub mod git_analyzer;
+pub mod github_importer;
+pub mod meta_introspector;
 pub mod minimal_server_plugin;
 pub mod security_audit;
 pub mod telemetry;
+pub mod value_lattice_manager;
 pub mod web;
+pub mod zos_api;
 
 // Clip2Secure modules
 pub mod automorphic_compiler;

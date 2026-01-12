@@ -4,9 +4,6 @@ pub mod plugins;
 
 // Re-export the handler functions
 pub use dashboard::dashboard_handler;
-pub use plugins::create_plugin_router;
-
-pub use dashboard::dashboard_handler;
 pub use plugins::{create_plugin_router, plugin_handler};
 
 use axum::{
