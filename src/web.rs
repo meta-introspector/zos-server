@@ -10,7 +10,7 @@ use axum::{
     routing::get,
     Router,
 };
-use handlers::{create_plugin_router, dashboard_handler};
+use handlers::{create_plugin_routes, dashboard_handler};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -26,7 +26,7 @@ pub fn create_router(core: AppState) -> Router {
             get(move || dashboard_handler(registry.clone())),
         )
         .route("/health", get(health_handler))
-        .merge(create_plugin_router())
+        .merge(create_plugin_routes())
 }
 
 fn setup_plugins() -> Arc<PluginRegistry> {

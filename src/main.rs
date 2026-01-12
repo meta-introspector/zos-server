@@ -1,7 +1,10 @@
 use std::sync::{Arc, Mutex};
 use tokio;
-use tracing::info;
-use zos_server::{core::ZOSCore, telemetry, web};
+use tracing::{error, info};
+use zos_server::{
+    core::ZOSCore, project_watcher::ProjectWatcher, telemetry,
+    value_lattice_processor::ValueLatticeProcessor, web,
+};
 
 #[tokio::main]
 async fn main() {
@@ -27,10 +30,35 @@ async fn main() {
 
 async fn serve() {
     // Initialize high-performance OpenTelemetry
-    if let Err(e) = telemetry::init_high_performance_telemetry() {
+    if let Err(e) = telemetry::TelemetryServer::init() {
         eprintln!("Failed to initialize telemetry: {}", e);
         return;
     }
+
+    info!("🚀 Starting ZOS Server...");
+
+    // Start project watcher
+    let (mut watcher, mut change_rx) = ProjectWatcher::new();
+    watcher.start_watching().await;
+
+    // Start value lattice processor
+    let mut lattice_processor = ValueLatticeProcessor::new();
+
+    // Handle file changes
+    tokio::spawn(async move {
+        while let Some(change) = change_rx.recv().await {
+            info!(
+                "📁 File changed: {} in {}",
+                change.path.display(),
+                change.project_root.display()
+            );
+
+            // Process change through value lattice
+            if let Err(e) = lattice_processor.process_file_change(&change) {
+                error!("❌ Lattice processing error: {}", e);
+            }
+        }
+    });
 
     let core = Arc::new(Mutex::new(ZOSCore::new()));
 
@@ -44,7 +72,7 @@ async fn serve() {
     info!("🌐 Server running on 0.0.0.0:8080");
 
     let result = axum::serve(listener, app).await;
-    telemetry::shutdown_telemetry();
+    // Telemetry cleanup handled automatically
 
     if let Err(e) = result {
         eprintln!("Server error: {}", e);

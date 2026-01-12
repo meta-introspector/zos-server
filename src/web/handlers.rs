@@ -1,10 +1,12 @@
 // Re-export the modules for use by web.rs
 pub mod dashboard;
 pub mod plugins;
+pub mod process_monitor_plugin;
+pub mod value_lattice_plugin;
 
 // Re-export the handler functions
 pub use dashboard::dashboard_handler;
-pub use plugins::{create_plugin_router, plugin_handler};
+pub use plugins::{create_plugin_routes, handle_plugin};
 
 use axum::{
     http::{header, StatusCode},

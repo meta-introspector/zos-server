@@ -46,6 +46,14 @@ case "$1" in
         echo "👑 Project owners..."
         curl -s "$ZOS_SERVER/api/owners" | jq -r '.data[] | "\(.[1]) \(.[0])"' | sort -nr
         ;;
+    "repo-status"|"rs")
+        echo "📊 Repository Status (Chronological)..."
+        curl -s "$ZOS_SERVER/api/repo-status" | jq -r '.data[] | "📁 \(.path)\n   Branch: \(.branch) | Ahead: \(.ahead) | Modified: \(.modified) | Untracked: \(.untracked)\n   Last commit: \(.last_commit_date)\n"'
+        ;;
+    "unpushed"|"up")
+        echo "🚨 Unpushed Changes Summary..."
+        curl -s "$ZOS_SERVER/api/unpushed-summary" | jq -r '.data | to_entries[] | "📁 \(.key) -> \(.value) changes"'
+        ;;
     "top-owners"|"to")
         echo "🏆 Top repository owners..."
         curl -s "$ZOS_SERVER/api/owners" | jq -r '.data[:10][] | "  \(.[1]) repos - \(.[0])"'

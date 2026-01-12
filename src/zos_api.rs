@@ -2,8 +2,10 @@ use crate::cicd_dashboard::{CICDDashboard, ProjectStatus};
 use crate::git_analyzer::GitAnalyzer;
 use crate::github_importer::GitHubDataImporter;
 use crate::meta_introspector::MetaIntrospectorManager;
+use crate::repo_status_manager::RepoStatusManager;
 use crate::value_lattice_manager::ValueLatticeManager;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CompactProjectStatus {
@@ -142,6 +144,41 @@ impl ZosApi {
         let response = ApiResponse {
             success: true,
             data: Some(report),
+            error: None,
+        };
+
+        serde_json::to_string_pretty(&response)
+            .map_err(|e| format!("JSON serialization error: {}", e))
+    }
+
+    pub fn get_repo_status_json() -> Result<String, String> {
+        let mut manager = RepoStatusManager::new();
+        manager.load_repo_list()?;
+
+        let repos = manager.get_all_repos();
+        let response = ApiResponse {
+            success: true,
+            data: Some(repos),
+            error: None,
+        };
+
+        serde_json::to_string_pretty(&response)
+            .map_err(|e| format!("JSON serialization error: {}", e))
+    }
+
+    pub fn get_unpushed_summary_json() -> Result<String, String> {
+        let mut manager = RepoStatusManager::new();
+        manager.load_repo_list()?;
+
+        let repos_with_changes = manager.get_repos_with_changes();
+        let summary: HashMap<String, String> = repos_with_changes
+            .into_iter()
+            .map(|r| (r.path.clone(), format!("needs refresh")))
+            .collect();
+
+        let response = ApiResponse {
+            success: true,
+            data: Some(summary),
             error: None,
         };
 

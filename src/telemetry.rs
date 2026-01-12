@@ -1,68 +1,32 @@
-#![allow(unused)]
-
-use opentelemetry::{global, metrics::MeterProvider, trace::TraceError, KeyValue};
-use opentelemetry_sdk::{
-    metrics::MeterProviderBuilder,
-    runtime,
-    trace::{self, RandomIdGenerator, Sampler},
-    Resource,
-};
-use tracing::{info, instrument};
+use std::sync::Arc;
+use tracing::{debug, error, info, warn};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-pub fn init_high_performance_telemetry() -> Result<(), TraceError> {
-    // High-performance tracer with optimized settings
-    let tracer = opentelemetry_jaeger::new_agent_pipeline()
-        .with_service_name("zos-server")
-        .with_trace_config(
-            trace::config()
-                .with_sampler(Sampler::TraceIdRatioBased(1.0)) // 100% sampling for dev
-                .with_id_generator(RandomIdGenerator::default())
-                .with_max_events_per_span(32)
-                .with_max_attributes_per_span(16)
-                .with_resource(Resource::new(vec![
-                    KeyValue::new("service.name", "zos-server"),
-                    KeyValue::new("service.version", "1.0.0"),
-                ])),
-        )
-        .with_auto_split_batch(true)
-        .install_batch(runtime::Tokio)?;
+pub struct TelemetryServer;
 
-    // Zero-allocation metrics provider
-    let meter_provider = MeterProviderBuilder::default()
-        .with_resource(Resource::new(vec![KeyValue::new(
-            "service.name",
-            "zos-server",
-        )]))
-        .build();
+impl TelemetryServer {
+    pub fn init() -> Result<(), String> {
+        tracing_subscriber::registry()
+            .with(
+                tracing_subscriber::EnvFilter::try_from_default_env()
+                    .unwrap_or_else(|_| "zos_server=debug,tower_http=debug,axum=debug".into()),
+            )
+            .with(tracing_subscriber::fmt::layer())
+            .init();
 
-    global::set_meter_provider(meter_provider);
+        info!("🔍 Telemetry server initialized");
+        Ok(())
+    }
 
-    // Minimal overhead tracing subscriber
-    tracing_subscriber::registry()
-        .with(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "zos_server=info,tower_http=info".into()),
-        )
-        .with(tracing_opentelemetry::layer().with_tracer(tracer))
-        .init();
+    pub fn log_request(method: &str, path: &str, status: u16) {
+        info!("📡 {} {} -> {}", method, path, status);
+    }
 
-    info!("⚡ High-performance OpenTelemetry initialized");
-    Ok(())
-}
+    pub fn log_error(component: &str, error: &str) {
+        error!("❌ {}: {}", component, error);
+    }
 
-// Zero-allocation instrumentation macros
-#[instrument(skip_all, fields(user_id, operation))]
-pub async fn trace_user_operation<F, R>(user_id: &str, operation: &str, f: F) -> R
-where
-    F: std::future::Future<Output = R>,
-{
-    tracing::Span::current().record("user_id", user_id);
-    tracing::Span::current().record("operation", operation);
-    f.await
-}
-
-pub fn shutdown_telemetry() {
-    global::shutdown_tracer_provider();
-    global::shutdown_meter_provider();
+    pub fn log_plugin_error(plugin: &str, error: &str) {
+        error!("🔌 Plugin '{}' error: {}", plugin, error);
+    }
 }

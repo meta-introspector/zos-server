@@ -5,15 +5,21 @@
 pub mod auth;
 pub mod cache;
 pub mod cicd_dashboard;
+pub mod code_transformation_graph;
 pub mod common;
 pub mod core;
 pub mod git_analyzer;
 pub mod github_importer;
 pub mod meta_introspector;
 pub mod minimal_server_plugin;
+pub mod process_monitor_component;
+pub mod project_watcher;
+pub mod repo_status_manager;
 pub mod security_audit;
+pub mod self_bootstrap_system;
 pub mod telemetry;
 pub mod value_lattice_manager;
+pub mod value_lattice_processor;
 pub mod web;
 pub mod zos_api;
 
