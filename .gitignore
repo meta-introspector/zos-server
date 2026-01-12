@@ -1,24 +1,20 @@
-# Rust
-/target/
-**/*.rs.bk
-Cargo.lock
+# Ignore organized models directory - will be uploaded to HuggingFace
+organized_models/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+# Ignore binary executables
+**/target/
+temp_binary
+test_wrap
+top_transitions
+transition_matrix
+universal_dumper
+venn_markov_analyzer
+rustc_markov_analyzer
+rustc_hir_cicd
+rust_repo_generator
+regex_fixed_point
+reverse_ending
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-
-# Build artifacts
-/result
-/result-*
-
-# Nix
-.direnv/
+# Ignore generated files
+*.csv
+rustc_hir_build_report.txt

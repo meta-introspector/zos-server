@@ -114,11 +114,8 @@ impl SelfBootstrapSystem {
             state_transitions: self
                 .zos_markov_model
                 .keys()
-                .cloned()
-                .collect::<HashMap<String, String>>()
-                .into_iter()
-                .map(|(k, _)| (k.clone(), k))
-                .collect(),
+                .map(|k| (k.clone(), k.clone()))
+                .collect::<HashMap<String, String>>(),
             output_generators: vec![
                 "value_lattice_entry".to_string(),
                 "godel_number_assignment".to_string(),

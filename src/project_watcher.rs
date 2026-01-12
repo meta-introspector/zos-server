@@ -126,7 +126,7 @@ trait PathExpand {
 impl PathExpand for PathBuf {
     fn expand(&self) -> PathBuf {
         let binding = self.to_string_lossy();
-        let expanded = shellexpand::tilde(&binding);
+        let expanded = binding.replace("~", &std::env::var("HOME").unwrap_or_default());
         PathBuf::from(expanded.to_string())
     }
 }

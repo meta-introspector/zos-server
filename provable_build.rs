@@ -129,7 +129,10 @@ pub mod syscall_removal_proof {{
     pub const REMOVAL_CERTIFICATE: &str = "SYSCALLS_PROVABLY_REMOVED_AT_COMPILE_TIME";
 }}
 "#,
-        chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC"),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
         syscalls_before.len(),
         syscalls_before.iter()
             .map(|s| format!("\"{}\"", s.syscall))
@@ -200,5 +203,9 @@ fn additional_security_checks() {
     // Set build flags to disable unsafe features
     println!("cargo:rustc-cfg=feature=\"no-syscalls\"");
     println!("cargo:rustc-cfg=feature=\"virtualized-only\"");
-    println!("cargo:rustc-env=BUILD_TIMESTAMP={}", chrono::Utc::now().timestamp());
+    println!("cargo:rustc-env=BUILD_TIMESTAMP={}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs());
 }

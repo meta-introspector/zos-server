@@ -35,7 +35,9 @@ impl RepoStatusManager {
         // Load from meta-introspector repos.txt
         if let Ok(content) = std::fs::read_to_string("/mnt/data1/meta-introspector/repos.txt") {
             for line in content.lines() {
-                let path = shellexpand::tilde(line.trim()).to_string();
+                let path = line
+                    .trim()
+                    .replace("~", &std::env::var("HOME").unwrap_or_default());
                 let name = Path::new(&path)
                     .file_name()
                     .and_then(|n| n.to_str())

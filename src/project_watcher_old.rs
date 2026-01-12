@@ -83,7 +83,7 @@ impl ProjectWatcher {
         // Load repos from meta-introspector repos.txt
         if let Ok(content) = std::fs::read_to_string("/mnt/data1/meta-introspector/repos.txt") {
             for line in content.lines() {
-                let path = PathBuf::from(shellexpand::tilde(line.trim()).to_string());
+                let path = PathBuf::from(line.trim().replace("~", &std::env::var("HOME").unwrap_or_default()));
                 if path.exists() {
                     if let Err(e) = self.add_project_dir(path.clone()) {
                         eprintln!("Failed to watch {}: {}", path.display(), e);
@@ -118,7 +118,8 @@ trait PathExpand {
 
 impl PathExpand for PathBuf {
     fn expand(&self) -> PathBuf {
-        if let Ok(expanded) = shellexpand::tilde(&self.to_string_lossy()) {
+        if let Ok(home) = std::env::var("HOME") {
+            let expanded = self.to_string_lossy().replace("~", &home);
             PathBuf::from(expanded.to_string())
         } else {
             self.clone()

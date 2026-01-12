@@ -99,5 +99,5 @@ members = [
     "zos-bootstrap",
     "zos-oci",
     "zos-analysis"
-]
+, "automorphic-tools"]
 resolver = "2"
