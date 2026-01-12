@@ -31,8 +31,9 @@ pub mod plantation_filter;
 
 // Re-export key types for macro usage
 pub use complexity_types::*;
-// pub mod p2p;
+pub mod plugin_registry;
 pub mod plugins;
+pub mod process_monitor;
 pub mod services;
 pub mod session;
 pub mod traits;
