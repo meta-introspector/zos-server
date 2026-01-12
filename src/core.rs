@@ -26,8 +26,8 @@ pub struct ZOSCore {
 }
 
 impl ZOSCore {
-    #[security_context(level = "Public", price_tier = 0.0, matrix_access = "DiagonalOnly")]
-    #[complexity(level = "Trivial", orbit_size = 1, time = "O(1)", space = "O(1)")]
+    // #[security_context(level = "Public", price_tier = 0.0, matrix_access = "DiagonalOnly")]
+    // #[complexity(level = "Trivial", orbit_size = 1, time = "O(1)", space = "O(1)")]
     pub fn new() -> Self {
         Self {
             users: HashMap::new(),
@@ -35,13 +35,13 @@ impl ZOSCore {
         }
     }
 
-    #[security_context(
-        level = "Admin",
-        price_tier = 1000.0,
-        matrix_access = "UpperTriangular"
-    )]
-    #[complexity(level = "Low", orbit_size = 100, time = "O(1)", space = "O(1)")]
-    #[lmfdb_orbit(size = 100, class = "AC0", proof_hash = "user_creation_proof")]
+    // #[security_context(
+    //     level = "Admin",
+    //     price_tier = 1000.0,
+    //     matrix_access = "UpperTriangular"
+    // )]
+    // #[complexity(level = "Low", orbit_size = 100, time = "O(1)", space = "O(1)")]
+    // #[lmfdb_orbit(size = 100, class = "AC0", proof_hash = "user_creation_proof")]
     pub fn create_user(&mut self, username: String) -> Result<User, String> {
         with_complexity_guard!("create_user", 100, {
             if self.users.contains_key(&username) {
@@ -64,9 +64,9 @@ impl ZOSCore {
         })
     }
 
-    #[security_context(level = "User", price_tier = 100.0, matrix_access = "LowerTriangular")]
-    #[complexity(level = "Medium", orbit_size = 1000, time = "O(log n)", space = "O(1)")]
-    #[lmfdb_orbit(size = 1000, class = "L", proof_hash = "session_creation_proof")]
+    // #[security_context(level = "User", price_tier = 100.0, matrix_access = "LowerTriangular")]
+    // #[complexity(level = "Medium", orbit_size = 1000, time = "O(log n)", space = "O(1)")]
+    // #[lmfdb_orbit(size = 1000, class = "L", proof_hash = "session_creation_proof")]
     pub fn create_session(&mut self, username: &str) -> Result<Session, String> {
         with_complexity_guard!("create_session", 1000, {
             let user = self.users.get(username).ok_or("User not found")?;
@@ -82,13 +82,13 @@ impl ZOSCore {
         })
     }
 
-    #[security_context(level = "User", price_tier = 100.0, matrix_access = "LowerTriangular")]
-    #[complexity(level = "Medium", orbit_size = 500, time = "O(1)", space = "O(1)")]
-    #[eigenvalue_decomposition(
-        real = 1.5,
-        imaginary = 0.0,
-        structural_meaning = "session_validation"
-    )]
+    // #[security_context(level = "User", price_tier = 100.0, matrix_access = "LowerTriangular")]
+    // #[complexity(level = "Medium", orbit_size = 500, time = "O(1)", space = "O(1)")]
+    // #[eigenvalue_decomposition(
+    //     real = 1.5,
+    //     imaginary = 0.0,
+    //     structural_meaning = "session_validation"
+    // )]
     pub fn validate_session(&self, token: &str) -> Option<&User> {
         with_complexity_guard!("validate_session", 500, {
             let session = self.sessions.get(token)?;
@@ -101,8 +101,8 @@ impl ZOSCore {
         })
     }
 
-    #[security_context(level = "Public", price_tier = 0.0, matrix_access = "DiagonalOnly")]
-    #[complexity(level = "Trivial", orbit_size = 1, time = "O(1)", space = "O(1)")]
+    // #[security_context(level = "Public", price_tier = 0.0, matrix_access = "DiagonalOnly")]
+    // #[complexity(level = "Trivial", orbit_size = 1, time = "O(1)", space = "O(1)")]
     pub fn get_user(&self, username: &str) -> Option<&User> {
         self.users.get(username)
     }

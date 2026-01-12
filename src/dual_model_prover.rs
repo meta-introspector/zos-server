@@ -184,7 +184,7 @@ fn prove_fixed_point() -> bool {{
 
     pub fn report_dual_model_status(&self) {
         println!("\n🎯 DUAL MODEL FIXED POINT ANALYSIS");
-        println!("=".repeat(50));
+        println!("{}", "=".repeat(50));
         println!("🤖 LLM Model: {}", self.llm_model.name);
         println!("   Parameters: {}", self.llm_model.parameters);
         println!("   GPU Memory: {}MB", self.llm_model.gpu_memory_mb);

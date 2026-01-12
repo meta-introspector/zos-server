@@ -158,7 +158,7 @@ impl ConvergenceAnalyzer {
             path: file_path.to_string(),
             hash: hash.clone(),
             char_markov: markov,
-            syn_patterns: patterns,
+            syn_patterns: patterns.clone(),
             kleene_score,
         };
 
@@ -248,7 +248,8 @@ impl ConvergenceAnalyzer {
         let chunk_size = files.len() / optimizer.threads + 1;
         for chunk in files.chunks(chunk_size) {
             chunk.par_iter().for_each(|&file_path| {
-                if let Err(e) = self.analyze_file(file_path) {
+                let mut analyzer = ConvergenceAnalyzer::new();
+                if let Err(e) = analyzer.analyze_file(file_path) {
                     eprintln!("Error analyzing {}: {}", file_path, e);
                 }
             });

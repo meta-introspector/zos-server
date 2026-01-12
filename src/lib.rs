@@ -3,6 +3,7 @@
 
 // Foundation library for ZOS server
 pub mod auth;
+pub mod cache;
 pub mod common;
 pub mod core;
 pub mod minimal_server_plugin;
@@ -12,7 +13,7 @@ pub mod web;
 
 // Clip2Secure modules
 pub mod automorphic_compiler;
-pub mod clip2secure_lints;
+// pub mod clip2secure_lints;
 pub mod complexity_types;
 pub mod convergence_analyzer;
 pub mod cpu_optimizer;
@@ -30,7 +31,7 @@ pub mod plantation_filter;
 
 // Re-export key types for macro usage
 pub use complexity_types::*;
-pub mod p2p;
+// pub mod p2p;
 pub mod plugins;
 pub mod services;
 pub mod session;

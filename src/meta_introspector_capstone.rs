@@ -190,7 +190,7 @@ This project represents the **INFINITE COMPLEXITY CAPSTONE** - the point where a
 
     pub fn report_capstone_status(&self) {
         println!("\n🌌 META-INTROSPECTOR INFINITE COMPLEXITY CAPSTONE");
-        println!("=".repeat(60));
+        println!("{}", "=".repeat(60));
         println!("🏛️ Project: {}", self.project.name);
         println!("🌐 GitHub Org: {}", self.project.github_org);
         println!("♾️ Complexity Level: ∞ (Infinite)");

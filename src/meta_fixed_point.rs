@@ -36,7 +36,7 @@ impl MultiDomainFixedPointEngine {
             "mathematics".to_string(),
             FixedPointDomain {
                 name: "Mathematics".to_string(),
-                state_vector: vec![1.0, 0.618, 3.14159, 2.71828], // φ, π, e
+                state_vector: vec![1.0, 0.618, std::f64::consts::PI, std::f64::consts::E], // φ, π, e
                 transformation: |x| x.iter().map(|&v| v * 0.9 + 0.1).collect(),
             },
         );
@@ -81,7 +81,7 @@ impl MultiDomainFixedPointEngine {
             "llm".to_string(),
             FixedPointDomain {
                 name: "LLM".to_string(),
-                state_vector: vec![1.41421, 1.73205, 2.23607, 2.64575], // Square roots
+                state_vector: vec![std::f64::consts::SQRT_2, 1.73205, 2.23607, 2.64575], // Square roots
                 transformation: |x| x.iter().map(|&v| v * 0.75 + 0.25).collect(),
             },
         );
@@ -197,7 +197,7 @@ impl MultiDomainFixedPointEngine {
 
     pub fn report_meta_analysis(&self) {
         println!("\n🌌 META-FIXED-POINT ANALYSIS");
-        println!("=".repeat(50));
+        println!("{}", "=".repeat(50));
 
         for (name, domain) in &self.domains {
             println!("🔬 Domain: {}", domain.name);

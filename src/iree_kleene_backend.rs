@@ -120,8 +120,8 @@ __global__ void kleene_orbit_kernel(float* input, float* output, int size) {{
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < size) {{
         // Apply Kleene star transformation
-        float orbit_freq = {:.6f};
-        float transform = {:.6f};
+        float orbit_freq = {:.6};
+        float transform = {:.6};
         output[idx] = input[idx] * orbit_freq + transform;
     }}
 }}

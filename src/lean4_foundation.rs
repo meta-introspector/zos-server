@@ -254,7 +254,7 @@ declare double @llvm.fabs.f64(double)
 
     pub fn report_foundation_status(&self) {
         println!("\n📐 MATHEMATICAL FOUNDATION MODEL M");
-        println!("=".repeat(50));
+        println!("{}", "=".repeat(50));
         println!("🔬 Lean4 Path: {}", self.lean4_path);
         println!("🧮 Foundation: {}", self.foundation_model.name);
         println!(

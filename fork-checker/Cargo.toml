@@ -1,0 +1,9 @@
+[package]
+name = "fork-checker"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[dependencies]
+glob = "0.3"

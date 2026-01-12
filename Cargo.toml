@@ -53,18 +53,22 @@ notify = "6.0"
 libloading = "0.8"
 libp2p = "0.54"
 tempfile = "3.0"
-# Clippy lint dependencies
-clippy_utils = { git = "https://github.com/rust-lang/rust-clippy", optional = true }
-rustc_hir = { git = "https://github.com/rust-lang/rust", optional = true }
-rustc_lint = { git = "https://github.com/rust-lang/rust", optional = true }
-rustc_session = { git = "https://github.com/rust-lang/rust", optional = true }
-rustc_span = { git = "https://github.com/rust-lang/rust", optional = true }
-rustc_middle = { git = "https://github.com/rust-lang/rust", optional = true }
+# Clippy lint dependencies (optional, disabled for now)
+# clippy_utils = { git = "https://github.com/rust-lang/rust-clippy", optional = true }
+# rustc_hir = { git = "https://github.com/rust-lang/rust", optional = true }
+# rustc_lint = { git = "https://github.com/rust-lang/rust", optional = true }
+# rustc_session = { git = "https://github.com/rust-lang/rust", optional = true }
+# rustc_span = { git = "https://github.com/rust-lang/rust", optional = true }
+# rustc_middle = { git = "https://github.com/rust-lang/rust", optional = true }
 
 # Procedural macro dependencies
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "2.0", features = ["full", "visit-mut"] }
+
+# Repository indexing dependencies
+bincode = "1.3"
+flate2 = "1.0"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

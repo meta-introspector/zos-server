@@ -138,7 +138,7 @@ impl NidexBuilder {
 
     pub fn report_nidex_status(&self) {
         println!("\n📚 NIDEX STATUS REPORT");
-        println!("=".repeat(50));
+        println!("{}", "=".repeat(50));
         println!("💾 Total Memory: {}GB", self.total_memory_gb);
         println!("📁 Indexed Files: {}", self.file_index.len());
         println!("🧮 Mathlib Files: {}", self.mathlib_files.len());

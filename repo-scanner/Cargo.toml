@@ -1,0 +1,9 @@
+[package]
+name = "repo-scanner"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[dependencies]
+rayon = "1.8"

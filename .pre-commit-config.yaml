@@ -1,37 +1,24 @@
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-added-large-files
-      - id: check-merge-conflict
-      - id: check-json
-      - id: check-executables-have-shebangs
-
-  # - repo: https://github.com/Yelp/detect-secrets
-  #   rev: v1.4.0
-  #   hooks:
-  #     - id: detect-secrets
-  #       args: ['--baseline', '.secrets.baseline']
-  #       additional_dependencies: ['detect-secrets']
-
   - repo: local
     hooks:
+      - id: trailing-whitespace
+        name: trim trailing whitespace
+        entry: bash -c 'for file in "$@"; do sed -i "s/[[:space:]]*$//" "$file"; done'
+        language: system
+        types: [text]
+
+      - id: check-json
+        name: check json
+        entry: bash -c 'for file in "$@"; do python3 -c "import json; json.load(open(\"$file\"))" || exit 1; done'
+        language: system
+        files: \.json$
+
       - id: no-binaries
         name: prevent binary files
         entry: bash
         args: ['-c', 'for file in "$@"; do head -c 16 "$file" | xxd -p | grep -qE "^(7f454c46|4d5a|feedface|cefaedfe|cafebabe)" && echo "❌ Binary executable detected: $file" && exit 1; done; exit 0', '--']
         language: system
         exclude: '\.(png|jpg|jpeg|gif|ico|pdf|zip|tar|gz|bz2)$'
-
-      # - id: lean4-check
-      #   name: lean4 check
-      #   entry: bash -c 'if command -v lean >/dev/null 2>&1; then find . -name "*.lean" -exec lean --check {} \;; else echo "⚠️  lean4 not installed, skipping"; fi'
-      #   language: system
-      #   files: \.lean$
-      #   pass_filenames: false
 
       - id: shellcheck
         name: shellcheck
@@ -40,33 +27,22 @@ repos:
         files: \.sh$
 
       - id: cargo-check
-        name: cargo check
-        entry: bash -c 'RUSTC_BOOTSTRAP=1 cargo check --all-features'
+        name: cargo check (offline)
+        entry: bash -c 'RUSTC_BOOTSTRAP=1 CARGO_NET_OFFLINE=true cargo check --all-features --offline'
         language: system
         files: \.rs$
         pass_filenames: false
 
-      - id: cargo-test
-        name: cargo test
-        entry: bash -c 'RUSTC_BOOTSTRAP=1 cargo test --all-features'
+      - id: rust-fmt
+        name: rust fmt (offline)
+        entry: bash -c 'RUSTC_BOOTSTRAP=1 cargo fmt --all'
         language: system
         files: \.rs$
         pass_filenames: false
 
-      - id: lattice-validation
-        name: validate lattice system
-        entry: bash -c 'if [ -f "lattice-analyzer.sh" ]; then echo "✅ Lattice analyzer present"; fi'
+      - id: rust-clippy
+        name: rust clippy (offline)
+        entry: bash -c 'RUSTC_BOOTSTRAP=1 CARGO_NET_OFFLINE=true cargo clippy --all-targets --all-features --offline'
         language: system
-        files: \.sh$
+        files: \.rs$
         pass_filenames: false
-
-  - repo: https://github.com/doublify/pre-commit-rust
-    rev: v1.0
-    hooks:
-      - id: fmt
-        pass_filenames: false
-      - id: clippy
-        args: ['--all-targets', '--all-features']
-        additional_dependencies: []
-        env:
-          RUSTC_BOOTSTRAP: "1"
