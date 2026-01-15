@@ -207,9 +207,6 @@ name = "libp2p2_server"
 path = "libp2p2_server.rs"
 
 [[bin]]
-name = "llm_git_demo"
-path = "llm_git_demo.rs"
-
 [[bin]]
 name = "logarithmic_memory_map"
 path = "logarithmic_memory_map.rs"
@@ -386,3 +383,7 @@ path = "venn_markov_analyzer.rs"
 name = "wrapping_cost_analyzer"
 path = "wrapping_cost_analyzer.rs"
 
+
+[[example]]
+name = "llm_git_demo"
+path = "examples/llm_git_demo.rs"
