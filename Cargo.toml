@@ -101,3 +101,287 @@ members = [
     "zos-analysis"
 , "automorphic-tools"]
 resolver = "2"
+[[bin]]
+name = "audited_automorphic_system"
+path = "audited_automorphic_system.rs"
+
+[[bin]]
+name = "automorphic_field"
+path = "automorphic_field.rs"
+
+[[bin]]
+name = "binary_classification_demo"
+path = "binary_classification_demo.rs"
+
+[[bin]]
+name = "byte_value_assigner"
+path = "byte_value_assigner.rs"
+
+[[bin]]
+name = "cargo2plugin_demo"
+path = "cargo2plugin_demo.rs"
+
+[[bin]]
+name = "clifford_self_reference"
+path = "clifford_self_reference.rs"
+
+[[bin]]
+name = "compiler_path_matcher"
+path = "compiler_path_matcher.rs"
+
+[[bin]]
+name = "contextual_eliminator"
+path = "contextual_eliminator.rs"
+
+[[bin]]
+name = "cuda_monster_gpu"
+path = "cuda_monster_gpu.rs"
+
+[[bin]]
+name = "dead_code_eliminator"
+path = "dead_code_eliminator.rs"
+
+[[bin]]
+name = "dynamic_memory_bitmap"
+path = "dynamic_memory_bitmap.rs"
+
+[[bin]]
+name = "elf_target_analyzer"
+path = "elf_target_analyzer.rs"
+
+[[bin]]
+name = "example_build"
+path = "example_build.rs"
+
+[[bin]]
+name = "example_patched_code"
+path = "example_patched_code.rs"
+
+[[bin]]
+name = "file_list_markov"
+path = "file_list_markov.rs"
+
+[[bin]]
+name = "filename_markov"
+path = "filename_markov.rs"
+
+[[bin]]
+name = "fixed_point_71"
+path = "fixed_point_71.rs"
+
+[[bin]]
+name = "gandalf_test"
+path = "gandalf_test.rs"
+
+[[bin]]
+name = "git_pack_analyzer"
+path = "git_pack_analyzer.rs"
+
+[[bin]]
+name = "godel_path"
+path = "godel_path.rs"
+
+[[bin]]
+name = "hierarchical_markov"
+path = "hierarchical_markov.rs"
+
+[[bin]]
+name = "hir_comparison"
+path = "hir_comparison.rs"
+
+[[bin]]
+name = "hir_rustc_comparison"
+path = "hir_rustc_comparison.rs"
+
+[[bin]]
+name = "homotopy_unirepo"
+path = "homotopy_unirepo.rs"
+
+[[bin]]
+name = "kleene2markov2godel"
+path = "kleene2markov2godel.rs"
+
+[[bin]]
+name = "libp2p2_server"
+path = "libp2p2_server.rs"
+
+[[bin]]
+name = "llm_git_demo"
+path = "llm_git_demo.rs"
+
+[[bin]]
+name = "logarithmic_memory_map"
+path = "logarithmic_memory_map.rs"
+
+[[bin]]
+name = "markov_1_4m_analyzer"
+path = "markov_1_4m_analyzer.rs"
+
+[[bin]]
+name = "markov_1_4m_fast"
+path = "markov_1_4m_fast.rs"
+
+[[bin]]
+name = "markov_analyzer"
+path = "markov_analyzer.rs"
+
+[[bin]]
+name = "markov_comparison"
+path = "markov_comparison.rs"
+
+[[bin]]
+name = "markov_with_storage"
+path = "markov_with_storage.rs"
+
+[[bin]]
+name = "model_classifier"
+path = "model_classifier.rs"
+
+[[bin]]
+name = "model_similarity"
+path = "model_similarity.rs"
+
+[[bin]]
+name = "morphism_map"
+path = "morphism_map.rs"
+
+[[bin]]
+name = "multi_file_markov"
+path = "multi_file_markov.rs"
+
+[[bin]]
+name = "multi_repo_extractor"
+path = "multi_repo_extractor.rs"
+
+[[bin]]
+name = "p2p_compilation_cluster"
+path = "p2p_compilation_cluster.rs"
+
+[[bin]]
+name = "p2p_lib_wrapper"
+path = "p2p_lib_wrapper.rs"
+
+[[bin]]
+name = "p2p_rustc_loader"
+path = "p2p_rustc_loader.rs"
+
+[[bin]]
+name = "p2p_rustc_test"
+path = "p2p_rustc_test.rs"
+
+[[bin]]
+name = "p2p_server"
+path = "p2p_server.rs"
+
+[[bin]]
+name = "proof_test"
+path = "proof_test.rs"
+
+[[bin]]
+name = "provable_build"
+path = "provable_build.rs"
+
+[[bin]]
+name = "raid_markov_analyzer"
+path = "raid_markov_analyzer.rs"
+
+[[bin]]
+name = "regex_fixed_point"
+path = "regex_fixed_point.rs"
+
+[[bin]]
+name = "reverse_ending_analyzer"
+path = "reverse_ending_analyzer.rs"
+
+[[bin]]
+name = "runtime_71_trace"
+path = "runtime_71_trace.rs"
+
+[[bin]]
+name = "rustc_hir_cicd"
+path = "rustc_hir_cicd.rs"
+
+[[bin]]
+name = "rustc_hir_cicd_simple"
+path = "rustc_hir_cicd_simple.rs"
+
+[[bin]]
+name = "rustc_markov_analyzer"
+path = "rustc_markov_analyzer.rs"
+
+[[bin]]
+name = "rust_repo_generator"
+path = "rust_repo_generator.rs"
+
+[[bin]]
+name = "rust_structured_extractor"
+path = "rust_structured_extractor.rs"
+
+[[bin]]
+name = "self_aware_analyzer"
+path = "self_aware_analyzer.rs"
+
+[[bin]]
+name = "self_aware_gpu"
+path = "self_aware_gpu.rs"
+
+[[bin]]
+name = "self_reading_goblin"
+path = "self_reading_goblin.rs"
+
+[[bin]]
+name = "simple_markov_builder"
+path = "simple_markov_builder.rs"
+
+[[bin]]
+name = "simple_markov_clean"
+path = "simple_markov_clean.rs"
+
+[[bin]]
+name = "syscall_stripping_example"
+path = "syscall_stripping_example.rs"
+
+[[bin]]
+name = "test_file"
+path = "test_file.rs"
+
+[[bin]]
+name = "test_lattice"
+path = "test_lattice.rs"
+
+[[bin]]
+name = "test_lattice_extraction"
+path = "test_lattice_extraction.rs"
+
+[[bin]]
+name = "test_p2p_verbs"
+path = "test_p2p_verbs.rs"
+
+[[bin]]
+name = "test-repo-status"
+path = "test-repo-status.rs"
+
+[[bin]]
+name = "top_transitions_sampler"
+path = "top_transitions_sampler.rs"
+
+[[bin]]
+name = "transition_matrix"
+path = "transition_matrix.rs"
+
+[[bin]]
+name = "truncated_monster"
+path = "truncated_monster.rs"
+
+[[bin]]
+name = "universal_compiler_dumper"
+path = "universal_compiler_dumper.rs"
+
+[[bin]]
+name = "venn_markov_analyzer"
+path = "venn_markov_analyzer.rs"
+
+[[bin]]
+name = "wrapping_cost_analyzer"
+path = "wrapping_cost_analyzer.rs"
+
