@@ -43,10 +43,10 @@ impl RustStructuredExtractor {
         println!("Found {} Rust files to process", files.len());
 
         // Process all dump types in parallel
-        thread::scope(|s| {
+        thread::scope(|s: &'_ thread::Scope<'_, '_>| {
             for dump_type in &self.dump_types {
                 let files_ref = &files;
-                s.spawn(move |_| {
+                s.spawn(move |_: &'_ thread::Scope<'_, '_>| {
                     println!("📤 Starting {} extraction...", dump_type);
                     self.extract_dump_type_parallel(dump_type, files_ref);
                 });
@@ -64,9 +64,9 @@ impl RustStructuredExtractor {
         let chunk_size = 100;
         let chunks: Vec<_> = files.chunks(chunk_size).collect();
 
-        thread::scope(|s| {
+        thread::scope(|s: &'_ thread::Scope<'_, '_>| {
             for (chunk_idx, chunk) in chunks.iter().enumerate() {
-                s.spawn(move |_| {
+                s.spawn(move |_: &'_ thread::Scope<'_, '_>| {
                     for (i, file_path) in chunk.iter().enumerate() {
                         if let Ok(dump_content) = self.get_dump_for_file(file_path, dump_type) {
                             let filename = file_path.split('/').last().unwrap_or("unknown");
@@ -83,9 +83,9 @@ impl RustStructuredExtractor {
     fn process_dumps_to_models(&self) -> Result<(), String> {
         println!("🔄 Processing dumps into Markov models...");
 
-        thread::scope(|s| {
+        thread::scope(|s: &'_ thread::Scope<'_, '_>| {
             for dump_type in &self.dump_types {
-                s.spawn(move |_| {
+                s.spawn(move |_: &'_ thread::Scope<'_, '_>| {
                     self.process_dump_type_to_models(dump_type);
                 });
             }
@@ -104,9 +104,9 @@ impl RustStructuredExtractor {
             let chunk_size = 50;
             let chunks: Vec<_> = files.chunks(chunk_size).collect();
 
-            thread::scope(|s| {
+            thread::scope(|s: &'_ thread::Scope<'_, '_>| {
                 for chunk in chunks {
-                    s.spawn(move |_| {
+                    s.spawn(move |_: &'_ thread::Scope<'_, '_>| {
                         for entry in chunk {
                             let path = entry.path();
                             if let Ok(content) = fs::read_to_string(&path) {
@@ -148,9 +148,9 @@ impl RustStructuredExtractor {
     fn process_dumps_to_models(&self) -> Result<(), String> {
         println!("🔄 Processing dumps into Markov models...");
 
-        thread::scope(|s| {
+        thread::scope(|s: &'_ thread::Scope<'_, '_>| {
             for dump_type in &self.dump_types {
-                s.spawn(move |_| {
+                s.spawn(move |_: &'_ thread::Scope<'_, '_>| {
                     self.process_dump_type_to_models(dump_type);
                 });
             }
@@ -169,9 +169,9 @@ impl RustStructuredExtractor {
             let chunk_size = 50;
             let chunks: Vec<_> = files.chunks(chunk_size).collect();
 
-            thread::scope(|s| {
+            thread::scope(|s: &'_ thread::Scope<'_, '_>| {
                 for chunk in chunks {
-                    s.spawn(move |_| {
+                    s.spawn(move |_: &'_ thread::Scope<'_, '_>| {
                         for entry in chunk {
                             let path = entry.path();
                             if let Ok(content) = fs::read_to_string(&path) {
