@@ -150,9 +150,6 @@ name = "elf_target_analyzer"
 path = "elf_target_analyzer.rs"
 
 [[bin]]
-name = "example_build"
-path = "example_build.rs"
-
 [[bin]]
 name = "example_patched_code"
 path = "example_patched_code.rs"
@@ -170,9 +167,6 @@ name = "fixed_point_71"
 path = "fixed_point_71.rs"
 
 [[bin]]
-name = "gandalf_test"
-path = "gandalf_test.rs"
-
 [[bin]]
 name = "git_pack_analyzer"
 path = "git_pack_analyzer.rs"
@@ -270,9 +264,6 @@ name = "p2p_rustc_test"
 path = "p2p_rustc_test.rs"
 
 [[bin]]
-name = "p2p_server"
-path = "p2p_server.rs"
-
 [[bin]]
 name = "proof_test"
 path = "proof_test.rs"
@@ -385,3 +376,15 @@ path = "venn_markov_analyzer.rs"
 name = "wrapping_cost_analyzer"
 path = "wrapping_cost_analyzer.rs"
 
+
+[[example]]
+name = "p2p_server"
+path = "p2p_server.rs"
+
+[[example]]
+name = "gandalf_test"
+path = "gandalf_test.rs"
+
+[[example]]
+name = "example_build"
+path = "example_build.rs"
