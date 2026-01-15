@@ -72,7 +72,7 @@ impl P2PPluginServer {
                         data: data.as_ptr(),
                         size: data.len(),
                     };
-                    self.driver = std::mem::take(&mut self.driver).react(event);
+                    self.driver = std::mem::take::<PluginDriver>(&mut self.driver).react(event);
                     self.driver.execute_plugin(&plugin, "span_execute_c")?;
                 }
                 Ok(format!("Ran {} with files", plugin))
