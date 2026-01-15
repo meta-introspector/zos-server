@@ -33,6 +33,12 @@ struct SystemConfig {
 }
 
 impl AutomorphicFieldSystem {
+    fn audit_function(&mut self, name: &str, details: &str) -> Result<(), String> {
+        self.audit_trail.push(format!("[AUDIT] {}: {}", name, details));
+        Ok(())
+    }
+
+
     fn new() -> Result<Self, String> {
         let config = Self::load_system_config()?;
         Ok(Self {
