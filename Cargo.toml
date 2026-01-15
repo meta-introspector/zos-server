@@ -139,7 +139,6 @@ name = "cuda_monster_gpu"
 path = "cuda_monster_gpu.rs"
 
 [[bin]]
-[[bin]]
 name = "dynamic_memory_bitmap"
 path = "dynamic_memory_bitmap.rs"
 
@@ -203,7 +202,6 @@ path = "kleene2markov2godel.rs"
 name = "libp2p2_server"
 path = "libp2p2_server.rs"
 
-[[bin]]
 [[bin]]
 name = "logarithmic_memory_map"
 path = "logarithmic_memory_map.rs"
