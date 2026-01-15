@@ -153,7 +153,7 @@ path = "elf_target_analyzer.rs"
 name = "example_build"
 path = "example_build.rs"
 
-[[bin]]
+[[example]]
 name = "example_patched_code"
 path = "example_patched_code.rs"
 
