@@ -34,7 +34,12 @@ struct SystemConfig {
 
 impl AutomorphicFieldSystem {
     fn audit_function(&mut self, name: &str, details: &str) -> Result<(), String> {
-        self.audit_trail.push(format!("[AUDIT] {}: {}", name, details));
+        self.audit_trail.push(DataAudit {
+            source_function: name.to_string(),
+            timestamp: format!("{:?}", std::time::SystemTime::now()),
+            checksum: details.to_string(),
+            validation_status: ValidationStatus::Verified,
+        });
         Ok(())
     }
 
@@ -142,7 +147,7 @@ impl AutomorphicFieldSystem {
     // AUDITED: File list path resolution
     fn get_file_list_path(&self) -> Result<String, String> {
         let candidates = vec![
-            "/mnt/data1/files.txt",
+            "/mnt/data1/files.txt".to_string(),
             format!("{}/files.txt", self.config.repository_root),
             format!("{}/file_list.txt", self.config.output_directory),
         ];
