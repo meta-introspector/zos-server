@@ -1,5 +1,23 @@
 { pkgs ? import <nixpkgs> {} }:
 
+let
+  # Get all binary names from Cargo.toml
+  mainBinaries = [
+    "zos_server"
+    "zos-dev-server"
+    "zos-dev-minimal"
+    "zos-dev-launch"
+  ];
+  
+  analysisBinaries = [
+    "markov_1_4m_analyzer"
+    "multi_repo_extractor"
+    "p2p_rustc_loader"
+    "p2p_rustc_test"
+  ];
+  
+  allBinaries = mainBinaries ++ analysisBinaries;
+in
 pkgs.rustPlatform.buildRustPackage rec {
   pname = "zos-server";
   version = "1.0.0";
@@ -18,16 +36,19 @@ pkgs.rustPlatform.buildRustPackage rec {
     openssl
   ];
 
-  # Build the standalone server
+  # Build all binaries
   buildPhase = ''
-    cd zos-minimal-server
-    cargo build --release
+    cargo build --release --bins
   '';
 
   installPhase = ''
     mkdir -p $out/bin
-    cp target/release/zos-minimal-server $out/bin/
-    cp ../install-from-node.sh $out/bin/
+    
+    # Copy all binaries
+    ${pkgs.lib.concatMapStringsSep "\n    " (bin: "cp target/release/${bin} $out/bin/") allBinaries}
+    
+    # Helper scripts
+    cp install-from-node.sh $out/bin/ || true
   '';
 
   meta = with pkgs.lib; {
