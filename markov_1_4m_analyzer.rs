@@ -46,7 +46,7 @@ fn analyze_file_markov(path: &str) -> Option<MarkovFingerprint> {
 
 fn main() {
     println!("🧬 Markov Chain Analysis on 1.4M Rust Files");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     // Find all Rust files
     let rust_files: Vec<String> = walkdir::WalkDir::new("/")

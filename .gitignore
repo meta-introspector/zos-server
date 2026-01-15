@@ -18,3 +18,17 @@ reverse_ending
 # Ignore generated files
 *.csv
 rustc_hir_build_report.txt
+models/
+
+*.log
+data/
+build_logs/
+check_errors/
+lattice_test_results/
+compilation-analysis/
+mir_dump/
+security_audit/
+telemetry/
+result
+*.bin
+*.dot

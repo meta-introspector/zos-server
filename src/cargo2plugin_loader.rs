@@ -1,7 +1,7 @@
 // Cargo to Plugin Loader - Automatic Plugin Hierarchy Generation
-use crate::binary_inspector::{SecurityLevel, FunctionClassification};
-use std::collections::HashMap;
+use crate::binary_inspector::{FunctionClassification, SecurityLevel};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// Plugin hierarchy generated from Cargo project
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -98,7 +98,8 @@ impl Cargo2PluginLoader {
         let virtualization_features = self.generate_virtualization_features(&secured_functions);
 
         // Calculate security classification
-        let security_classification = self.calculate_security_classification(&public_functions, &secured_functions);
+        let security_classification =
+            self.calculate_security_classification(&public_functions, &secured_functions);
 
         Ok(PluginHierarchy {
             crate_name: cargo_toml.name,
@@ -114,7 +115,8 @@ impl Cargo2PluginLoader {
             .map_err(|e| format!("Failed to read Cargo.toml: {}", e))?;
 
         // Simplified TOML parsing
-        let name = content.lines()
+        let name = content
+            .lines()
             .find(|line| line.starts_with("name"))
             .and_then(|line| line.split('=').nth(1))
             .map(|s| s.trim().trim_matches('"').to_string())
@@ -125,16 +127,22 @@ impl Cargo2PluginLoader {
 
     fn discover_source_files(&self, _cargo_toml: &CargoToml) -> Result<Vec<String>, String> {
         // Discover Rust source files
-        Ok(vec![
-            "src/lib.rs".to_string(),
-            "src/main.rs".to_string(),
-        ])
+        Ok(vec!["src/lib.rs".to_string(), "src/main.rs".to_string()])
     }
 
     fn get_accessible_roles(&self, level: &SecurityLevel) -> Vec<String> {
         match level {
-            SecurityLevel::Safe => vec!["user".to_string(), "developer".to_string(), "admin".to_string(), "root".to_string()],
-            SecurityLevel::Controlled => vec!["developer".to_string(), "admin".to_string(), "root".to_string()],
+            SecurityLevel::Safe => vec![
+                "user".to_string(),
+                "developer".to_string(),
+                "admin".to_string(),
+                "root".to_string(),
+            ],
+            SecurityLevel::Controlled => vec![
+                "developer".to_string(),
+                "admin".to_string(),
+                "root".to_string(),
+            ],
             SecurityLevel::Privileged => vec!["admin".to_string(), "root".to_string()],
             SecurityLevel::Critical => vec!["root".to_string()],
             SecurityLevel::Forbidden => vec![],
@@ -150,11 +158,15 @@ impl Cargo2PluginLoader {
         }
     }
 
-    fn generate_virtualization_features(&self, secured_functions: &[SecuredFunction]) -> Vec<VirtualizationFeature> {
+    fn generate_virtualization_features(
+        &self,
+        secured_functions: &[SecuredFunction],
+    ) -> Vec<VirtualizationFeature> {
         let mut features = Vec::new();
 
         // Group functions by security level for virtualization
-        let privileged_funcs: Vec<String> = secured_functions.iter()
+        let privileged_funcs: Vec<String> = secured_functions
+            .iter()
             .filter(|f| f.security_level == SecurityLevel::Privileged)
             .map(|f| f.name.clone())
             .collect();
@@ -167,7 +179,8 @@ impl Cargo2PluginLoader {
             });
         }
 
-        let critical_funcs: Vec<String> = secured_functions.iter()
+        let critical_funcs: Vec<String> = secured_functions
+            .iter()
             .filter(|f| f.security_level == SecurityLevel::Critical)
             .map(|f| f.name.clone())
             .collect();
@@ -183,7 +196,11 @@ impl Cargo2PluginLoader {
         features
     }
 
-    fn calculate_security_classification(&self, public: &[PublicFunction], secured: &[SecuredFunction]) -> SecurityClassification {
+    fn calculate_security_classification(
+        &self,
+        public: &[PublicFunction],
+        secured: &[SecuredFunction],
+    ) -> SecurityClassification {
         let mut safe_count = 0;
         let mut controlled_count = 0;
         let mut privileged_count = 0;
@@ -222,13 +239,25 @@ impl Cargo2PluginLoader {
         let mut code = String::new();
 
         // Generate feature flags
-        code.push_str(&self.macro_generator.generate_feature_flags(&hierarchy.virtualization_features));
+        code.push_str(
+            &self
+                .macro_generator
+                .generate_feature_flags(&hierarchy.virtualization_features),
+        );
 
         // Generate public API
-        code.push_str(&self.macro_generator.generate_public_api(&hierarchy.public_functions));
+        code.push_str(
+            &self
+                .macro_generator
+                .generate_public_api(&hierarchy.public_functions),
+        );
 
         // Generate secured API with virtualization
-        code.push_str(&self.macro_generator.generate_secured_api(&hierarchy.secured_functions));
+        code.push_str(
+            &self
+                .macro_generator
+                .generate_secured_api(&hierarchy.secured_functions),
+        );
 
         // Generate virtualization macros
         for feature in &hierarchy.virtualization_features {
@@ -300,7 +329,12 @@ impl FunctionAnalyzer {
         line.find(prefix)
             .map(|start| &line[start + prefix.len()..])
             .and_then(|rest| rest.find('('))
-            .map(|end| line[line.find(prefix).unwrap() + prefix.len()..line.find(prefix).unwrap() + prefix.len() + end].trim().to_string())
+            .map(|end| {
+                line[line.find(prefix).unwrap() + prefix.len()
+                    ..line.find(prefix).unwrap() + prefix.len() + end]
+                    .trim()
+                    .to_string()
+            })
     }
 
     fn classify_function_security(&self, name: &str) -> SecurityLevel {
@@ -378,7 +412,9 @@ mod tests {
     #[test]
     fn test_function_analysis() {
         let analyzer = FunctionAnalyzer::new();
-        let func = analyzer.extract_function("pub fn safe_add(a: i32, b: i32) -> i32").unwrap();
+        let func = analyzer
+            .extract_function("pub fn safe_add(a: i32, b: i32) -> i32")
+            .unwrap();
 
         assert_eq!(func.name, "safe_add");
         assert!(func.is_public);

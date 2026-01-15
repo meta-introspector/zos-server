@@ -85,8 +85,8 @@ impl BinaryClassifier {
 
     /// Classify a .so file as safe or unsafe
     pub fn classify_binary(&self, so_path: &str) -> Result<ClassificationResult, String> {
-        let binary_data = std::fs::read(so_path)
-            .map_err(|e| format!("Failed to read binary: {}", e))?;
+        let binary_data =
+            std::fs::read(so_path).map_err(|e| format!("Failed to read binary: {}", e))?;
 
         // Analyze binary patterns
         let pattern_analysis = self.analyze_patterns(&binary_data);
@@ -110,7 +110,7 @@ impl BinaryClassifier {
         })
     }
 
-    fn analyze_patterns(&self, binary_data: &[u8]) -> PatternAnalysis {
+    pub fn analyze_patterns(&self, binary_data: &[u8]) -> PatternAnalysis {
         let mut analysis = PatternAnalysis {
             syscall_patterns: 0,
             dangerous_patterns: 0,
@@ -165,14 +165,21 @@ impl BinaryClassifier {
     }
 
     /// Compare before and after stripping
-    pub fn compare_binaries(&self, before_path: &str, after_path: &str) -> Result<ComparisonResult, String> {
+    pub fn compare_binaries(
+        &self,
+        before_path: &str,
+        after_path: &str,
+    ) -> Result<ComparisonResult, String> {
         let before = self.classify_binary(before_path)?;
         let after = self.classify_binary(after_path)?;
 
         Ok(ComparisonResult {
             syscalls_removed: before.syscall_count.saturating_sub(after.syscall_count),
             risk_reduction: before.risk_score - after.risk_score,
-            symbols_stripped: before.dangerous_symbols.len().saturating_sub(after.dangerous_symbols.len()),
+            symbols_stripped: before
+                .dangerous_symbols
+                .len()
+                .saturating_sub(after.dangerous_symbols.len()),
             stripping_successful: after.stripped_verification,
             before_classification: before,
             after_classification: after,
@@ -181,10 +188,10 @@ impl BinaryClassifier {
 }
 
 #[derive(Debug)]
-struct PatternAnalysis {
-    syscall_patterns: usize,
-    dangerous_patterns: usize,
-    safe_patterns: usize,
+pub struct PatternAnalysis {
+    pub syscall_patterns: usize,
+    pub dangerous_patterns: usize,
+    pub safe_patterns: usize,
 }
 
 #[derive(Debug)]
@@ -226,10 +233,7 @@ impl SymbolAnalyzer {
         };
 
         // Use objdump to extract symbols
-        if let Ok(output) = Command::new("objdump")
-            .args(&["-T", so_path])
-            .output()
-        {
+        if let Ok(output) = Command::new("objdump").args(&["-T", so_path]).output() {
             let symbols_output = String::from_utf8_lossy(&output.stdout);
 
             for line in symbols_output.lines() {
@@ -295,16 +299,21 @@ impl VerificationSystem {
 
         println!("🔍 Binary Comparison Results:");
         println!("  Syscalls removed: {}", comparison.syscalls_removed);
-        println!("  Risk reduction: {:.2}%", comparison.risk_reduction * 100.0);
+        println!(
+            "  Risk reduction: {:.2}%",
+            comparison.risk_reduction * 100.0
+        );
         println!("  Symbols stripped: {}", comparison.symbols_stripped);
-        println!("  Stripping successful: {}", comparison.stripping_successful);
+        println!(
+            "  Stripping successful: {}",
+            comparison.stripping_successful
+        );
 
         // Verification criteria
-        let verification_passed =
-            comparison.syscalls_removed > 0 &&
-            comparison.risk_reduction > 0.0 &&
-            comparison.stripping_successful &&
-            comparison.after_classification.is_safe;
+        let verification_passed = comparison.syscalls_removed > 0
+            && comparison.risk_reduction > 0.0
+            && comparison.stripping_successful
+            && comparison.after_classification.is_safe;
 
         if verification_passed {
             println!("✅ VERIFICATION PASSED: Binary is provably safe");
@@ -349,7 +358,11 @@ impl VerificationSystem {
             comparison.syscalls_removed,
             comparison.risk_reduction * 100.0,
             comparison.symbols_stripped,
-            if comparison.stripping_successful { "PASSED" } else { "FAILED" }
+            if comparison.stripping_successful {
+                "PASSED"
+            } else {
+                "FAILED"
+            }
         )
     }
 }

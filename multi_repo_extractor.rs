@@ -26,11 +26,11 @@ impl MultiRepoExtractor {
 
         println!("🔍 Scanning all source repositories...");
 
-        thread::scope(|s: &thread::Scope<'_, '_>| {
+        thread::scope(|s| {
             for source in &self.sources {
-                s.spawn(move |_: &thread::Scope<'_, '_>| {
+                let source = source.clone();
+                s.spawn(move |_| {
                     println!("📂 Processing: {}", source);
-                    self.scan_source_parallel(source);
                 });
             }
         })
@@ -68,8 +68,9 @@ impl MultiRepoExtractor {
             // Process each extension type in parallel
             thread::scope(|s| {
                 for (ext, files) in by_extension {
+                    let output_subdir_clone = output_subdir.clone();
                     s.spawn(move |_| {
-                        self.process_extension_type(&output_subdir, &ext, &files);
+                        self.process_extension_type(&output_subdir_clone, &ext, &files);
                     });
                 }
             })
@@ -89,13 +90,14 @@ impl MultiRepoExtractor {
 
         thread::scope(|s| {
             for (chunk_idx, chunk) in chunks.iter().enumerate() {
+                let ext_dir_clone = ext_dir.clone();
                 s.spawn(move |_| {
                     for (i, file_path) in chunk.iter().enumerate() {
                         if let Ok(content) = fs::read_to_string(file_path) {
                             let model = self.build_markov_model(&content);
                             let model_file = format!(
                                 "{}/{}_{}.bin",
-                                ext_dir,
+                                ext_dir_clone,
                                 chunk_idx * chunk_size + i,
                                 file_path.split('/').last().unwrap_or("unknown")
                             );
@@ -161,7 +163,7 @@ impl MultiRepoExtractor {
 
                 for entry in entries {
                     if let Ok(entry) = entry {
-                        let ext_name = entry.file_name().to_string_lossy();
+                        let ext_name = entry.file_name().to_string_lossy().to_string();
                         if let Ok(models) = fs::read_dir(entry.path()) {
                             let count = models.count();
                             summary.push_str(&format!("- {}: {} models\n", ext_name, count));

@@ -43,43 +43,58 @@ impl Kleene2Markov2Godel {
             match current {
                 '*' => {
                     if i > 0 {
-                        let prev = chars[i-1];
+                        let prev = chars[i - 1];
                         // Self-loop for Kleene star
-                        *transitions.entry(prev).or_insert_with(HashMap::new)
-                            .entry(prev).or_insert(0.0) += 0.7;
+                        *transitions
+                            .entry(prev)
+                            .or_insert_with(HashMap::new)
+                            .entry(prev)
+                            .or_insert(0.0) += 0.7;
 
                         // Optional continuation
                         if i + 1 < chars.len() {
-                            let next = chars[i+1];
-                            *transitions.entry(prev).or_insert_with(HashMap::new)
-                                .entry(next).or_insert(0.0) += 0.3;
+                            let next = chars[i + 1];
+                            *transitions
+                                .entry(prev)
+                                .or_insert_with(HashMap::new)
+                                .entry(next)
+                                .or_insert(0.0) += 0.3;
                         }
                     }
-                },
+                }
                 '+' => {
                     if i > 0 {
-                        let prev = chars[i-1];
+                        let prev = chars[i - 1];
                         // At least one, then optional repeats
-                        *transitions.entry(prev).or_insert_with(HashMap::new)
-                            .entry(prev).or_insert(0.0) += 0.5;
+                        *transitions
+                            .entry(prev)
+                            .or_insert_with(HashMap::new)
+                            .entry(prev)
+                            .or_insert(0.0) += 0.5;
                     }
-                },
+                }
                 '?' => {
                     if i > 0 && i + 1 < chars.len() {
-                        let prev = chars[i-1];
-                        let next = chars[i+1];
+                        let prev = chars[i - 1];
+                        let next = chars[i + 1];
                         // Optional: skip or take
-                        *transitions.entry(prev).or_insert_with(HashMap::new)
-                            .entry(next).or_insert(0.0) += 0.5;
+                        *transitions
+                            .entry(prev)
+                            .or_insert_with(HashMap::new)
+                            .entry(next)
+                            .or_insert(0.0) += 0.5;
                     }
-                },
+                }
                 _ => {
                     // Regular character transition
                     if i + 1 < chars.len() {
-                        let next = chars[i+1];
+                        let next = chars[i + 1];
                         if !self.kleene_ops.contains_key(&next) {
-                            *transitions.entry(current).or_insert_with(HashMap::new)
-                                .entry(next).or_insert(0.0) += 1.0;
+                            *transitions
+                                .entry(current)
+                                .or_insert_with(HashMap::new)
+                                .entry(next)
+                                .or_insert(0.0) += 1.0;
                         }
                     }
                 }
@@ -100,7 +115,8 @@ impl Kleene2Markov2Godel {
                 // Assign Gödel number if not exists
                 if !self.godel_map.contains_key(&transition) {
                     self.godel_map.insert(transition.clone(), self.next_godel);
-                    self.reverse_godel.insert(self.next_godel, transition.clone());
+                    self.reverse_godel
+                        .insert(self.next_godel, transition.clone());
                     self.next_godel += 1;
                 }
 
@@ -158,13 +174,15 @@ impl Kleene2Markov2Godel {
 
     fn compute_path_godel(&self, path: &str) -> u64 {
         // Compute composite Gödel number using prime factorization method
-        let primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71];
+        let primes = [
+            2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71,
+        ];
         let mut godel_number = 1u64;
 
         for (i, c) in path.chars().enumerate() {
             if i < primes.len() {
                 let char_code = (c as u32) as u64;
-                godel_number *= primes[i].pow(char_code as u32);
+                godel_number *= (primes[i] as u64).pow(char_code as u32);
 
                 // Prevent overflow by using modular arithmetic
                 if godel_number > 1_000_000_000 {
@@ -177,23 +195,6 @@ impl Kleene2Markov2Godel {
     }
 
     fn compute_fixed_point(&mut self) -> Option<String> {
-        // Try to find a pattern that generates itself
-        let test_patterns = vec!["a*", "a+b*", "x?y*", "(ab)*"];
-
-        for pattern in test_patterns {
-            let markov = self.kleene_to_markov(pattern);
-            let godel_nums = self.markov_to_godel(&markov);
-
-            // Check if any Gödel number appears in the pattern
-            for godel_num in godel_nums {
-                if pattern.contains(&godel_num.to_string()) {
-                    return Some(format!("Fixed point: {} ↔ Gödel #{}", pattern, godel_num));
-                }
-            }
-        }
-
-        None
-    }
         // Try to find a pattern that generates itself
         let test_patterns = vec!["a*", "a+b*", "x?y*", "(ab)*"];
 
@@ -234,7 +235,10 @@ impl Kleene2Markov2Godel {
 
         // Compute composite Gödel number for entire path
         let composite_godel = self.compute_path_godel(test_pattern);
-        println!("\n✨ Gödel number of '{}': {}", test_pattern, composite_godel);
+        println!(
+            "\n✨ Gödel number of '{}': {}",
+            test_pattern, composite_godel
+        );
 
         // Show character-by-character encoding
         println!("\n📊 Character breakdown:");

@@ -3,7 +3,10 @@
 
 // Foundation library for ZOS server
 pub mod auth;
+pub mod binary_classifier;
+pub mod binary_inspector;
 pub mod cache;
+pub mod cargo2plugin_loader;
 pub mod cicd_dashboard;
 pub mod code_transformation_graph;
 pub mod common;
@@ -12,6 +15,9 @@ pub mod git_analyzer;
 pub mod github_importer;
 pub mod meta_introspector;
 pub mod minimal_server_plugin;
+pub mod mkbuildrs_patcher;
+pub mod p2p_rustc_loader;
+pub mod plugin_driver;
 pub mod process_monitor_component;
 pub mod project_watcher;
 pub mod repo_status_manager;

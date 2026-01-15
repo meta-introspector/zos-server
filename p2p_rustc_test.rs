@@ -1,4 +1,4 @@
-use crate::p2p_rustc_loader::P2PRustcLoader;
+use zos_server::p2p_rustc_loader::P2PRustcLoader;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧟 P2P RUSTC LOADER TEST");

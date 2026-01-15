@@ -1,5 +1,7 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use std::io::Write;
 use std::path::Path;
 use std::process::Command;
 
@@ -15,7 +17,7 @@ struct RustcHIRExtractor {
     failed_hir: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct HIRArtifact {
     source_path: String,
     hir_content: String,
@@ -25,7 +27,7 @@ struct HIRArtifact {
     transition_count: u64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct SourceArtifact {
     path: String,
     content: String,
@@ -35,7 +37,7 @@ struct SourceArtifact {
     transition_count: u64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct BuildManifest {
     rustc_root: String,
     total_modules: u32,
@@ -44,14 +46,14 @@ struct BuildManifest {
     artifacts_generated: Vec<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 enum CompilationStatus {
     Success,
     Failed(String),
     Skipped(String),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 enum ModuleType {
     Library,
     Binary,
@@ -262,10 +264,11 @@ impl RustcHIRExtractor {
             }
         }
 
+        let hir_size = hir_content.len();
         HIRArtifact {
             source_path: file_path.to_string(),
             hir_content,
-            hir_size: hir_content.len(),
+            hir_size,
             compilation_status: status,
             markov_transitions,
             transition_count,

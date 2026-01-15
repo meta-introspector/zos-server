@@ -1,15 +1,15 @@
 // Binary Security Classification System
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// Security lattice levels based on LMFDB orbits
-#[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum SecurityLevel {
-    Safe = 0,        // Pure functions, no side effects
-    Controlled = 1,  // Limited I/O, rate limited
-    Privileged = 2,  // System operations, admin only
-    Critical = 3,    // Syscalls, root only
-    Forbidden = 4,   // Blocked operations
+    Safe = 0,       // Pure functions, no side effects
+    Controlled = 1, // Limited I/O, rate limited
+    Privileged = 2, // System operations, admin only
+    Critical = 3,   // Syscalls, root only
+    Forbidden = 4,  // Blocked operations
 }
 
 /// Function classification in security lattice
@@ -44,30 +44,57 @@ impl BinaryInspector {
 
     fn setup_lmfdb_orbits(&mut self) {
         // Map LMFDB orbits to security levels
-        self.orbit_mappings.insert("arithmetic".to_string(), SecurityLevel::Safe);
-        self.orbit_mappings.insert("io_operations".to_string(), SecurityLevel::Controlled);
-        self.orbit_mappings.insert("system_config".to_string(), SecurityLevel::Privileged);
-        self.orbit_mappings.insert("kernel_interface".to_string(), SecurityLevel::Critical);
-        self.orbit_mappings.insert("malicious".to_string(), SecurityLevel::Forbidden);
+        self.orbit_mappings
+            .insert("arithmetic".to_string(), SecurityLevel::Safe);
+        self.orbit_mappings
+            .insert("io_operations".to_string(), SecurityLevel::Controlled);
+        self.orbit_mappings
+            .insert("system_config".to_string(), SecurityLevel::Privileged);
+        self.orbit_mappings
+            .insert("kernel_interface".to_string(), SecurityLevel::Critical);
+        self.orbit_mappings
+            .insert("malicious".to_string(), SecurityLevel::Forbidden);
     }
 
     fn setup_symbol_filters(&mut self) {
         // Define which symbols are allowed at each security level
-        self.symbol_filters.insert(SecurityLevel::Safe, vec![
-            "add".to_string(), "sub".to_string(), "mul".to_string(), "div".to_string(),
-        ]);
+        self.symbol_filters.insert(
+            SecurityLevel::Safe,
+            vec![
+                "add".to_string(),
+                "sub".to_string(),
+                "mul".to_string(),
+                "div".to_string(),
+            ],
+        );
 
-        self.symbol_filters.insert(SecurityLevel::Controlled, vec![
-            "read".to_string(), "write".to_string(), "open".to_string(), "close".to_string(),
-        ]);
+        self.symbol_filters.insert(
+            SecurityLevel::Controlled,
+            vec![
+                "read".to_string(),
+                "write".to_string(),
+                "open".to_string(),
+                "close".to_string(),
+            ],
+        );
 
-        self.symbol_filters.insert(SecurityLevel::Privileged, vec![
-            "chmod".to_string(), "chown".to_string(), "mount".to_string(),
-        ]);
+        self.symbol_filters.insert(
+            SecurityLevel::Privileged,
+            vec![
+                "chmod".to_string(),
+                "chown".to_string(),
+                "mount".to_string(),
+            ],
+        );
 
-        self.symbol_filters.insert(SecurityLevel::Critical, vec![
-            "execve".to_string(), "ptrace".to_string(), "setuid".to_string(),
-        ]);
+        self.symbol_filters.insert(
+            SecurityLevel::Critical,
+            vec![
+                "execve".to_string(),
+                "ptrace".to_string(),
+                "setuid".to_string(),
+            ],
+        );
     }
 
     /// Inspect binary and classify all functions
@@ -78,7 +105,8 @@ impl BinaryInspector {
 
         for symbol in symbols {
             let classification = self.classify_function(&symbol);
-            self.classifications.insert(symbol.clone(), classification.clone());
+            self.classifications
+                .insert(symbol.clone(), classification.clone());
             classifications.push(classification);
         }
 
@@ -199,7 +227,8 @@ impl PluginSecurityLattice {
     /// Classify all functions in a plugin
     pub fn classify_plugin(&mut self, plugin_name: &str, so_path: &str) -> Result<(), String> {
         let classifications = self.inspector.inspect_binary(so_path)?;
-        self.plugin_classifications.insert(plugin_name.to_string(), classifications);
+        self.plugin_classifications
+            .insert(plugin_name.to_string(), classifications);
         Ok(())
     }
 
@@ -208,7 +237,8 @@ impl PluginSecurityLattice {
         self.plugin_classifications
             .get(plugin_name)
             .map(|funcs| {
-                funcs.iter()
+                funcs
+                    .iter()
                     .map(|f| f.security_level.clone())
                     .max()
                     .unwrap_or(SecurityLevel::Safe)
@@ -245,24 +275,33 @@ impl PluginSecurityLattice {
 
     /// Prove plugin security properties
     pub fn prove_plugin_security(&self, plugin_name: &str) -> SecurityProof {
-        let functions = self.plugin_classifications.get(plugin_name).unwrap_or(&Vec::new());
+        let empty_vec = Vec::new();
+        let functions = self
+            .plugin_classifications
+            .get(plugin_name)
+            .unwrap_or(&empty_vec);
 
-        let max_level = functions.iter()
+        let max_level = functions
+            .iter()
             .map(|f| f.security_level.clone())
             .max()
             .unwrap_or(SecurityLevel::Safe);
 
-        let total_memory = functions.iter()
-            .map(|f| f.memory_usage)
-            .sum();
+        let total_memory = functions.iter().map(|f| f.memory_usage).sum();
 
         SecurityProof {
             plugin_name: plugin_name.to_string(),
             max_security_level: max_level,
             total_functions: functions.len(),
             total_memory_usage: total_memory,
-            safe_functions: functions.iter().filter(|f| f.security_level == SecurityLevel::Safe).count(),
-            critical_functions: functions.iter().filter(|f| f.security_level == SecurityLevel::Critical).count(),
+            safe_functions: functions
+                .iter()
+                .filter(|f| f.security_level == SecurityLevel::Safe)
+                .count(),
+            critical_functions: functions
+                .iter()
+                .filter(|f| f.security_level == SecurityLevel::Critical)
+                .count(),
         }
     }
 }
@@ -287,7 +326,9 @@ mod tests {
         let classifications = inspector.inspect_binary("rustc_driver.so").unwrap();
 
         assert!(!classifications.is_empty());
-        assert!(classifications.iter().any(|c| c.security_level == SecurityLevel::Critical));
+        assert!(classifications
+            .iter()
+            .any(|c| c.security_level == SecurityLevel::Critical));
     }
 
     #[test]

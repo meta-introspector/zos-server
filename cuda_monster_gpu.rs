@@ -110,7 +110,7 @@ __global__ void clifford_algebra_kernel(float4* vectors, float4* result, int n) 
 
         // Generate input data with Monster Group patterns
         let input_data: Vec<f32> = (0..data_size)
-            .map(|i| (i as f32) * 3.14159 / 71.0) // Scale by Monster prime 71
+            .map(|i| (i as f32) * std::f32::consts::PI / 71.0) // Scale by Monster prime 71
             .collect();
 
         println!("   📤 Uploading {} bytes to GPU...", input_data.len() * 4);

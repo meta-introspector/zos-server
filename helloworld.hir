@@ -1,0 +1,7 @@
+#[attr = MacroUse {arguments: UseAll}]
+extern crate std;
+#[prelude_import]
+use ::std::prelude::rust_2015::*;
+fn main() {
+    { ::std::io::_print(format_arguments::from_str("Hello, world!\n")); };
+}

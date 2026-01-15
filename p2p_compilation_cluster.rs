@@ -1,3 +1,4 @@
+use std::io::Read;
 // 🧟 ENHANCED SHIM WITH P2P FEEDERS: Distributed compilation cluster
 use libloading::Library;
 use serde_json::json;

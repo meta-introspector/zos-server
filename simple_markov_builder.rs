@@ -1,6 +1,6 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct SimpleMarkovModel {
@@ -35,19 +35,17 @@ impl SimpleMarkovModel {
         let json = serde_json::to_string_pretty(self)
             .map_err(|e| format!("Serialization error: {}", e))?;
 
-        fs::write(path, json)
-            .map_err(|e| format!("Write error: {}", e))?;
+        fs::write(path, json).map_err(|e| format!("Write error: {}", e))?;
 
         println!("💾 Model saved to: {}", path);
         Ok(())
     }
 
     pub fn load_model(path: &str) -> Result<Self, String> {
-        let content = fs::read_to_string(path)
-            .map_err(|e| format!("Read error: {}", e))?;
+        let content = fs::read_to_string(path).map_err(|e| format!("Read error: {}", e))?;
 
-        let model: Self = serde_json::from_str(&content)
-            .map_err(|e| format!("Deserialization error: {}", e))?;
+        let model: Self =
+            serde_json::from_str(&content).map_err(|e| format!("Deserialization error: {}", e))?;
 
         println!("📂 Model loaded from: {}", path);
         Ok(model)
@@ -82,10 +80,9 @@ impl SimpleMarkovModel {
                 }
             }
         }
-        self.model_metadata.repos_scanned.push(repo_path.to_string_lossy().to_string());
-                }
-            }
-        }
+        self.model_metadata
+            .repos_scanned
+            .push(repo_path.to_string_lossy().to_string());
         Ok(())
     }
 
@@ -96,7 +93,8 @@ impl SimpleMarkovModel {
             let from = window[0];
             let to = window[1];
 
-            *self.transitions
+            *self
+                .transitions
                 .entry(from)
                 .or_insert_with(HashMap::new)
                 .entry(to)
@@ -188,15 +186,17 @@ impl SimpleMarkovModel {
         }
         true
     }
+
+    pub fn print_stats(&self) {
         println!("🔍 Markov Model Statistics:");
         println!("  Total characters processed: {}", self.total_chars);
         println!("  Unique characters: {}", self.transitions.len());
 
         // Show top transitions
-        let mut all_transitions: Vec<_> = self.transitions.iter()
-            .flat_map(|(from, to_map)| {
-                to_map.iter().map(move |(to, count)| ((*from, *to), *count))
-            })
+        let mut all_transitions: Vec<_> = self
+            .transitions
+            .iter()
+            .flat_map(|(from, to_map)| to_map.iter().map(move |(to, count)| ((*from, *to), *count)))
             .collect();
         all_transitions.sort_by_key(|(_, count)| std::cmp::Reverse(*count));
 
@@ -224,7 +224,6 @@ fn main() {
     }
 
     model.print_stats();
-
 
     // Find 'enum' statistics
     let (enum_count, enum_patterns) = model.find_word_stats("enum");

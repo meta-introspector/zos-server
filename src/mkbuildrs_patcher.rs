@@ -7,7 +7,9 @@ use std::path::Path;
 macro_rules! mkbuildrs {
     () => {
         fn main() {
-            zos_security_patcher::patch_cargo_project();
+            // TODO: Implement zos_security_patcher crate
+            // zos_security_patcher::patch_cargo_project();
+            println!("cargo:warning=ZOS Security Patcher would run here");
         }
     };
 }
@@ -214,7 +216,9 @@ pub use root::virtual::syscall;
         if let Ok(entries) = fs::read_dir("src") {
             for entry in entries.flatten() {
                 if let Some(ext) = entry.path().extension() {
-                    if ext == "rs" && entry.path().file_name() != Some(std::ffi::OsStr::new("security")) {
+                    if ext == "rs"
+                        && entry.path().file_name() != Some(std::ffi::OsStr::new("security"))
+                    {
                         self.patch_rust_file(&entry.path());
                     }
                 }
@@ -229,20 +233,32 @@ pub use root::virtual::syscall;
 
             // Patch dangerous std::fs calls
             if patched.contains("std::fs::") {
-                patched = patched.replace("std::fs::read", "crate::security::user::virtual::filesystem::read");
-                patched = patched.replace("std::fs::write", "crate::security::user::virtual::filesystem::write");
+                patched = patched.replace(
+                    "std::fs::read",
+                    "crate::security::user::virtual::filesystem::read",
+                );
+                patched = patched.replace(
+                    "std::fs::write",
+                    "crate::security::user::virtual::filesystem::write",
+                );
                 needs_patch = true;
             }
 
             // Patch network calls
             if patched.contains("std::net::") {
-                patched = patched.replace("std::net::TcpStream::connect", "crate::security::admin::virtual::network::connect");
+                patched = patched.replace(
+                    "std::net::TcpStream::connect",
+                    "crate::security::admin::virtual::network::connect",
+                );
                 needs_patch = true;
             }
 
             // Patch syscalls
             if patched.contains("libc::execve") {
-                patched = patched.replace("libc::execve", "crate::security::root::virtual::syscall::execve");
+                patched = patched.replace(
+                    "libc::execve",
+                    "crate::security::root::virtual::syscall::execve",
+                );
                 needs_patch = true;
             }
 
