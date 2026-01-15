@@ -30,7 +30,8 @@ impl MarkovComparison {
 
         let chars: Vec<char> = dump_content.chars().collect();
         for window in chars.windows(2) {
-            *self.dump_transitions
+            *self
+                .dump_transitions
                 .entry(window[0])
                 .or_insert_with(HashMap::new)
                 .entry(window[1])
@@ -55,7 +56,8 @@ impl MarkovComparison {
                 if path.ends_with(".rs") {
                     let chars: Vec<char> = path.chars().collect();
                     for window in chars.windows(2) {
-                        *self.path_transitions
+                        *self
+                            .path_transitions
                             .entry(window[0])
                             .or_insert_with(HashMap::new)
                             .entry(window[1])
@@ -64,14 +66,18 @@ impl MarkovComparison {
                     }
 
                     count += 1;
-                    if count >= 10000 { // Sample first 10k rust files
+                    if count >= 10000 {
+                        // Sample first 10k rust files
                         break;
                     }
                 }
             }
         }
 
-        println!("  Path model: {} transitions from {} files", self.path_total, count);
+        println!(
+            "  Path model: {} transitions from {} files",
+            self.path_total, count
+        );
         Ok(())
     }
 

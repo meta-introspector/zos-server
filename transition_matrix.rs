@@ -1,6 +1,6 @@
+use std::collections::HashMap;
 use std::fs;
 use std::io::Read;
-use std::collections::HashMap;
 
 struct TransitionMatrix {
     models: Vec<ModelSample>,
@@ -20,8 +20,7 @@ impl TransitionMatrix {
     fn sample_top_models(&mut self) -> Result<(), String> {
         println!("🔍 Sampling top 3 transitions from each model...");
 
-        let entries = fs::read_dir(".")
-            .map_err(|e| format!("Cannot read directory: {}", e))?;
+        let entries = fs::read_dir(".").map_err(|e| format!("Cannot read directory: {}", e))?;
 
         for entry in entries.flatten() {
             let path = entry.path();
@@ -42,18 +41,20 @@ impl TransitionMatrix {
     }
 
     fn extract_top_transitions(&self, filename: &str) -> Result<Vec<(char, char, u32)>, String> {
-        let mut file = fs::File::open(filename)
-            .map_err(|e| format!("Cannot open {}: {}", filename, e))?;
+        let mut file =
+            fs::File::open(filename).map_err(|e| format!("Cannot open {}: {}", filename, e))?;
 
         // Read transition count
         let mut buffer = [0u8; 4];
-        file.read_exact(&mut buffer).map_err(|_| "Cannot read count")?;
+        file.read_exact(&mut buffer)
+            .map_err(|_| "Cannot read count")?;
         let total_transitions = u32::from_le_bytes(buffer);
 
         let mut transitions = Vec::new();
 
         // Read all transitions and find top 3
-        for _ in 0..std::cmp::min(total_transitions, 1000) { // Limit to prevent memory issues
+        for _ in 0..std::cmp::min(total_transitions, 1000) {
+            // Limit to prevent memory issues
             if file.read_exact(&mut buffer).is_ok() {
                 let from = u32::from_le_bytes(buffer);
                 if file.read_exact(&mut buffer).is_ok() {
@@ -61,7 +62,11 @@ impl TransitionMatrix {
                     if file.read_exact(&mut buffer).is_ok() {
                         let count = u32::from_le_bytes(buffer);
 
-                        let from_char = if from <= 127 { char::from(from as u8) } else { '?' };
+                        let from_char = if from <= 127 {
+                            char::from(from as u8)
+                        } else {
+                            '?'
+                        };
                         let to_char = if to <= 127 { char::from(to as u8) } else { '?' };
 
                         transitions.push((from_char, to_char, count));
@@ -120,18 +125,38 @@ impl TransitionMatrix {
 
         // Print header
         if let Some(header) = matrix.first() {
-            println!("{:<25} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8}",
-                header[0], header[1], header[2], header[3],
-                header[4], header[5], header[6], header[7], header[8], header[9]);
+            println!(
+                "{:<25} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8}",
+                header[0],
+                header[1],
+                header[2],
+                header[3],
+                header[4],
+                header[5],
+                header[6],
+                header[7],
+                header[8],
+                header[9]
+            );
             println!("{}", "-".repeat(120));
         }
 
         // Print top 20 rows
         for row in matrix.iter().skip(1).take(20) {
             if row.len() >= 10 {
-                println!("{:<25} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8}",
+                println!(
+                    "{:<25} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8}",
                     &row[0][..std::cmp::min(24, row[0].len())],
-                    row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9]);
+                    row[1],
+                    row[2],
+                    row[3],
+                    row[4],
+                    row[5],
+                    row[6],
+                    row[7],
+                    row[8],
+                    row[9]
+                );
             }
         }
 
@@ -165,7 +190,8 @@ impl TransitionMatrix {
             for (from, to, count) in &model.top_transitions {
                 *char_frequency.entry(*from).or_insert(0) += 1;
                 *char_frequency.entry(*to).or_insert(0) += 1;
-                *transition_frequency.entry((*from, *to)).or_insert(0) += std::cmp::min(*count, 1000000); // Prevent overflow
+                *transition_frequency.entry((*from, *to)).or_insert(0) +=
+                    std::cmp::min(*count, 1000000); // Prevent overflow
             }
         }
 

@@ -28,7 +28,8 @@ impl HIRRustcComparison {
 
         let chars: Vec<char> = hir_content.chars().collect();
         for window in chars.windows(2) {
-            *self.hir_model
+            *self
+                .hir_model
                 .entry(window[0])
                 .or_insert_with(HashMap::new)
                 .entry(window[1])
@@ -58,7 +59,8 @@ impl HIRRustcComparison {
             file.read_exact(&mut buffer).unwrap();
             let count = u32::from_le_bytes(buffer);
 
-            *self.rustc_path_model
+            *self
+                .rustc_path_model
                 .entry(from)
                 .or_insert_with(HashMap::new)
                 .entry(to)
@@ -79,15 +81,22 @@ impl HIRRustcComparison {
             file.read_exact(&mut buffer).unwrap();
             let count = u32::from_le_bytes(buffer);
 
-            *self.rustc_content_model
+            *self
+                .rustc_content_model
                 .entry(from)
                 .or_insert_with(HashMap::new)
                 .entry(to)
                 .or_insert(0) += count;
         }
 
-        println!("  Loaded rustc path model: {} states", self.rustc_path_model.len());
-        println!("  Loaded rustc content model: {} states", self.rustc_content_model.len());
+        println!(
+            "  Loaded rustc path model: {} states",
+            self.rustc_path_model.len()
+        );
+        println!(
+            "  Loaded rustc content model: {} states",
+            self.rustc_content_model.len()
+        );
 
         Ok(())
     }
@@ -123,8 +132,16 @@ impl HIRRustcComparison {
             }
         }
 
-        let hir_path_sim = if hir_path_total > 0 { hir_path_common as f64 / hir_path_total as f64 } else { 0.0 };
-        let hir_content_sim = if hir_content_total > 0 { hir_content_common as f64 / hir_content_total as f64 } else { 0.0 };
+        let hir_path_sim = if hir_path_total > 0 {
+            hir_path_common as f64 / hir_path_total as f64
+        } else {
+            0.0
+        };
+        let hir_content_sim = if hir_content_total > 0 {
+            hir_content_common as f64 / hir_content_total as f64
+        } else {
+            0.0
+        };
 
         (hir_path_sim, hir_content_sim)
     }
@@ -141,20 +158,26 @@ impl HIRRustcComparison {
                         let pattern = format!("{}{}{}", from, to, next);
 
                         // Check if pattern exists in rustc path model
-                        if self.rustc_path_model.get(from)
+                        if self
+                            .rustc_path_model
+                            .get(from)
                             .and_then(|m| m.get(to))
                             .and_then(|_| self.rustc_path_model.get(to))
                             .and_then(|m| m.get(next))
-                            .is_some() {
+                            .is_some()
+                        {
                             hir_path_shared.push(pattern.clone());
                         }
 
                         // Check if pattern exists in rustc content model
-                        if self.rustc_content_model.get(from)
+                        if self
+                            .rustc_content_model
+                            .get(from)
                             .and_then(|m| m.get(to))
                             .and_then(|_| self.rustc_content_model.get(to))
                             .and_then(|m| m.get(next))
-                            .is_some() {
+                            .is_some()
+                        {
                             hir_content_shared.push(pattern);
                         }
                     }
@@ -183,7 +206,10 @@ impl HIRRustcComparison {
 
         println!("\n🎯 Shared Pattern Analysis:");
         println!("  HIR-Path shared patterns: {}", hir_path_patterns.len());
-        println!("  HIR-Content shared patterns: {}", hir_content_patterns.len());
+        println!(
+            "  HIR-Content shared patterns: {}",
+            hir_content_patterns.len()
+        );
 
         println!("\n📝 HIR-Path shared patterns:");
         for pattern in hir_path_patterns.iter().take(8) {
@@ -196,7 +222,9 @@ impl HIRRustcComparison {
         }
 
         if hir_content_sim > hir_path_sim {
-            println!("\n✨ HIR MAPS MORE TO CONTENT: Compilation output reflects source code structure!");
+            println!(
+                "\n✨ HIR MAPS MORE TO CONTENT: Compilation output reflects source code structure!"
+            );
             println!("    The HIR dump contains more patterns from rustc source than from paths");
         } else if hir_path_sim > hir_content_sim {
             println!("\n🗂️ HIR MAPS MORE TO PATHS: Compilation output reflects file organization!");

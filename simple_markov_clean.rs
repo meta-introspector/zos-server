@@ -52,7 +52,8 @@ impl SimpleMarkovModel {
             let from = window[0];
             let to = window[1];
 
-            *self.transitions
+            *self
+                .transitions
                 .entry(from)
                 .or_insert_with(HashMap::new)
                 .entry(to)
@@ -74,12 +75,14 @@ impl SimpleMarkovModel {
                         if let Some(&u_count) = n_map.get(&'u') {
                             if let Some(u_map) = self.transitions.get(&'u') {
                                 if let Some(&m_count) = u_map.get(&'m') {
-                                    enum_count += std::cmp::min(std::cmp::min(n_count, u_count), m_count);
+                                    enum_count +=
+                                        std::cmp::min(std::cmp::min(n_count, u_count), m_count);
 
                                     // Find what follows 'm' in enum context
                                     if let Some(m_map) = self.transitions.get(&'m') {
                                         for (next_char, count) in m_map {
-                                            *following_chars.entry(*next_char).or_insert(0) += count;
+                                            *following_chars.entry(*next_char).or_insert(0) +=
+                                                count;
                                         }
                                     }
                                 }
@@ -90,7 +93,8 @@ impl SimpleMarkovModel {
             }
         }
 
-        let mut sorted_following: Vec<_> = following_chars.into_iter()
+        let mut sorted_following: Vec<_> = following_chars
+            .into_iter()
             .map(|(c, count)| format!("'{}': {} times", c, count))
             .collect();
         sorted_following.sort();
@@ -104,10 +108,10 @@ impl SimpleMarkovModel {
         println!("  Unique characters: {}", self.transitions.len());
 
         // Show top transitions
-        let mut all_transitions: Vec<_> = self.transitions.iter()
-            .flat_map(|(from, to_map)| {
-                to_map.iter().map(move |(to, count)| ((*from, *to), *count))
-            })
+        let mut all_transitions: Vec<_> = self
+            .transitions
+            .iter()
+            .flat_map(|(from, to_map)| to_map.iter().map(move |(to, count)| ((*from, *to), *count)))
             .collect();
         all_transitions.sort_by_key(|(_, count)| std::cmp::Reverse(*count));
 

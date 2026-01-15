@@ -64,7 +64,7 @@ fn main() {
             "pl" => ".pl (Perl scripts)",
             "rb" => ".rb (Ruby scripts)",
             "php" => ".php (PHP scripts)",
-            _ => "Various file types"
+            _ => "Various file types",
         };
 
         println!("{:7} | {:9} | {}", pattern, count, file_types);
@@ -73,34 +73,57 @@ fn main() {
     println!("\n📊 SUMMARY:");
     println!("Reverse models processed: {}", models_processed);
     println!("Unique ending patterns: {}", sorted_endings.len());
-    println!("Total ending transitions: {}", sorted_endings.iter().map(|(_, c)| c).sum::<u64>());
+    println!(
+        "Total ending transitions: {}",
+        sorted_endings.iter().map(|(_, c)| c).sum::<u64>()
+    );
 }
 
-fn load_model(path: &Path) -> Result<HashMap<char, HashMap<char, u32>>, Box<dyn std::error::Error>> {
+fn load_model(
+    path: &Path,
+) -> Result<HashMap<char, HashMap<char, u32>>, Box<dyn std::error::Error>> {
     let data = fs::read(path)?;
     let mut model = HashMap::new();
 
-    if data.len() < 4 { return Ok(model); }
+    if data.len() < 4 {
+        return Ok(model);
+    }
 
     let total_transitions = u32::from_le_bytes([data[0], data[1], data[2], data[3]]) as usize;
     let mut offset = 4;
 
     for _ in 0..total_transitions {
-        if offset + 12 > data.len() { break; }
+        if offset + 12 > data.len() {
+            break;
+        }
 
         let from_char = char::from_u32(u32::from_le_bytes([
-            data[offset], data[offset + 1], data[offset + 2], data[offset + 3]
-        ])).unwrap_or('\0');
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+        ]))
+        .unwrap_or('\0');
 
         let to_char = char::from_u32(u32::from_le_bytes([
-            data[offset + 4], data[offset + 5], data[offset + 6], data[offset + 7]
-        ])).unwrap_or('\0');
+            data[offset + 4],
+            data[offset + 5],
+            data[offset + 6],
+            data[offset + 7],
+        ]))
+        .unwrap_or('\0');
 
         let count = u32::from_le_bytes([
-            data[offset + 8], data[offset + 9], data[offset + 10], data[offset + 11]
+            data[offset + 8],
+            data[offset + 9],
+            data[offset + 10],
+            data[offset + 11],
         ]);
 
-        model.entry(from_char).or_insert_with(HashMap::new).insert(to_char, count);
+        model
+            .entry(from_char)
+            .or_insert_with(HashMap::new)
+            .insert(to_char, count);
         offset += 12;
     }
 

@@ -8,7 +8,10 @@ fn main() {
 
     // Step 1: Scan source for syscalls before processing
     let syscalls_before = scan_for_syscalls("src/");
-    println!("📊 Syscalls found before stripping: {}", syscalls_before.len());
+    println!(
+        "📊 Syscalls found before stripping: {}",
+        syscalls_before.len()
+    );
 
     // Step 2: Apply proc macro transformations
     apply_syscall_stripping();
@@ -26,9 +29,16 @@ fn main() {
 fn scan_for_syscalls(dir: &str) -> Vec<SyscallOccurrence> {
     let mut syscalls = Vec::new();
     let dangerous_patterns = [
-        "libc::execve", "libc::fork", "libc::mount", "libc::ptrace",
-        "libc::setuid", "libc::setgid", "libc::reboot", "syscall(",
-        "std::process::Command", "std::process::exit",
+        "libc::execve",
+        "libc::fork",
+        "libc::mount",
+        "libc::ptrace",
+        "libc::setuid",
+        "libc::setgid",
+        "libc::reboot",
+        "syscall(",
+        "std::process::Command",
+        "std::process::exit",
     ];
 
     if let Ok(entries) = fs::read_dir(dir) {
@@ -93,7 +103,8 @@ pub fn secure_function() {
 
 /// Generate mathematical proof of syscall removal
 fn generate_removal_proof(syscalls_before: &[SyscallOccurrence]) {
-    let proof_code = format!(r#"
+    let proof_code = format!(
+        r#"
 // MATHEMATICAL PROOF OF SYSCALL REMOVAL
 // Generated at build time: {}
 
@@ -134,7 +145,8 @@ pub mod syscall_removal_proof {{
             .unwrap()
             .as_secs(),
         syscalls_before.len(),
-        syscalls_before.iter()
+        syscalls_before
+            .iter()
             .map(|s| format!("\"{}\"", s.syscall))
             .collect::<Vec<_>>()
             .join(", ")
@@ -152,8 +164,10 @@ fn verify_syscall_removal() {
     let syscalls_after = scan_for_syscalls("src/generated/");
 
     if !syscalls_after.is_empty() {
-        panic!("❌ VERIFICATION FAILED: {} syscalls still present after stripping",
-               syscalls_after.len());
+        panic!(
+            "❌ VERIFICATION FAILED: {} syscalls still present after stripping",
+            syscalls_after.len()
+        );
     }
 
     // Additional verification using objdump if available
@@ -166,7 +180,10 @@ fn verify_syscall_removal() {
 
         for symbol in dangerous_symbols {
             if symbols.contains(symbol) {
-                panic!("❌ VERIFICATION FAILED: Dangerous symbol '{}' found in binary", symbol);
+                panic!(
+                    "❌ VERIFICATION FAILED: Dangerous symbol '{}' found in binary",
+                    symbol
+                );
             }
         }
     }
@@ -195,7 +212,10 @@ fn additional_security_checks() {
 
         for dep in dangerous_deps {
             if cargo_toml.contains(dep) {
-                println!("cargo:warning=Dangerous dependency '{}' detected - will be virtualized", dep);
+                println!(
+                    "cargo:warning=Dangerous dependency '{}' detected - will be virtualized",
+                    dep
+                );
             }
         }
     }
@@ -203,9 +223,11 @@ fn additional_security_checks() {
     // Set build flags to disable unsafe features
     println!("cargo:rustc-cfg=feature=\"no-syscalls\"");
     println!("cargo:rustc-cfg=feature=\"virtualized-only\"");
-    println!("cargo:rustc-env=BUILD_TIMESTAMP={}",
+    println!(
+        "cargo:rustc-env=BUILD_TIMESTAMP={}",
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
-            .as_secs());
+            .as_secs()
+    );
 }

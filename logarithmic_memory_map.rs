@@ -22,7 +22,11 @@ impl LogarithmicMemoryMap {
 
         let clifford_coordinates = Self::map_to_clifford(&memory_71_locations);
 
-        Self { memory_71_locations, emoji_maps, clifford_coordinates }
+        Self {
+            memory_71_locations,
+            emoji_maps,
+            clifford_coordinates,
+        }
     }
 
     fn find_71_in_memory() -> Vec<usize> {
@@ -40,7 +44,7 @@ impl LogarithmicMemoryMap {
 
         println!("📍 Found 71 at {} memory locations", locations.len());
         for (i, &addr) in locations.iter().enumerate() {
-            println!("   Location {}: 0x{:x}", i+1, addr);
+            println!("   Location {}: 0x{:x}", i + 1, addr);
         }
 
         locations
@@ -90,11 +94,14 @@ impl LogarithmicMemoryMap {
     }
 
     fn map_to_clifford(locations: &[usize]) -> Vec<(f64, f64)> {
-        locations.iter().map(|&addr| {
-            let x = (addr as f64).log2() / 10.0; // Logarithmic x-coordinate
-            let y = ((addr ^ 0x71) as f64).log2() / 10.0; // XOR with 71 for y
-            (x, y)
-        }).collect()
+        locations
+            .iter()
+            .map(|&addr| {
+                let x = (addr as f64).log2() / 10.0; // Logarithmic x-coordinate
+                let y = ((addr ^ 0x71) as f64).log2() / 10.0; // XOR with 71 for y
+                (x, y)
+            })
+            .collect()
     }
 
     fn display_maps(&self) {
@@ -132,9 +139,10 @@ impl LogarithmicMemoryMap {
                 let grid_x = col as f64 / 8.0 * 10.0;
                 let grid_y = row as f64 / 8.0 * 10.0;
 
-                let has_point = self.clifford_coordinates.iter().any(|&(x, y)| {
-                    (x - grid_x).abs() < 1.0 && (y - grid_y).abs() < 1.0
-                });
+                let has_point = self
+                    .clifford_coordinates
+                    .iter()
+                    .any(|&(x, y)| (x - grid_x).abs() < 1.0 && (y - grid_y).abs() < 1.0);
 
                 print!("{}", if has_point { "🔢" } else { "⬜" });
             }
@@ -156,7 +164,10 @@ fn main() {
     memory_map.display_clifford_projection();
 
     println!("\n🎯 LOGARITHMIC MAPPING COMPLETE:");
-    println!("   ✅ Found {} locations of 71 in memory", memory_map.memory_71_locations.len());
+    println!(
+        "   ✅ Found {} locations of 71 in memory",
+        memory_map.memory_71_locations.len()
+    );
     println!("   ✅ Generated 5 logarithmic emoji bitmaps (2x2 to 32x32)");
     println!("   ✅ Mapped to Clifford algebra coordinates");
     println!("   🔮 Memory structure visualized through Monster Group 71!");

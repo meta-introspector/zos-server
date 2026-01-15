@@ -1,722 +1,1032 @@
-   Compiling zos-server v0.1.0 (/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server)
-error[E0407]: method `export_to_mcp` is not a member of trait `VerbExporter`
-  --> src/protocol_exports.rs:8:5
-   |
- 8 |       fn export_to_mcp(&self) -> Result<String, String> {
-   |       ^  ------------- help: there is an associated function with a similar name: `export_to_xml`
-   |  _____|
-   | |
- 9 | |         // Export as Model Context Protocol format
-10 | |         let mut mcp = json!({
-11 | |             "jsonrpc": "2.0",
-...  |
-36 | |             .map_err(|e| format!("MCP serialization failed: {}", e))
-37 | |     }
-   | |_____^ not a member of trait `VerbExporter`
-
-error[E0407]: method `export_to_soap` is not a member of trait `VerbExporter`
-  --> src/protocol_exports.rs:39:5
-   |
-39 |       fn export_to_soap(&self) -> Result<String, String> {
-   |       ^  -------------- help: there is an associated function with a similar name: `export_to_sql`
-   |  _____|
-   | |
-40 | |         // Export as SOAP WSDL
-41 | |         let mut wsdl = String::new();
-42 | |         wsdl.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-...  |
-63 | |         Ok(wsdl)
-64 | |     }
-   | |_____^ not a member of trait `VerbExporter`
-
-error[E0407]: method `export_to_openapi` is not a member of trait `VerbExporter`
-   --> src/protocol_exports.rs:66:5
-    |
- 66 | /     fn export_to_openapi(&self) -> Result<String, String> {
- 67 | |         // Export as OpenAPI 3.0 specification
- 68 | |         let mut openapi = json!({
- 69 | |             "openapi": "3.0.0",
-...   |
-128 | |             .map_err(|e| format!("OpenAPI serialization failed: {}", e))
-129 | |     }
-    | |_____^ not a member of trait `VerbExporter`
-
-error[E0407]: method `export_to_rest_routes` is not a member of trait `VerbExporter`
-   --> src/protocol_exports.rs:131:5
-    |
-131 | /     fn export_to_rest_routes(&self) -> Result<String, String> {
-132 | |         // Export as REST route definitions
-133 | |         let mut routes = String::new();
-134 | |         routes.push_str("# ZOS Server REST Routes\n\n");
-...   |
-144 | |         Ok(routes)
-145 | |     }
-    | |_____^ not a member of trait `VerbExporter`
-
-warning: unused import: `LibVerb`
- --> src/traits/mod.rs:4:29
+warning: Git tree '/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server' is dirty
+copying path '/nix/store/c4ghf47ifi52acyd5kvmfjgmlcdlxvri-curl-8.17.0-man' from 'https://cache.nixos.org'...
+copying path '/nix/store/wld076bhb9z43np72q1lv9vx6dwzl796-mingw-w64-x86_64-w64-mingw32-13.0.0' from 'https://cache.nixos.org'...
+copying path '/nix/store/gf6gg8l2imzdks9y8archcki4zbi8n3k-x86_64-w64-mingw32-gcc-15.2.0-lib' from 'https://cache.nixos.org'...
+copying path '/nix/store/yxi1pmrgn8vsrrncz6pdlxhr5lsc3ysr-glibc-iconv-2.40' from 'https://cache.nixos.org'...
+copying path '/nix/store/fd5iam5y0qw9awpaf8l6vhzksbsdzl0g-libgcc-aarch64-unknown-linux-gnu-15.2.0' from 'https://cache.nixos.org'...
+copying path '/nix/store/ada8dadwibq1xl3fsmg2rc1mmkgrslf0-linux-headers-6.16.7' from 'https://cache.nixos.org'...
+copying path '/nix/store/hdc3n5fznir9f3nyw2w9bkydzmaz8bys-mcfgthread-x86_64-w64-mingw32-2.2.2' from 'https://cache.nixos.org'...
+copying path '/nix/store/v7ajfwclkakvsndcfrjk7035n5ggjsra-aarch64-unknown-linux-gnu-binutils-2.44' from 'https://cache.nixos.org'...
+copying path '/nix/store/sk8x7aabysn1wr89i6a813ffii4x7i8w-brotli-1.2.0' from 'https://cache.nixos.org'...
+copying path '/nix/store/cr9yz1bdfs9vj9cpr85ihrkgzgawgcwa-curl-8.17.0-bin' from 'https://cache.nixos.org'...
+copying path '/nix/store/p59c986zyf31f923yhr8sqxdqnq3plnh-libpsl-0.21.5-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/bcqpmsh9w6xdy7yd81nkaij8g3vmd61g-nghttp3-1.13.1-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/dp3sg21kr75b2059s94g3a2vg8dfajmv-libssh2-1.11.1-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/ygwc32xg9dqylv1j3gh6rv2zlrhn4r7h-ngtcp2-1.18.0-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/swckyaw21q981j9a64a59iax6m3spsry-c-ares-1.34.5' from 'https://cache.nixos.org'...
+copying path '/nix/store/2qzc0x9nm5nwq83svddaybwx806pnlws-gmp-with-cxx-6.3.0' from 'https://cache.nixos.org'...
+building '/nix/store/3gqdsnyvwgfrsbipq4x3xx8hs7mmi42l-cargo-nightly-x86_64-unknown-linux-gnu.tar.xz.drv'...
+copying path '/nix/store/xw2j3bn2ss92fwmr0ijz4jnyqd21xybc-libedit-20251016-3.1' from 'https://cache.nixos.org'...
+copying path '/nix/store/lkgdk0jwkpbp6dizkq12jw6rdkwqqnxm-libev-4.33' from 'https://cache.nixos.org'...
+copying path '/nix/store/wpq7nwgwlic1yiwnsm5b3brkig3nn50z-libidn2-2.3.8-bin' from 'https://cache.nixos.org'...
+copying path '/nix/store/y9pysmiad3pch71mqqdpmiwlsyrd97jw-x86_64-w64-mingw32-binutils-2.44' from 'https://cache.nixos.org'...
+copying path '/nix/store/4i4q6abxjxnwf4j0ksc2zcb7byaxnrxi-zstd-1.5.7-bin' from 'https://cache.nixos.org'...
+copying path '/nix/store/aq62vlf3liwp8rpgn6wp0wsf3wbhcpqb-brotli-1.2.0-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/qj2i4kqaamafj69ifmykb9b4k4mmy9xq-glibc-aarch64-unknown-linux-gnu-2.40-66' from 'https://cache.nixos.org'...
+copying path '/nix/store/hzy7qijfw0fhwhv3n76zpa6r1yk9z49s-isl-0.20' from 'https://cache.nixos.org'...
+copying path '/nix/store/qkfy5km26gzh1c4s8ag36vaj7ay3xxx2-mpfr-4.2.2' from 'https://cache.nixos.org'...
+copying path '/nix/store/1vkywr14p36rsp4dgghqrclsdv8n344d-mcfgthread-x86_64-w64-mingw32-2.2.2-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/xy9v3ciqbqx2v9vqqn785hk22ndx55yd-libidn2-2.3.8-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/26f9s2k3cx2iri2rjh229na2p5xfmhmb-krb5-1.22.1' from 'https://cache.nixos.org'...
+copying path '/nix/store/r7l6n43ifx8c37qg4wckdms8w6pdlka8-nghttp2-1.67.1' from 'https://cache.nixos.org'...
+copying path '/nix/store/di94mxmhhk390zzzv2gvavfwkgww7q6h-zstd-1.5.7-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/5ffiqv64bh7qmzhcb2w73plxnllqa06z-libmpc-1.3.1' from 'https://cache.nixos.org'...
+copying path '/nix/store/20dygnb42nwy7mbilwgql2lzz8h69pqz-krb5-1.22.1-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/cxvk2hibqamfmgpbz9inbnvfyv49lr0h-nghttp2-1.67.1-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/ykig5mj25xfm6zgxppj4xk3grfrrv5yb-mingw-w64-x86_64-w64-mingw32-13.0.0-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/wflnb8fxmq4lqx3ca91hlpv95vrqkv51-curl-8.17.0-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/h4a18vzczydcdlw58hkmjc6am8n7zqm0-aarch64-unknown-linux-gnu-gcc-15.2.0-lib' from 'https://cache.nixos.org'...
+copying path '/nix/store/mynrg8jz3w7gyrfcn4mlz14km5j7m6g9-glibc-aarch64-unknown-linux-gnu-2.40-66-bin' from 'https://cache.nixos.org'...
+copying path '/nix/store/2l0l9j4r4gd10b53iiyz1r70zz6ain02-glibc-aarch64-unknown-linux-gnu-2.40-66-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/dg2b59pdypajs3vi6jjarbyhp0n27xa8-aarch64-unknown-linux-gnu-binutils-wrapper-2.44' from 'https://cache.nixos.org'...
+copying path '/nix/store/qfx98rhhgbf061p9yrd6rk1hn0z4w2ac-x86_64-w64-mingw32-binutils-wrapper-2.44' from 'https://cache.nixos.org'...
+copying path '/nix/store/sjn3jxcarw95id82ydz6fbirzi91mxgb-x86_64-w64-mingw32-gcc-15.2.0' from 'https://cache.nixos.org'...
+copying path '/nix/store/k660hja95akg1gxz7920aaa2s8ygxc93-aarch64-unknown-linux-gnu-gcc-15.2.0' from 'https://cache.nixos.org'...
+building '/nix/store/v3h3gmibldrgxxyk78s8vfvikd98zx2p-clippy-nightly-x86_64-unknown-linux-gnu.tar.xz.drv'...
+copying path '/nix/store/0v7hbxg5vpcyij6ca1ilxm7wfs0vdpdi-x86_64-w64-mingw32-gcc-wrapper-15.2.0' from 'https://cache.nixos.org'...
+building '/nix/store/vj0w99jxaq5pwwn6891y9gjm0y9zv2sd-cargo-1.94.0-nightly-2026-01-09-x86_64-unknown-linux-gnu.drv'...
+copying path '/nix/store/4hb4kljrm74zk0n86z9r7zm5p1b6w6fd-aarch64-unknown-linux-gnu-gcc-wrapper-15.2.0' from 'https://cache.nixos.org'...
+building '/nix/store/5f1fkvjyx67aablzgipknlpfprj4jxr9-rust-docs-nightly-x86_64-unknown-linux-gnu.tar.xz.drv'...
+building '/nix/store/32l87as1la9wy6acgv20891qf048biip-rust-src-nightly.tar.xz.drv'...
+building '/nix/store/5fwz8wv3621a16kcd0pnvwhm8n0jia82-rust-docs-1.94.0-nightly-2026-01-09-x86_64-unknown-linux-gnu.drv'...
+building '/nix/store/0kl7hjk2ksapxfbh7h21ckviddaw4nba-rust-src-1.94.0-nightly-2026-01-09-x86_64-unknown-linux-gnu.drv'...
+building '/nix/store/m1vp6bksmqgjnbj1qjh7ssid484h2523-rust-std-nightly-aarch64-linux-android.tar.xz.drv'...
+building '/nix/store/pi2x9nv94mygdpdcfi09jfgy8l6f4w4w-rust-std-nightly-aarch64-unknown-linux-gnu.tar.xz.drv'...
+building '/nix/store/11fyr7005i2w2drqkjkbllz9y94cddmq-rust-std-1.94.0-nightly-2026-01-09-aarch64-linux-android.drv'...
+building '/nix/store/rfib8clizz3xybzx4p2amy3v4vz460bz-rust-std-1.94.0-nightly-2026-01-09-aarch64-unknown-linux-gnu.drv'...
+building '/nix/store/rd5yab2g1f7gdpz02j71ybk8p6wshc2y-rust-std-nightly-armv7-linux-androideabi.tar.xz.drv'...
+building '/nix/store/386dqv0ywkj7jv9bnn7x3lk7jq81q914-rust-std-nightly-x86_64-pc-windows-gnu.tar.xz.drv'...
+building '/nix/store/x007vm2nx494ckvp9vbkr5wiskbc5k3n-rust-std-1.94.0-nightly-2026-01-09-armv7-linux-androideabi.drv'...
+building '/nix/store/m0zx915diiwkgag00gh024ynz1ax6pya-rust-std-1.94.0-nightly-2026-01-09-x86_64-pc-windows-gnu.drv'...
+building '/nix/store/9pxvh5sl7xi01yg5b1xmilp012hn13l6-rust-std-nightly-x86_64-unknown-linux-gnu.tar.xz.drv'...
+building '/nix/store/iprjgjl4wiswia925n5mrapjkgs2ygd0-rustc-nightly-x86_64-unknown-linux-gnu.tar.xz.drv'...
+building '/nix/store/s2b7q8zsxxsqdqig3rkii23ymriwv5nr-rust-std-1.94.0-nightly-2026-01-09-x86_64-unknown-linux-gnu.drv'...
+building '/nix/store/7xc62psx8g4s1xymbay47wbsccdfviiw-rustc-1.94.0-nightly-2026-01-09-x86_64-unknown-linux-gnu.drv'...
+building '/nix/store/q4vzq7jfzvy2c1q5l5apadl56vir5a1w-rustfmt-nightly-x86_64-unknown-linux-gnu.tar.xz.drv'...
+building '/nix/store/zllmkmrsbd706hx6jj3j2kbw6nq20wdp-clippy-preview-1.94.0-nightly-2026-01-09-x86_64-unknown-linux-gnu.drv'...
+building '/nix/store/9r907j7r6i50zfyv8fkbrw7amnrhi0x6-rustfmt-preview-1.94.0-nightly-2026-01-09-x86_64-unknown-linux-gnu.drv'...
+building '/nix/store/6m55ndnsp2lbjlwpnybgc91n2vsbrg6a-rust-default-1.94.0-nightly-2026-01-09.drv'...
+building '/nix/store/hqimacv97abn4m8l1rhyr51vxahlf0ss-nix-shell-env.drv'...
+🚀 ZOS Cross-Platform Dev Environment Ready
+📱 Run: ./build-android.sh
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/cargo-watch/Cargo.toml
+workspace: /mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/Cargo.toml
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded adler2 v2.0.1
+  Downloaded async-stream v0.3.6
+  Downloaded atomic-waker v1.1.2
+  Downloaded async-stream-impl v0.3.6
+  Downloaded arrayref v0.3.9
+  Downloaded autocfg v1.5.0
+  Downloaded async-trait v0.1.89
+  Downloaded crossbeam-deque v0.8.6
+  Downloaded anyhow v1.0.100
+  Downloaded allocator-api2 v0.2.21
+  Downloaded data-encoding-macro v0.1.18
+  Downloaded cpufeatures v0.2.17
+  Downloaded data-encoding-macro-internal v0.1.16
+  Downloaded aho-corasick v1.1.4
+  Downloaded ed25519 v2.2.3
+  Downloaded curve25519-dalek-derive v0.1.1
+  Downloaded const-str v0.4.3
+  Downloaded cfg-if v1.0.4
+  Downloaded crossbeam-epoch v0.9.18
+  Downloaded der v0.7.10
+  Downloaded errno v0.3.14
+  Downloaded deranged v0.5.5
+  Downloaded form_urlencoded v1.2.2
+  Downloaded crossbeam-utils v0.8.21
+  Downloaded integer-encoding v3.0.4
+  Downloaded equivalent v1.0.2
+  Downloaded ed25519-dalek v2.2.0
+  Downloaded http-body v0.4.6
+  Downloaded futures-macro v0.3.31
+  Downloaded inotify-sys v0.1.5
+  Downloaded curve25519-dalek v4.1.3
+  Downloaded hyper-timeout v0.4.1
+  Downloaded futures-executor v0.3.31
+  Downloaded futures-channel v0.3.31
+  Downloaded axum-core v0.4.5
+  Downloaded hyper-rustls v0.24.2
+  Downloaded hmac v0.12.1
+  Downloaded glob v0.3.3
+  Downloaded icu_collections v2.1.1
+  Downloaded ipnet v2.11.0
+  Downloaded indexmap v1.9.3
+  Downloaded httpdate v1.0.3
+  Downloaded inotify v0.9.6
+  Downloaded futures-io v0.3.31
+  Downloaded http-body-util v0.1.3
+  Downloaded httparse v1.10.1
+  Downloaded iana-time-zone v0.1.64
+  Downloaded hyper-timeout v0.5.2
+  Downloaded futures-timer v3.0.3
+  Downloaded filetime v0.2.26
+  Downloaded rustls-pemfile v1.0.4
+  Downloaded crossbeam-channel v0.5.15
+  Downloaded static_assertions v1.1.0
+  Downloaded rustversion v1.0.22
+  Downloaded icu_properties v2.1.2
+  Downloaded hashbrown v0.15.5
+  Downloaded base64ct v1.8.2
+  Downloaded bincode v1.3.3
+  Downloaded axum-core v0.3.4
+  Downloaded futures-core v0.3.31
+  Downloaded fnv v1.0.7
+  Downloaded base256emoji v1.0.2
+  Downloaded http-body v1.0.1
+  Downloaded base-x v0.2.11
+  Downloaded bytes v1.11.0
+  Downloaded getrandom v0.3.4
+  Downloaded encoding_rs v0.8.35
+  Downloaded thread_local v1.1.9
+  Downloaded slog-async v2.8.0
+  Downloaded jsonwebtoken v9.3.1
+  Downloaded signal-hook-registry v1.4.8
+  Downloaded base64 v0.21.7
+  Downloaded multistream-select v0.13.0
+  Downloaded thiserror v2.0.17
+  Downloaded synstructure v0.13.2
+  Downloaded sync_wrapper v1.0.2
+  Downloaded sync_wrapper v0.1.2
+  Downloaded subtle v2.6.1
+  Downloaded stable_deref_trait v1.2.1
+  Downloaded spki v0.7.3
+  Downloaded slog v2.8.2
+  Downloaded slab v0.4.11
+  Downloaded signature v2.2.0
+  Downloaded shlex v1.3.0
+  Downloaded icu_normalizer v2.1.1
+  Downloaded icu_locale_core v2.1.1
+  Downloaded flate2 v1.1.5
+  Downloaded multibase v0.9.2
+  Downloaded icu_provider v2.1.1
+  Downloaded base64 v0.22.1
+  Downloaded serde_urlencoded v0.7.1
+  Downloaded serde_spanned v0.6.9
+  Downloaded serde_path_to_error v0.1.20
+  Downloaded serde_derive v1.0.228
+  Downloaded itoa v1.0.17
+  Downloaded serde_core v1.0.228
+  Downloaded semver v1.0.27
+  Downloaded sct v0.7.1
+  Downloaded smallvec v1.15.1
+  Downloaded tracing-serde v0.2.0
+  Downloaded tracing-core v0.1.36
+  Downloaded tower-service v0.3.3
+  Downloaded tokio-rustls v0.24.1
+  Downloaded tinyvec v1.10.0
+  Downloaded tinystr v0.8.2
+  Downloaded unsigned-varint v0.8.0
+  Downloaded untrusted v0.9.0
+  Downloaded zmij v1.0.12
+  Downloaded lazy_static v1.5.0
+  Downloaded zerofrom v0.1.6
+  Downloaded walkdir v2.5.0
+  Downloaded zerofrom-derive v0.1.6
+  Downloaded yoke v0.8.1
+  Downloaded zeroize v1.8.2
+  Downloaded want v0.3.1
+  Downloaded zerovec-derive v0.11.2
+  Downloaded yoke-derive v0.8.1
+  Downloaded toml_edit v0.22.27
+  Downloaded urlencoding v2.1.3
+  Downloaded tokio-util v0.7.18
+  Downloaded uuid v1.19.0
+  Downloaded web-time v1.1.0
+  Downloaded rustc_version v0.4.1
+  Downloaded mime v0.3.17
+  Downloaded matchers v0.2.0
+  Downloaded powerfmt v0.2.0
+  Downloaded version_check v0.9.5
+  Downloaded void v1.0.2
+  Downloaded writeable v0.6.2
+  Downloaded utf8_iter v1.0.4
+  Downloaded unicode-ident v1.0.22
+  Downloaded try-lock v0.2.5
+  Downloaded tracing-log v0.2.0
+  Downloaded tracing-attributes v0.1.31
+  Downloaded tower-sessions-core v0.12.3
+  Downloaded tower-sessions v0.12.3
+  Downloaded tower-layer v0.3.3
+  Downloaded tower-cookies v0.10.0
+  Downloaded typenum v1.19.0
+  Downloaded tokio v1.49.0
+  Downloaded tracing-subscriber v0.3.22
+  Downloaded tower v0.4.13
+  Downloaded tracing-opentelemetry v0.22.0
+  Downloaded tower-http v0.6.8
+  Downloaded pem v3.0.6
+  Downloaded zerotrie v0.2.3
+  Downloaded tracing v0.1.44
+  Downloaded url v2.5.8
+  Downloaded winnow v0.7.14
+  Downloaded num-conv v0.1.0
+  Downloaded webpki-roots v0.25.4
+  Downloaded zerocopy v0.8.33
+  Downloaded zerovec v0.11.5
+  Downloaded percent-encoding v2.3.2
+  Downloaded match-lookup v0.1.1
+  Downloaded multihash v0.19.3
+  Downloaded time v0.3.44
+  Downloaded libloading v0.8.9
+  Downloaded multiaddr v0.18.2
+  Downloaded unsigned-varint v0.7.2
+  Downloaded tower-sessions-memory-store v0.12.3
+  Downloaded time-core v0.1.6
+  Downloaded opentelemetry-http v0.27.0
+  Downloaded ordered-float v2.10.1
+  Downloaded syn v2.0.114
+  Downloaded toml_write v0.1.2
+  Downloaded toml v0.8.23
+  Downloaded tokio-stream v0.1.18
+  Downloaded tokio-macros v2.6.0
+  Downloaded lru v0.12.5
+  Downloaded tokio-io-timeout v1.2.1
+  Downloaded tinyvec_macros v0.1.1
+  Downloaded time-macros v0.2.24
+  Downloaded thrift v0.17.0
+  Downloaded threadpool v1.8.1
+  Downloaded thiserror-impl v1.0.69
+  Downloaded thiserror v1.0.69
+  Downloaded tempfile v3.24.0
+  Downloaded take_mut v0.2.2
+  Downloaded socket2 v0.6.1
+  Downloaded socket2 v0.5.10
+  Downloaded sharded-slab v0.1.7
+  Downloaded sha2 v0.10.9
+  Downloaded serde_json v1.0.149
+  Downloaded serde v1.0.228
+  Downloaded rustls-webpki v0.101.7
+  Downloaded prost-derive v0.13.5
+  Downloaded prost-derive v0.11.9
+  Downloaded pkcs8 v0.10.2
+  Downloaded icu_normalizer_data v2.1.1
+  Downloaded hyper-util v0.1.19
+  Downloaded hyper v1.8.1
+  Downloaded hyper v0.14.32
+  Downloaded toml_datetime v0.6.11
+  Downloaded http v1.4.0
+  Downloaded http v0.2.12
+  Downloaded prost v0.11.9
+  Downloaded hkdf v0.12.4
+  Downloaded hashbrown v0.16.1
+  Downloaded axum-otel-metrics v0.9.1
+  Downloaded hashbrown v0.12.3
+  Downloaded h2 v0.4.13
+  Downloaded ordered-float v4.6.0
+  Downloaded h2 v0.3.27
+  Downloaded futures-util v0.3.31
+  Downloaded axum v0.7.9
+  Downloaded pin-project-lite v0.2.16
+  Downloaded axum v0.6.20
+  Downloaded slog-json v2.6.1
+  Downloaded simple_asn1 v0.6.3
+  Downloaded parking_lot v0.12.5
+  Downloaded simd-adler32 v0.3.8
+  Downloaded rand_chacha v0.3.1
+  Downloaded potential_utf v0.1.4
+  Downloaded pin-utils v0.1.0
+  Downloaded idna_adapter v1.2.1
+  Downloaded scopeguard v1.2.0
+  Downloaded same-file v1.0.6
+  Downloaded ryu v1.0.22
+  Downloaded rw-stream-sink v0.4.0
+  Downloaded generic-array v0.14.7
+  Downloaded futures-task v0.3.31
+  Downloaded futures-sink v0.3.31
+  Downloaded lock_api v0.4.14
+  Downloaded futures v0.3.31
+  Downloaded foldhash v0.1.5
+  Downloaded find-msvc-tools v0.1.7
+  Downloaded fastrand v2.3.0
+  Downloaded getrandom v0.2.16
+  Downloaded erased-serde v0.3.31
+  Downloaded num_cpus v1.17.0
+  Downloaded byteorder v1.5.0
+  Downloaded displaydoc v0.2.5
+  Downloaded cookie v0.18.1
+  Downloaded digest v0.10.7
+  Downloaded core2 v0.4.0
+  Downloaded chrono v0.4.42
+  Downloaded rand_core v0.6.4
+  Downloaded bitflags v2.10.0
+  Downloaded pin-project-internal v1.1.10
+  Downloaded num-integer v0.1.46
+  Downloaded nu-ansi-term v0.50.3
+  Downloaded opentelemetry-otlp v0.27.0
+  Downloaded data-encoding v2.9.0
+  Downloaded cc v1.2.52
+  Downloaded bs58 v0.5.1
+  Downloaded either v1.15.0
+  Downloaded opentelemetry-semantic-conventions v0.13.0
+  Downloaded crypto-common v0.1.7
+  Downloaded const-oid v0.9.6
+  Downloaded block-buffer v0.10.4
+  Downloaded bitflags v1.3.2
+  Downloaded crc32fast v1.5.0
+  Downloaded matchit v0.7.3
+  Downloaded indexmap v2.13.0
+  Downloaded quote v1.0.43
+  Downloaded thiserror-impl v2.0.17
+  Downloaded opentelemetry-otlp v0.14.0
+  Downloaded axum-login v0.15.3
+  Downloaded parking_lot_core v0.9.12
+  Downloaded prost v0.13.5
+  Downloaded ppv-lite86 v0.2.21
+  Downloaded litemap v0.8.1
+  Downloaded pin-project v1.1.10
+  Downloaded notify v6.1.1
+  Downloaded libp2p-connection-limits v0.4.0
+  Downloaded once_cell v1.21.3
+  Downloaded miniz_oxide v0.8.9
+  Downloaded libp2p-allow-block-list v0.4.0
+  Downloaded itertools v0.10.5
+  Downloaded log v0.4.29
+  Downloaded num-traits v0.2.19
+  Downloaded idna v1.1.0
+  Downloaded proc-macro2 v1.0.105
+  Downloaded rayon-core v1.13.0
+  Downloaded opentelemetry v0.27.1
+  Downloaded opentelemetry-semantic-conventions v0.27.0
+  Downloaded icu_properties_data v2.1.2
+  Downloaded prometheus v0.13.4
+  Downloaded rand v0.8.5
+  Downloaded libp2p v0.54.1
+  Downloaded opentelemetry-stdout v0.2.0
+  Downloaded mio v1.1.1
+  Downloaded libp2p-core v0.42.0
+  Downloaded quick-protobuf v0.8.1
+  Downloaded opentelemetry v0.21.0
+  Downloaded memchr v2.7.6
+  Downloaded tonic v0.9.2
+  Downloaded num-bigint v0.4.6
+  Downloaded mio v0.8.11
+  Downloaded libp2p-identity v0.2.13
+  Downloaded itertools v0.14.0
+  Downloaded tower v0.5.2
+  Downloaded tonic v0.12.3
+  Downloaded opentelemetry_sdk v0.21.2
+  Downloaded libp2p-swarm v0.45.1
+  Downloaded iri-string v0.7.10
+  Downloaded reqwest v0.11.27
+  Downloaded reqwest v0.12.28
+  Downloaded regex v1.12.2
+  Downloaded opentelemetry-proto v0.4.0
+  Downloaded opentelemetry-jaeger v0.20.0
+  Downloaded opentelemetry-proto v0.27.0
+  Downloaded protobuf v2.28.0
+  Downloaded rayon v1.11.0
+  Downloaded opentelemetry_sdk v0.27.1
+  Downloaded syn v1.0.109
+  Downloaded rustls v0.21.12
+  Downloaded regex-syntax v0.8.8
+  Downloaded rustix v1.1.3
+  Downloaded regex-automata v0.4.13
+  Downloaded libc v0.2.180
+  Downloaded ring v0.17.14
+  Downloaded linux-raw-sys v0.11.0
+   Compiling zos-server v1.0.0 (/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server)
+warning: unused import: `std::collections::HashMap`
+ --> src/cache.rs:2:5
   |
-4 | use crate::enums::{P2PVerb, LibVerb, NetworkEvent};
-  |                             ^^^^^^^
+2 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
   |
   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
 
-warning: unused import: `LoadedSo`
- --> src/traits/mod.rs:5:45
+warning: unused import: `crate::value_lattice_manager::LatticeProcessStatus`
+ --> src/cicd_dashboard.rs:2:5
   |
-5 | use crate::structs::{PeerInfo, DatasetSeed, LoadedSo};
-  |                                             ^^^^^^^^
+2 | use crate::value_lattice_manager::LatticeProcessStatus;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 warning: unused import: `std::collections::HashMap`
- --> src/traits/mod.rs:6:5
+ --> src/cicd_dashboard.rs:4:5
   |
-6 | use std::collections::HashMap;
+4 | use std::collections::HashMap;
   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-warning: unused import: `LibVerb`
- --> src/functions/mod.rs:5:29
+warning: unused import: `std::collections::HashMap`
+ --> src/code_transformation_graph.rs:2:5
   |
-5 | use crate::enums::{P2PVerb, LibVerb};
-  |                             ^^^^^^^
+2 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-warning: unused import: `CString`
- --> src/plugins/libp2p_c_interface.rs:5:22
+warning: unused import: `DateTime`
+ --> src/git_analyzer.rs:1:14
   |
-5 | use std::ffi::{CStr, CString};
-  |                      ^^^^^^^
+1 | use chrono::{DateTime, Duration, Utc};
+  |              ^^^^^^^^
 
-warning: unused import: `std::ptr`
- --> src/plugins/libp2p_c_interface.rs:7:5
+warning: unused imports: `Arc` and `Mutex`
+ --> src/project_watcher.rs:4:17
   |
-7 | use std::ptr;
-  |     ^^^^^^^^
+4 | use std::sync::{Arc, Mutex};
+  |                 ^^^  ^^^^^
 
-warning: unused import: `crate::traits::LibraryLoader`
- --> src/plugins/systemd_plugin.rs:4:5
+warning: unused import: `crate::value_lattice_processor::ValueLatticeProcessor`
+ --> src/self_bootstrap_system.rs:2:5
   |
-4 | use crate::traits::LibraryLoader;
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2 | use crate::value_lattice_processor::ValueLatticeProcessor;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-warning: unused import: `CStr`
- --> src/plugins/systemd_plugin.rs:7:25
+warning: unused import: `std::sync::Arc`
+ --> src/telemetry.rs:1:5
   |
-7 | use std::ffi::{CString, CStr};
-  |                         ^^^^
+1 | use std::sync::Arc;
+  |     ^^^^^^^^^^^^^^
 
-warning: unused import: `crate::traits::LibraryLoader`
- --> src/plugins/oracle_plugin.rs:4:5
+warning: unused imports: `debug` and `warn`
+ --> src/telemetry.rs:2:15
   |
-4 | use crate::traits::LibraryLoader;
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2 | use tracing::{debug, error, info, warn};
+  |               ^^^^^               ^^^^
 
-warning: unused import: `crate::traits::LibraryLoader`
- --> src/plugins/docker_plugin.rs:4:5
+warning: unused import: `error`
+ --> src/value_lattice_processor.rs:5:15
   |
-4 | use crate::traits::LibraryLoader;
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+5 | use tracing::{error, info};
+  |               ^^^^^
 
-warning: unused import: `CStr`
- --> src/plugins/docker_plugin.rs:6:25
+warning: unused import: `User`
+ --> src/web.rs:3:19
   |
-6 | use std::ffi::{CString, CStr};
-  |                         ^^^^
+3 | use crate::core::{User, ZOSCore};
+  |                   ^^^^
 
-warning: unused import: `crate::traits::LibraryLoader`
- --> src/plugins/kernel_plugin.rs:4:5
+warning: unused imports: `Path`, `Query`, and `State`
+ --> src/web.rs:7:15
   |
-4 | use crate::traits::LibraryLoader;
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+7 |     extract::{Path, Query, State},
+  |               ^^^^  ^^^^^  ^^^^^
 
-warning: unused import: `c_void`
- --> src/plugins/kernel_plugin.rs:7:35
-  |
-7 | use std::os::raw::{c_char, c_int, c_void};
-  |                                   ^^^^^^
+warning: unused import: `std::collections::HashMap`
+  --> src/web.rs:14:5
+   |
+14 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-warning: unused import: `CStr`
- --> src/plugins/ebpf_plugin.rs:3:25
+warning: unused import: `ProjectStatus`
+ --> src/zos_api.rs:1:44
   |
-3 | use std::ffi::{CString, CStr};
-  |                         ^^^^
+1 | use crate::cicd_dashboard::{CICDDashboard, ProjectStatus};
+  |                                            ^^^^^^^^^^^^^
 
-warning: unused import: `CStr`
- --> src/plugins/solana_plugin.rs:3:25
+warning: unused import: `std::collections::HashMap`
+ --> src/automorphic_compiler.rs:1:5
   |
-3 | use std::ffi::{CString, CStr};
-  |                         ^^^^
+1 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-warning: unused import: `CStr`
- --> src/plugins/wasm_plugin.rs:3:25
+warning: unused import: `std::process::Command`
+ --> src/automorphic_compiler.rs:2:5
   |
-3 | use std::ffi::{CString, CStr};
-  |                         ^^^^
-
-warning: unused import: `CStr`
- --> src/plugins/runtime_plugins.rs:3:25
-  |
-3 | use std::ffi::{CString, CStr};
-  |                         ^^^^
-
-warning: unused import: `CStr`
- --> src/plugins/storage_plugins.rs:3:25
-  |
-3 | use std::ffi::{CString, CStr};
-  |                         ^^^^
-
-warning: unused import: `CStr`
- --> src/plugins/blockchain_plugins.rs:3:25
-  |
-3 | use std::ffi::{CString, CStr};
-  |                         ^^^^
-
-warning: unused import: `CStr`
- --> src/plugins/telemetry_plugin.rs:3:25
-  |
-3 | use std::ffi::{CString, CStr};
-  |                         ^^^^
-
-warning: unused import: `CStr`
- --> src/plugins/compiler_plugins.rs:3:25
-  |
-3 | use std::ffi::{CString, CStr};
-  |                         ^^^^
-
-warning: unused import: `crate::enums::P2PVerb`
- --> src/verb_export.rs:4:5
-  |
-4 | use crate::enums::P2PVerb;
+2 | use std::process::Command;
   |     ^^^^^^^^^^^^^^^^^^^^^
 
-warning: unused imports: `AsyncBufReadExt` and `self`
-  --> src/mini_sdf_server.rs:11:17
-   |
-11 | use tokio::io::{self, AsyncBufReadExt};
-   |                 ^^^^  ^^^^^^^^^^^^^^^
-
-warning: unused import: `crate::plugins::*`
- --> src/node_coordinator.rs:4:5
-  |
-4 | use crate::plugins::*;
-  |     ^^^^^^^^^^^^^^^^^
-
-warning: unused import: `Swarm`
- --> src/node_coordinator.rs:6:22
-  |
-6 | use libp2p::{PeerId, Swarm};
-  |                      ^^^^^
-
-warning: unused import: `crate::node_coordinator::ZosNode`
- --> src/blockchain_ingestor.rs:5:5
-  |
-5 | use crate::node_coordinator::ZosNode;
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-warning: unused import: `Symbol`
- --> src/universal_plugin_loader.rs:5:27
-  |
-5 | use libloading::{Library, Symbol};
-  |                           ^^^^^^
-
-warning: unused imports: `CStr` and `CString`
- --> src/universal_plugin_loader.rs:7:16
-  |
-7 | use std::ffi::{CString, CStr};
-  |                ^^^^^^^  ^^^^
-
-warning: unused imports: `c_char` and `c_int`
- --> src/universal_plugin_loader.rs:8:20
-  |
-8 | use std::os::raw::{c_char, c_int};
-  |                    ^^^^^^  ^^^^^
-
-warning: unused import: `ChunkType`
- --> src/notebooklm_cli.rs:2:56
-  |
-2 | use crate::notebooklm_interface::{NotebookLMInterface, ChunkType};
-  |                                                        ^^^^^^^^^
-
-error[E0119]: conflicting implementations of trait `VerbExporter` for type `VerbExport`
-  --> src/protocol_exports.rs:5:1
-   |
- 5 | impl VerbExporter for VerbExport {
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ conflicting implementation for `VerbExport`
-   |
-  ::: src/verb_export.rs:36:1
-   |
-36 | impl VerbExporter for VerbExport {
-   | -------------------------------- first implementation here
-
-error[E0599]: no method named `with_tcp` found for struct `SwarmBuilder<NoProviderSpecified, ProviderPhase>` in the current scope
-  --> src/mini_sdf_server.rs:48:14
-   |
-47 |           let swarm = libp2p::SwarmBuilder::with_existing_identity(local_key)
-   |  _____________________-
-48 | |             .with_tcp(tcp::Config::default(), noise::Config::new, yamux::Config::default)?
-   | |             -^^^^^^^^ method not found in `SwarmBuilder<NoProviderSpecified, ProviderPhase>`
-   | |_____________|
-   |
-   |
-   = note: the method was found for
-           - `SwarmBuilder<libp2p::builder::phase::provider::Tokio, libp2p::builder::phase::tcp::TcpPhase>`
-   = note: the full name for the type has been written to '/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/target/debug/deps/zos_server-657dff2d8b868cfe.long-type-1268124314937751560.txt'
-   = note: consider using `--verbose` to print the full type name to the console
-
-error[E0599]: no method named `select_next_some` found for struct `Swarm<TBehaviour>` in the current scope
-    --> src/mini_sdf_server.rs:77:30
-     |
-  77 |             match self.swarm.select_next_some().await {
-     |                              ^^^^^^^^^^^^^^^^ method not found in `Swarm<SdfBehaviour>`
-     |
-    ::: /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-util-0.3.31/src/stream/stream/mod.rs:1691:8
-     |
-1691 |     fn select_next_some(&mut self) -> SelectNextSome<'_, Self>
-     |        ---------------- the method is available for `Swarm<SdfBehaviour>` here
-     |
-     = help: items from traits can only be used if the trait is in scope
-help: trait `StreamExt` which provides `select_next_some` is implemented but not in scope; perhaps you want to import it
-     |
-   4 + use libp2p::futures::StreamExt;
-     |
-
-warning: unused variable: `args`
-   --> src/node_coordinator.rs:156:55
+warning: unexpected `cfg` condition value: `security_alerts`
+   --> src/complexity_types.rs:103:19
     |
-156 |             NodeMessage::PluginRequest { plugin_name, args } => {
-    |                                                       ^^^^ help: try ignoring the field: `args: _`
+103 |             #[cfg(feature = "security_alerts")]
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: remove the condition
+    |
+    = note: no expected values for `feature`
+    = help: consider adding `security_alerts` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unused import: `HashSet`
+  --> src/convergence_analyzer.rs:11:33
+   |
+11 | use std::collections::{HashMap, HashSet};
+   |                                 ^^^^^^^
+
+warning: unused import: `std::path::Path`
+  --> src/convergence_analyzer.rs:13:5
+   |
+13 | use std::path::Path;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+ --> src/dual_model_prover.rs:1:5
+  |
+1 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::process::Command`
+ --> src/iree_kleene_backend.rs:2:5
+  |
+2 | use std::process::Command;
+  |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+ --> src/kleene_detector.rs:1:5
+  |
+1 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+ --> src/nvidia_kleene.rs:1:5
+  |
+1 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::path::Path`
+ --> src/plantation_filter.rs:3:5
+  |
+3 | use std::path::Path;
+  |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `http::StatusCode`
+ --> src/plugin_registry.rs:1:12
+  |
+1 | use axum::{http::StatusCode, response::Response};
+  |            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+ --> src/process_monitor.rs:2:5
+  |
+2 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `rayon::prelude`
+ --> src/cpu_optimizer.rs:1:5
+  |
+1 | use rayon::prelude::*;
+  |     ^^^^^^^^^^^^^^
+
+warning: unused variable: `repo_name`
+   --> src/cicd_dashboard.rs:121:45
+    |
+121 | ...ownership(&self, path: &str, repo_name: &str) -> Result<ProjectOwnership, String> {
+    |                                 ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_repo_name`
     |
     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
 
-warning: unused variable: `node_info`
-   --> src/node_coordinator.rs:177:23
+warning: unused variable: `remote_url`
+   --> src/cicd_dashboard.rs:123:13
     |
-177 |         for (peer_id, node_info) in &self.peer_nodes {
-    |                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_node_info`
+123 |         let remote_url = Command::new("git")
+    |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_remote_url`
 
-error[E0277]: the trait bound `BlockData: serde::Serialize` is not satisfied
-    --> src/blockchain_ingestor.rs:197:49
-     |
- 197 |         let rollup_data = serde_json::to_string(&blocks)?;
-     |                           --------------------- ^^^^^^^ unsatisfied trait bound
-     |                           |
-     |                           required by a bound introduced by this call
-     |
-help: the trait `Serialize` is not implemented for `BlockData`
-    --> src/blockchain_ingestor.rs:36:1
-     |
-  36 | pub struct BlockData {
-     | ^^^^^^^^^^^^^^^^^^^^
-     = note: for local types consider adding `#[derive(serde::Serialize)]` to your `BlockData` type
-     = note: for types from other crates check whether the crate offers a `serde` feature flag
-     = help: the following other types implement trait `Serialize`:
-               &'a T
-               &'a mut T
-               ()
-               (T,)
-               (T0, T1)
-               (T0, T1, T2)
-               (T0, T1, T2, T3)
-               (T0, T1, T2, T3, T4)
-             and 148 others
-     = note: required for `Vec<BlockData>` to implement `Serialize`
-note: required by a bound in `serde_json::to_string`
-    --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/ser.rs:2247:17
-     |
-2245 | pub fn to_string<T>(value: &T) -> Result<String>
-     |        --------- required by a bound in this function
-2246 | where
-2247 |     T: ?Sized + Serialize,
-     |                 ^^^^^^^^^ required by this bound in `to_string`
-
-warning: unused variable: `tx_data`
-   --> src/blockchain_ingestor.rs:225:21
+warning: unused variable: `start`
+   --> src/code_transformation_graph.rs:168:13
     |
-225 |                 let tx_data = format!("block_{}_txs", block.block_number);
-    |                     ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tx_data`
+168 |         let start = *i;
+    |             ^^^^^ help: if this is intentional, prefix it with an underscore: `_start`
 
-warning: unused variable: `rollup_message`
-   --> src/blockchain_ingestor.rs:244:13
+warning: unused variable: `core`
+  --> src/web.rs:19:22
+   |
+19 | pub fn create_router(core: AppState) -> Router {
+   |                      ^^^^ help: if this is intentional, prefix it with an underscore: `_core`
+
+warning: unused variable: `source_code`
+  --> src/automorphic_compiler.rs:93:36
+   |
+93 |     pub fn compile_in_orbit(&self, source_code: &str) -> Result<String, String> {
+   |                                    ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_source_code`
+
+warning: unused variable: `mlir_code`
+   --> src/convergence_analyzer.rs:276:13
     |
-244 |         let rollup_message = format!("{{\"rollup_proof\": \"{}\", \"zk_proof\": \"{}\"}}", rollup_proof, zk_proof);
-    |             ^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_rollup_message`
+276 |         let mlir_code = self.iree_backend.generate_kleene_mlir("sample_rust_code");
+    |             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_mlir_code`
 
-error[E0599]: no method named `into_bytes` found for unit type `()` in the current scope
-   --> src/universal_plugin_loader.rs:133:26
+warning: unused variable: `gpu_kernel`
+   --> src/convergence_analyzer.rs:280:13
     |
-133 |         Ok(native_binary.into_bytes())
-    |                          ^^^^^^^^^^
+280 |         let gpu_kernel = self.iree_backend.generate_gpu_kernel(&new_state);
+    |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_gpu_kernel`
+
+warning: unused variable: `proof_code`
+   --> src/convergence_analyzer.rs:286:17
     |
-help: there is a method `as_bytes` with a similar name
+286 |             let proof_code = self.dual_model_prover.generate_proof_code(&fixed_point);
+    |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_proof_code`
+
+warning: variable does not need to be mutable
+  --> src/dual_model_prover.rs:79:13
+   |
+79 |         let mut llm_state = self.llm_model.state_vector.clone();
+   |             ----^^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+  --> src/dual_model_prover.rs:80:13
+   |
+80 |         let mut compiler_state = self.compiler_model.optimization_state.clone();
+   |             ----^^^^^^^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+
+warning: unused variable: `rust_code`
+  --> src/iree_kleene_backend.rs:27:40
+   |
+27 |     pub fn generate_kleene_mlir(&self, rust_code: &str) -> String {
+   |                                        ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_rust_code`
+
+warning: unused variable: `mlir_code`
+  --> src/iree_kleene_backend.rs:49:37
+   |
+49 |     pub fn compile_with_iree(&self, mlir_code: &str) -> Result<String, String> {
+   |                                     ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_mlir_code`
+
+warning: unused variable: `file_path`
+  --> src/kleene_memory.rs:46:39
+   |
+46 |     pub fn calculate_resonance(&self, file_path: &str, kleene_score: f64) -> usize {
+   |                                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_file_path`
+
+warning: unused variable: `lean4_code`
+   --> src/lean4_foundation.rs:109:13
     |
-133 -         Ok(native_binary.into_bytes())
-133 +         Ok(native_binary.as_bytes())
+109 |         let lean4_code = self.generate_lean4_foundation();
+    |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_lean4_code`
+
+warning: unused variable: `name`
+   --> src/meta_fixed_point.rs:131:18
     |
+131 |             for (name, state) in &mut new_states {
+    |                  ^^^^ help: if this is intentional, prefix it with an underscore: `_name`
 
-warning: unused variable: `lib`
-   --> src/universal_plugin_loader.rs:315:13
+warning: unused variable: `name`
+   --> src/meta_fixed_point.rs:202:14
     |
-315 |         let lib = unsafe { Library::new(&temp_path)? };
-    |             ^^^ help: if this is intentional, prefix it with an underscore: `_lib`
+202 |         for (name, domain) in &self.domains {
+    |              ^^^^ help: if this is intentional, prefix it with an underscore: `_name`
 
-warning: unused variable: `args`
-   --> src/universal_plugin_loader.rs:324:80
+warning: unused variable: `name`
+   --> src/modular_form_spec.rs:162:14
     |
-324 |     pub async fn execute_plugin(&self, plugin_name: &str, function_name: &str, args: &[u8]) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-    |                                                                                ^^^^ help: if this is intentional, prefix it with an underscore: `_args`
+162 |         for (name, form) in &self.forms {
+    |              ^^^^ help: if this is intentional, prefix it with an underscore: `_name`
 
-error[E0277]: the trait bound `ExecutionPathReview: serde::Serialize` is not satisfied
-    --> src/verified_plugin_loader.rs:103:57
-     |
- 103 |             execution_path_proof: serde_json::to_string(&execution_review)?,
-     |                                   --------------------- ^^^^^^^^^^^^^^^^^ unsatisfied trait bound
-     |                                   |
-     |                                   required by a bound introduced by this call
-     |
-help: the trait `Serialize` is not implemented for `ExecutionPathReview`
-    --> src/verified_plugin_loader.rs:29:1
-     |
-  29 | pub struct ExecutionPathReview {
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     = note: for local types consider adding `#[derive(serde::Serialize)]` to your `ExecutionPathReview` type
-     = note: for types from other crates check whether the crate offers a `serde` feature flag
-     = help: the following other types implement trait `Serialize`:
-               &'a T
-               &'a mut T
-               ()
-               (T,)
-               (T0, T1)
-               (T0, T1, T2)
-               (T0, T1, T2, T3)
-               (T0, T1, T2, T3, T4)
-             and 148 others
-note: required by a bound in `serde_json::to_string`
-    --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/ser.rs:2247:17
-     |
-2245 | pub fn to_string<T>(value: &T) -> Result<String>
-     |        --------- required by a bound in this function
-2246 | where
-2247 |     T: ?Sized + Serialize,
-     |                 ^^^^^^^^^ required by this bound in `to_string`
+warning: unused variable: `index_entry`
+  --> src/nidex_builder.rs:71:25
+   |
+71 |                     let index_entry = FileIndex {
+   |                         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_index_entry`
 
-error[E0599]: no method named `analyze_performance` found for reference `&VerifiedPluginLoader` in the current scope
-   --> src/verified_plugin_loader.rs:166:41
+warning: trait `PathExpand` is never used
+   --> src/project_watcher.rs:122:7
     |
-166 |         let performance_analysis = self.analyze_performance(&disassembly).await?;
-    |                                         ^^^^^^^^^^^^^^^^^^^ method not found in `&VerifiedPluginLoader`
-
-error[E0599]: no method named `check_compliance` found for reference `&VerifiedPluginLoader` in the current scope
-   --> src/verified_plugin_loader.rs:169:38
+122 | trait PathExpand {
+    |       ^^^^^^^^^^
     |
-169 |         let compliance_result = self.check_compliance(&disassembly).await?;
-    |                                      ^^^^^^^^^^^^^^^^ method not found in `&VerifiedPluginLoader`
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
 
-error[E0277]: the trait bound `ExecutionPathReview: serde::Serialize` is not satisfied
-    --> src/verified_plugin_loader.rs:184:46
-     |
- 184 |         let witness = serde_json::to_string(&execution_review)?;
-     |                       ---------------------  ^^^^^^^^^^^^^^^^ unsatisfied trait bound
-     |                       |
-     |                       required by a bound introduced by this call
-     |
-help: the trait `Serialize` is not implemented for `ExecutionPathReview`
-    --> src/verified_plugin_loader.rs:29:1
-     |
-  29 | pub struct ExecutionPathReview {
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     = note: for local types consider adding `#[derive(serde::Serialize)]` to your `ExecutionPathReview` type
-     = note: for types from other crates check whether the crate offers a `serde` feature flag
-     = help: the following other types implement trait `Serialize`:
-               &'a T
-               &'a mut T
-               ()
-               (T,)
-               (T0, T1)
-               (T0, T1, T2)
-               (T0, T1, T2, T3)
-               (T0, T1, T2, T3, T4)
-             and 148 others
-     = note: required for `&ExecutionPathReview` to implement `Serialize`
-note: required by a bound in `serde_json::to_string`
-    --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/ser.rs:2247:17
-     |
-2245 | pub fn to_string<T>(value: &T) -> Result<String>
-     |        --------- required by a bound in this function
-2246 | where
-2247 |     T: ?Sized + Serialize,
-     |                 ^^^^^^^^^ required by this bound in `to_string`
-
-warning: unused variable: `binary_data`
-   --> src/verified_plugin_loader.rs:293:41
-    |
-293 |     async fn estimate_network_io(&self, binary_data: &[u8]) -> Result<u64, Box<dyn std::error::Error>> {
-    |                                         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary_data`
-
-warning: unused variable: `binary_data`
-   --> src/verified_plugin_loader.rs:298:41
-    |
-298 |     async fn estimate_storage_io(&self, binary_data: &[u8]) -> Result<u64, Box<dyn std::error::Error>> {
-    |                                         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary_data`
-
-warning: unused variable: `proof`
-   --> src/verified_plugin_loader.rs:322:21
-    |
-322 |         if let Some(proof) = self.verified_plugins.get(plugin_name) {
-    |                     ^^^^^ help: if this is intentional, prefix it with an underscore: `_proof`
-
-error[E0277]: the trait bound `Cow<'_, str>: AsRef<[u8]>` is not satisfied
-  --> src/self_builder.rs:87:75
-   |
-87 |             fs::write(format!("{}/build_errors.log", self.project_root), &stderr)
-   |             --------- required by a bound introduced by this call         ^^^^^^ the trait `AsRef<[u8]>` is not implemented for `Cow<'_, str>`
-   |
-   = note: required for `&Cow<'_, str>` to implement `AsRef<[u8]>`
-note: required by a bound in `std::fs::write`
-  --> /build/rustc-1.91.1-src/library/std/src/fs.rs:383:1
-help: consider dereferencing here
-   |
-87 |             fs::write(format!("{}/build_errors.log", self.project_root), &*stderr)
-   |                                                                           +
-
-error[E0308]: mismatched types
-   --> src/self_builder.rs:168:20
-    |
-168 |             error: error.clone(),
-    |                    ^^^^^^^^^^^^^ expected `CompileError`, found `&CompileError`
-    |
-note: `CompileError` does not implement `Clone`, so `&CompileError` was cloned instead
-   --> src/self_builder.rs:168:20
-    |
-168 |             error: error.clone(),
-    |                    ^^^^^
-help: consider annotating `CompileError` with `#[derive(Clone)]`
-    |
-  7 + #[derive(Clone)]
-  8 | pub struct CompileError {
-    |
-
-warning: unused variable: `response_text`
-   --> src/self_builder.rs:218:13
-    |
-218 |         let response_text = response.text().await
-    |             ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_response_text`
-
-error[E0277]: `Swarm<libp2p::libp2p_gossipsub::Behaviour>` doesn't implement `Debug`
-  --> src/structs/mod.rs:54:5
-   |
-52 | #[derive(Debug)]
-   |          ----- in this derive macro expansion
-53 | pub struct LibP2P2Server {
-54 |     pub swarm: Option<libp2p::Swarm<libp2p::gossipsub::Behaviour>>,
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `Swarm<libp2p::libp2p_gossipsub::Behaviour>`
-   |
-   = help: the trait `Debug` is implemented for `std::option::Option<T>`
-
-error[E0277]: the trait bound `Vec<u8>: From<&std::string::String>` is not satisfied
-  --> src/plugins/oracle_plugin.rs:38:41
-   |
-38 |             let c_config = CString::new(&self.config_path)
-   |                            ------------ ^^^^^^^^^^^^^^^^^ the trait `From<&std::string::String>` is not implemented for `Vec<u8>`
-   |                            |
-   |                            required by a bound introduced by this call
-   |
-   = note: required for `&std::string::String` to implement `Into<Vec<u8>>`
-note: required by a bound in `CString::new`
-  --> /build/rustc-1.91.1-src/library/alloc/src/ffi/c_str.rs:256:5
-help: consider dereferencing here
-   |
-38 |             let c_config = CString::new(&*self.config_path)
-   |                                          +
-
-error[E0599]: no method named `export_to_mcp` found for struct `VerbExport` in the current scope
-  --> src/plugin_registry.rs:68:38
-   |
-68 |         if let Ok(mcp) = verb_export.export_to_mcp() {
-   |                                      ^^^^^^^^^^^^^
-   |
-  ::: src/verb_export.rs:19:1
-   |
-19 | pub struct VerbExport {
-   | --------------------- method `export_to_mcp` not found for this struct
-   |
-help: there is a method `export_to_rdf` with a similar name
-   |
-68 -         if let Ok(mcp) = verb_export.export_to_mcp() {
-68 +         if let Ok(mcp) = verb_export.export_to_rdf() {
-   |
-
-error[E0599]: no method named `export_to_soap` found for struct `VerbExport` in the current scope
-  --> src/plugin_registry.rs:71:39
-   |
-71 |         if let Ok(soap) = verb_export.export_to_soap() {
-   |                                       ^^^^^^^^^^^^^^
-   |
-  ::: src/verb_export.rs:19:1
-   |
-19 | pub struct VerbExport {
-   | --------------------- method `export_to_soap` not found for this struct
-   |
-help: there is a method `export_to_sql` with a similar name
-   |
-71 -         if let Ok(soap) = verb_export.export_to_soap() {
-71 +         if let Ok(soap) = verb_export.export_to_sql() {
-   |
-
-error[E0599]: no method named `export_to_openapi` found for struct `VerbExport` in the current scope
-  --> src/plugin_registry.rs:74:42
-   |
-74 |         if let Ok(openapi) = verb_export.export_to_openapi() {
-   |                                          ^^^^^^^^^^^^^^^^^
-   |
-  ::: src/verb_export.rs:19:1
-   |
-19 | pub struct VerbExport {
-   | --------------------- method `export_to_openapi` not found for this struct
-   |
-help: there is a method `export_to_rdf` with a similar name
-   |
-74 -         if let Ok(openapi) = verb_export.export_to_openapi() {
-74 +         if let Ok(openapi) = verb_export.export_to_rdf() {
-   |
-
-error[E0599]: no method named `export_to_rest_routes` found for struct `VerbExport` in the current scope
-  --> src/plugin_registry.rs:77:39
-   |
-77 |         if let Ok(rest) = verb_export.export_to_rest_routes() {
-   |                                       ^^^^^^^^^^^^^^^^^^^^^
-   |
-  ::: src/verb_export.rs:19:1
-   |
-19 | pub struct VerbExport {
-   | --------------------- method `export_to_rest_routes` not found for this struct
-   |
-help: there is a method `export_to_parquet` with a similar name
-   |
-77 -         if let Ok(rest) = verb_export.export_to_rest_routes() {
-77 +         if let Ok(rest) = verb_export.export_to_parquet() {
-   |
-
-warning: unreachable expression
-   --> src/universal_plugin_loader.rs:186:9
-    |
-175 |         return "x86_64".to_string();
-    |         --------------------------- any code following this expression is unreachable
-...
-186 |         "unknown".to_string()
-    |         ^^^^^^^^^^^^^^^^^^^^^ unreachable expression
-    |
-    = note: `#[warn(unreachable_code)]` (part of `#[warn(unused)]`) on by default
-
-warning: unused import: `NetworkBehaviour`
- --> src/mini_sdf_server.rs:6:13
+warning: `zos-server` (lib) generated 46 warnings (run `cargo fix --lib -p zos-server` to apply 43 suggestions)
+error: expected item, found keyword `let`
+ --> proof_test.rs:2:1
   |
-6 |     swarm::{NetworkBehaviour, SwarmEvent},
-  |             ^^^^^^^^^^^^^^^^
+2 | let proof = 999;
+  | ^^^
+  | |
+  | `let` cannot be used for global variables
+  | help: consider using `static` or `const` instead of `let`
+  |
+  = note: for a full list of items that can appear in modules, see <https://doc.rust-lang.org/reference/items.html>
 
-warning: unused variable: `local_peer_id`
-  --> src/plugins/libp2p_c_interface.rs:14:9
+warning: variable `size` is assigned to, but never used
+  --> git_pack_analyzer.rs:66:13
    |
-14 |     let local_peer_id = PeerId::from(local_key.public());
-   |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_local_peer_id`
-
-warning: unused variable: `msg_slice`
-  --> src/plugins/libp2p_c_interface.rs:95:9
+66 |         let mut size = 0;
+   |             ^^^^^^^^
    |
-95 |     let msg_slice = std::slice::from_raw_parts(message, message_len);
-   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_msg_slice`
+   = note: consider using `_size` instead
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
 
-error: future cannot be sent between threads safely
-   --> src/blockchain_ingestor.rs:126:9
-    |
-126 | /         tokio::spawn(async move {
-127 | |             let mut current_block = 0u64;
-128 | |
-129 | |             loop {
-...   |
-149 | |         });
-    | |__________^ future created by async block is not `Send`
-    |
-    = help: the trait `std::marker::Send` is not implemented for `dyn StdError`
-note: future is not `Send` as this value is used across an await
-   --> src/blockchain_ingestor.rs:143:97
-    |
-141 |                     Err(e) => {
-    |                         - has type `Box<dyn StdError>` which is not `Send`
-142 |                         eprintln!("❌ Failed to fetch {} block {}: {}", chain_name, current_block, e);
-143 |                         tokio::time::sleep(tokio::time::Duration::from_secs(config.block_time)).await;
-    |                                                                                                 ^^^^^ await occurs here, with `e` maybe used later
-note: required by a bound in `tokio::spawn`
-   --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.49.0/src/task/spawn.rs:171:21
-    |
-169 |     pub fn spawn<F>(future: F) -> JoinHandle<F::Output>
-    |            ----- required by a bound in this function
-170 |     where
-171 |         F: Future + Send + 'static,
-    |                     ^^^^ required by this bound in `spawn`
+error[E0601]: `main` function not found in crate `gandalf_test`
+ --> gandalf_test.rs:1:25
+  |
+1 | const GANDALF: i32 = 71;
+  |                         ^ consider adding a `main` function to `gandalf_test.rs`
 
-warning: unused variable: `wasm_data`
-   --> src/universal_plugin_loader.rs:221:31
-    |
-221 |     fn wasm_to_llvm_ir(&self, wasm_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
-    |                               ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_wasm_data`
-
-warning: unused variable: `binary_data`
-   --> src/universal_plugin_loader.rs:236:30
-    |
-236 |     fn x86_to_llvm_ir(&self, binary_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
-    |                              ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary_data`
-
-warning: unused variable: `binary_data`
-   --> src/universal_plugin_loader.rs:250:30
-    |
-250 |     fn arm_to_llvm_ir(&self, binary_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
-    |                              ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary_data`
-
-warning: unused variable: `binary_data`
-   --> src/universal_plugin_loader.rs:263:32
-    |
-263 |     fn riscv_to_llvm_ir(&self, binary_data: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
-    |                                ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary_data`
-
-warning: unused variable: `binary`
-   --> src/verified_plugin_loader.rs:303:44
-    |
-303 |     fn create_buffer_overflow_patch(&self, binary: &[u8]) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-    |                                            ^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary`
-
-warning: unused variable: `binary`
-   --> src/verified_plugin_loader.rs:308:40
-    |
-308 |     fn create_memory_leak_patch(&self, binary: &[u8]) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-    |                                        ^^^^^^ help: if this is intentional, prefix it with an underscore: `_binary`
-
-error[E0382]: borrow of moved value: `content`
-  --> src/notebooklm_interface.rs:59:25
+For more information about this error, try `rustc --explain E0601`.
+warning: value assigned to `size` is never read
+  --> git_pack_analyzer.rs:79:17
    |
-46 |     pub fn create_intelligent_chunk(&mut self, content: String, topic: String) -> Result<String, String> {
-   |                                                ------- move occurs because `content` has type `std::string::String`, which does not implement the `Copy` trait
+79 | /                 size += line.split_whitespace().nth(1)
+80 | |                     .and_then(|s| s.parse::<u64>().ok()).unwrap_or(0);
+   | |_____________________________________________________________________^
+   |
+   = help: maybe it is overwritten before being read?
+   = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `uncompressed_size` is never read
+  --> git_pack_analyzer.rs:16:5
+   |
+13 | struct PackInfo {
+   |        -------- field in this struct
 ...
-58 |             content,
-   |             ------- value moved here
-59 |             size_bytes: content.len(),
-   |                         ^^^^^^^ value borrowed here after move
+16 |     uncompressed_size: u64,
+   |     ^^^^^^^^^^^^^^^^^
    |
-help: consider cloning the value if the performance cost is acceptable
-   |
-58 |             content: content.clone(),
-   |                    +++++++++++++++++
+   = note: `PackInfo` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
 
-error[E0716]: temporary value dropped while borrowed
-  --> src/notebooklm_cli.rs:79:48
-   |
-79 |             let topic = args.get(2).unwrap_or(&"general".to_string());
-   |                                                ^^^^^^^^^^^^^^^^^^^^^ - temporary value is freed at the end of this statement
-   |                                                |
-   |                                                creates a temporary value which is freed while still in use
-80 |             let chunk_id = cli.import_file(file_path, topic)?;
-   |                                                       ----- borrow later used here
-   |
-   = note: consider using a `let` binding to create a longer lived value
+warning: fields `entropy` and `char_density` are never read
+   --> raid_markov_analyzer.rs:107:5
+    |
+106 | struct RaidFingerprint {
+    |        --------------- fields in this struct
+107 |     entropy: f64,
+    |     ^^^^^^^
+108 |     signature: u64,
+109 |     char_density: f64,
+    |     ^^^^^^^^^^^^
+    |
+    = note: `RaidFingerprint` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
 
-Some errors have detailed explanations: E0119, E0277, E0308, E0382, E0407, E0599, E0716.
-For more information about an error, try `rustc --explain E0119`.
-warning: `zos-server` (lib) generated 50 warnings
-error: could not compile `zos-server` (lib) due to 24 previous errors; 50 warnings emitted
+warning: method `extract_delta_patterns` is never used
+   --> git_pack_analyzer.rs:133:8
+    |
+ 20 | impl GitPackAnalyzer {
+    | -------------------- method in this implementation
+...
+133 |     fn extract_delta_patterns(&self, repo_path: &std::path::Path) -> Result<Vec<Strin...
+    |        ^^^^^^^^^^^^^^^^^^^^^^
+
+error: could not compile `zos-server` (bin "gandalf_test") due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `zos-server` (bin "proof_test") due to 1 previous error
+warning: unused import: `Write`
+ --> hir_comparison.rs:3:35
+  |
+3 | use std::io::{BufRead, BufReader, Write};
+  |                                   ^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `ext_signature`
+  --> self_aware_analyzer.rs:49:13
+   |
+49 |         let ext_signature = Self::compute_signature(external_code);
+   |             ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_ext_signature`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `own_signature` and `self_knowledge` are never read
+ --> self_aware_analyzer.rs:7:5
+  |
+4 | struct SelfImage {
+  |        --------- fields in this struct
+...
+7 |     own_signature: u64,
+  |     ^^^^^^^^^^^^^
+8 |     self_knowledge: SelfKnowledge,
+  |     ^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `complexity_score` is never read
+  --> self_aware_analyzer.rs:15:5
+   |
+12 | struct SelfKnowledge {
+   |        ------------- field in this struct
+...
+15 |     complexity_score: f64,
+   |     ^^^^^^^^^^^^^^^^
+   |
+   = note: `SelfKnowledge` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: unused variable: `i`
+  --> reverse_ending_analyzer.rs:45:10
+   |
+45 |     for (i, (pattern, count)) in sorted_endings.iter().take(20).enumerate() {
+   |          ^ help: if this is intentional, prefix it with an underscore: `_i`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+error: expected `,`, found `.`
+  --> markov_1_4m_analyzer.rs:50:18
+   |
+50 |     println!("=" .repeat(50));
+   |                  ^ expected `,`
+
+error: argument never used
+  --> markov_1_4m_analyzer.rs:50:19
+   |
+50 |     println!("=" .repeat(50));
+   |              ---  ^^^^^^^^^^ argument never used
+   |              |
+   |              formatting specifier missing
+   |
+help: format specifiers use curly braces, consider adding a format specifier
+   |
+50 |     println!("={}" .repeat(50));
+   |                ++
+
+warning: unused import: `std::fs`
+ --> libp2p2_server.rs:2:5
+  |
+2 | use std::fs;
+  |     ^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `zos-server` (bin "self_aware_analyzer") generated 3 warnings (run `cargo fix --bin "self_aware_analyzer" -p zos-server` to apply 1 suggestion)
+warning: `zos-server` (bin "reverse_ending_analyzer") generated 1 warning (run `cargo fix --bin "reverse_ending_analyzer" -p zos-server` to apply 1 suggestion)
+warning: `zos-server` (bin "hir_comparison") generated 1 warning (run `cargo fix --bin "hir_comparison" -p zos-server` to apply 1 suggestion)
+warning: `zos-server` (bin "git_pack_analyzer") generated 4 warnings
+warning: `zos-server` (bin "raid_markov_analyzer") generated 1 warning
+error[E0277]: the trait bound `SimpleMarkovModel: serde::Serialize` is not satisfied
+    --> markov_with_storage.rs:102:49
+     |
+ 102 |         let json = serde_json::to_string_pretty(self)
+     |                    ---------------------------- ^^^^ unsatisfied trait bound
+     |                    |
+     |                    required by a bound introduced by this call
+     |
+help: the trait `serde_core::ser::Serialize` is not implemented for `SimpleMarkovModel`
+    --> markov_with_storage.rs:4:1
+     |
+   4 | pub struct SimpleMarkovModel {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = note: for local types consider adding `#[derive(serde::Serialize)]` to your `SimpleMarkovModel` type
+     = note: for types from other crates check whether the crate offers a `serde` feature flag
+     = help: the following other types implement trait `serde_core::ser::Serialize`:
+               &'a T
+               &'a mut T
+               ()
+               (T,)
+               (T0, T1)
+               (T0, T1, T2)
+               (T0, T1, T2, T3)
+               (T0, T1, T2, T3, T4)
+             and 134 others
+note: required by a bound in `to_string_pretty`
+    --> /home/mdupont/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/ser.rs:2266:17
+     |
+2264 | pub fn to_string_pretty<T>(value: &T) -> Result<String>
+     |        ---------------- required by a bound in this function
+2265 | where
+2266 |     T: ?Sized + Serialize,
+     |                 ^^^^^^^^^ required by this bound in `to_string_pretty`
+     = note: the full name for the type has been written to '/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/target/debug/deps/markov_with_storage-81d9255898aac9c9.long-type-1540492589147432954.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+
+For more information about this error, try `rustc --explain E0277`.
+error: could not compile `zos-server` (bin "markov_with_storage") due to 1 previous error
+warning: `zos-server` (bin "libp2p2_server") generated 1 warning (run `cargo fix --bin "libp2p2_server" -p zos-server` to apply 1 suggestion)
+error: Syscall stripped: libc::execve
+  --> syscall_stripping_example.rs:24:5
+   |
+24 |     compile_error!("Syscall stripped: libc::execve");
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: Syscall stripped: std::process::Command
+  --> syscall_stripping_example.rs:25:5
+   |
+25 |     compile_error!("Syscall stripped: std::process::Command");
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: couldn't read `/mnt/data1/nix/time/2024/12/10/swarms-terraform/services/submodules/zos-server/target/debug/build/zos-server-e2fc8b1cef3ab7c8/out/syscalls_stripped_count.txt`: No such file or directory (os error 2)
+  --> syscall_stripping_example.rs:54:34
+   |
+54 | ...count = include!(concat!(env!("OUT_DIR"), "/syscalls_stripped_count.txt"));
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: could not compile `zos-server` (bin "syscall_stripping_example") due to 3 previous errors
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `goblin`
+ --> p2p_lib_wrapper.rs:1:5
+  |
+1 | use goblin::elf::Elf;
+  |     ^^^^^^ use of unresolved module or unlinked crate `goblin`
+  |
+  = help: if you wanted to use a crate named `goblin`, use `cargo add goblin` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `zos_server::mkbuildrs_patcher`
+ --> example_build.rs:2:17
+  |
+2 | use zos_server::mkbuildrs_patcher::mkbuildrs;
+  |                 ^^^^^^^^^^^^^^^^^ could not find `mkbuildrs_patcher` in `zos_server`
+
+error[E0432]: unresolved import `zos_server::cargo2plugin_loader`
+ --> cargo2plugin_demo.rs:2:17
+  |
+2 | use zos_server::cargo2plugin_loader::Cargo2PluginLoader;
+  |                 ^^^^^^^^^^^^^^^^^^^ could not find `cargo2plugin_loader` in `zos_server`
+
+error[E0601]: `main` function not found in crate `example_build`
+ --> example_build.rs:5:14
+  |
+5 | mkbuildrs!();
+  |              ^ consider adding a `main` function to `example_build.rs`
+
+Some errors have detailed explanations: E0432, E0601.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `zos-server` (bin "example_build") due to 2 previous errors
+For more information about this error, try `rustc --explain E0432`.
+error: could not compile `zos-server` (bin "cargo2plugin_demo") due to 1 previous error
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `goblin`
+  --> p2p_lib_wrapper.rs:91:15
+   |
+91 |         match goblin::elf::Elf::parse(&buffer) {
+   |               ^^^^^^ use of unresolved module or unlinked crate `goblin`
+   |
+   = help: if you wanted to use a crate named `goblin`, use `cargo add goblin` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `walkdir`
+  --> markov_1_4m_analyzer.rs:53:35
+   |
+53 |     let rust_files: Vec<String> = walkdir::WalkDir::new("/")
+   |                                   ^^^^^^^ use of unresolved module or unlinked crate `walkdir`
+   |
+   = help: if you wanted to use a crate named `walkdir`, use `cargo add walkdir` to add it to your `Cargo.toml`
+
+error[E0425]: cannot find function `repeat` in this scope
+  --> markov_1_4m_analyzer.rs:50:19
+   |
+50 |     println!("=" .repeat(50));
+   |                   ^^^^^^ not found in this scope
+   |
+help: consider importing one of these functions
+   |
+ 1 + use std::array::repeat;
+   |
+ 1 + use std::io::repeat;
+   |
+ 1 + use std::iter::repeat;
+   |
+ 1 + use core::array::repeat;
+   |
+   = and 3 other candidates
+
+warning: unused import: `std::path::Path`
+ --> markov_1_4m_analyzer.rs:3:5
+  |
+3 | use std::path::Path;
+  |     ^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0282]: type annotations needed
+  --> p2p_lib_wrapper.rs:97:29
+   |
+97 |                         if !name.is_empty() && sym.st_value != 0 {
+   |                             ^^^^ cannot infer type
+
+error[E0282]: type annotations needed
+  --> markov_1_4m_analyzer.rs:55:22
+   |
+55 |         .filter_map(|e| e.ok())
+   |                      ^  - type must be known at this point
+   |
+help: consider giving this closure parameter an explicit type
+   |
+55 |         .filter_map(|e: /* Type */| e.ok())
+   |                       ++++++++++++
+
+error[E0282]: type annotations needed
+  --> markov_1_4m_analyzer.rs:56:18
+   |
+56 |         .filter(|e| e.path().extension().map_or(false, |ext| ext == "rs"))
+   |                  ^  - type must be known at this point
+   |
+help: consider giving this closure parameter an explicit type
+   |
+56 |         .filter(|e: /* Type */| e.path().extension().map_or(false, |ext| ext == "rs"))
+   |                   ++++++++++++
+
+error[E0282]: type annotations needed
+  --> markov_1_4m_analyzer.rs:57:15
+   |
+57 |         .map(|e| e.path().to_string_lossy().to_string())
+   |               ^  - type must be known at this point
+   |
+help: consider giving this closure parameter an explicit type
+   |
+57 |         .map(|e: /* Type */| e.path().to_string_lossy().to_string())
+   |                ++++++++++++
+
+Some errors have detailed explanations: E0282, E0433.
+For more information about an error, try `rustc --explain E0282`.
+error: could not compile `zos-server` (bin "p2p_lib_wrapper") due to 3 previous errors
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `shellexpand`
+  --> test-repo-status.rs:82:25
+   |
+82 |     let expanded_path = shellexpand::tilde(path).to_string();
+   |                         ^^^^^^^^^^^ use of unresolved module or unlinked crate `shellexpand`
+   |
+   = help: if you wanted to use a crate named `shellexpand`, use `cargo add shellexpand` to add it to your `Cargo.toml`
+
+For more information about this error, try `rustc --explain E0433`.
+error: could not compile `zos-server` (bin "test-repo-status") due to 1 previous error
+error[E0282]: type annotations needed
+  --> markov_1_4m_analyzer.rs:81:12
+   |
+81 |         if group.len() > 1 {
+   |            ^^^^^ cannot infer type
+
+Some errors have detailed explanations: E0282, E0425, E0433.
+warning: `zos-server` (bin "markov_1_4m_analyzer") generated 1 warning
+error: could not compile `zos-server` (bin "markov_1_4m_analyzer") due to 8 previous errors; 1 warning emitted

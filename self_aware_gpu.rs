@@ -25,7 +25,10 @@ impl SelfAwareGPU {
     }
 
     fn map_cpu_segment_to_gpu(&mut self, cpu_addr: usize, size: usize) -> usize {
-        println!("📡 Mapping CPU segment 0x{:x} ({} bytes) to GPU...", cpu_addr, size);
+        println!(
+            "📡 Mapping CPU segment 0x{:x} ({} bytes) to GPU...",
+            cpu_addr, size
+        );
 
         // Simulate GPU memory allocation
         let gpu_addr = 0x7f0000000000 + self.cpu_to_gpu_mapping.len() * 0x1000;
@@ -65,8 +68,8 @@ impl SelfAwareGPU {
                         71 => "🔢", // Monster Group 71
                         31 => "⭐", // Monster Group 31
                         47 => "💎", // Monster Group 47
-                        0 => "🟫", // Unallocated GPU memory (brown)
-                        _ => "🟪", // Other GPU data (purple)
+                        0 => "🟫",  // Unallocated GPU memory (brown)
+                        _ => "🟪",  // Other GPU data (purple)
                     }
                 } else {
                     "⬛" // Out of bounds
@@ -84,17 +87,23 @@ impl SelfAwareGPU {
     fn gpu_self_introspection(&self) {
         println!("\n🧠 GPU SELF-INTROSPECTION:");
         println!("{}", "=".repeat(40));
-        println!("🎮 GPU Memory Size: {}GB", self.gpu_memory_size / (1024*1024*1024));
+        println!(
+            "🎮 GPU Memory Size: {}GB",
+            self.gpu_memory_size / (1024 * 1024 * 1024)
+        );
         println!("📊 Simulated Memory: {} bytes", self.gpu_memory_map.len());
         println!("🔗 CPU→GPU Mappings: {}", self.cpu_to_gpu_mapping.len());
-        println!("🔢 Monster Group Locations: {}", self.monster_group_locations.len());
+        println!(
+            "🔢 Monster Group Locations: {}",
+            self.monster_group_locations.len()
+        );
 
         for (cpu_addr, gpu_addr) in &self.cpu_to_gpu_mapping {
             println!("   CPU 0x{:x} → GPU 0x{:x}", cpu_addr, gpu_addr);
         }
 
         for (i, &gpu_addr) in self.monster_group_locations.iter().enumerate() {
-            println!("   Monster Group {}: GPU 0x{:x}", i+1, gpu_addr);
+            println!("   Monster Group {}: GPU 0x{:x}", i + 1, gpu_addr);
         }
     }
 

@@ -27,7 +27,9 @@ impl DynamicMemoryBitmap {
             println!("   ✅ Allocated at 0x{:x}", ptr as usize);
 
             // Write 71 to the allocated memory
-            unsafe { *ptr = 71; }
+            unsafe {
+                *ptr = 71;
+            }
         }
 
         ptr
@@ -39,7 +41,9 @@ impl DynamicMemoryBitmap {
         if let Some(pos) = self.heap_allocations.iter().position(|(p, _)| *p == ptr) {
             let (_, size) = self.heap_allocations.remove(pos);
             let layout = Layout::from_size_align(size, 8).unwrap();
-            unsafe { dealloc(ptr, layout); }
+            unsafe {
+                dealloc(ptr, layout);
+            }
             println!("   ✅ Deallocated {} bytes", size);
         }
     }
@@ -59,12 +63,18 @@ impl DynamicMemoryBitmap {
 
         // Heap (dynamic, based on allocations)
         if !self.heap_allocations.is_empty() {
-            let heap_start = self.heap_allocations.iter()
+            let heap_start = self
+                .heap_allocations
+                .iter()
                 .map(|(ptr, _)| *ptr as usize)
-                .min().unwrap();
-            let heap_end = self.heap_allocations.iter()
+                .min()
+                .unwrap();
+            let heap_end = self
+                .heap_allocations
+                .iter()
                 .map(|(ptr, size)| *ptr as usize + size)
-                .max().unwrap();
+                .max()
+                .unwrap();
             regions.insert("HEAP".to_string(), (heap_start, heap_end, "🟩")); // Green
         }
 
@@ -83,12 +93,24 @@ impl DynamicMemoryBitmap {
         let mut bitmap = String::new();
 
         // Find memory bounds
-        let min_addr = regions.values().map(|(start, _, _)| *start).min().unwrap_or(0);
-        let max_addr = regions.values().map(|(_, end, _)| *end).max().unwrap_or(0xffffffff);
+        let min_addr = regions
+            .values()
+            .map(|(start, _, _)| *start)
+            .min()
+            .unwrap_or(0);
+        let max_addr = regions
+            .values()
+            .map(|(_, end, _)| *end)
+            .max()
+            .unwrap_or(0xffffffff);
         let addr_range = max_addr - min_addr;
 
-        println!("📊 Memory range: 0x{:x} - 0x{:x} ({}MB)",
-            min_addr, max_addr, addr_range / 1024 / 1024);
+        println!(
+            "📊 Memory range: 0x{:x} - 0x{:x} ({}MB)",
+            min_addr,
+            max_addr,
+            addr_range / 1024 / 1024
+        );
 
         for row in 0..size {
             for col in 0..size {
@@ -105,7 +127,11 @@ impl DynamicMemoryBitmap {
         bitmap
     }
 
-    fn get_emoji_for_address(&self, addr: usize, regions: &HashMap<String, (usize, usize, &'static str)>) -> &'static str {
+    fn get_emoji_for_address(
+        &self,
+        addr: usize,
+        regions: &HashMap<String, (usize, usize, &'static str)>,
+    ) -> &'static str {
         // Check if address contains 71
         let has_71 = self.heap_allocations.iter().any(|(ptr, _)| {
             let heap_addr = *ptr as usize;
@@ -130,11 +156,16 @@ impl DynamicMemoryBitmap {
         println!("\n🟩 HEAP STATUS:");
         println!("   Color: 🟩 (Green)");
         println!("   Allocations: {}", self.heap_allocations.len());
-        println!("   Total size: {} bytes",
-            self.heap_allocations.iter().map(|(_, size)| size).sum::<usize>());
+        println!(
+            "   Total size: {} bytes",
+            self.heap_allocations
+                .iter()
+                .map(|(_, size)| size)
+                .sum::<usize>()
+        );
 
         for (i, (ptr, size)) in self.heap_allocations.iter().enumerate() {
-            println!("   Block {}: 0x{:x} ({} bytes)", i+1, *ptr as usize, size);
+            println!("   Block {}: 0x{:x} ({} bytes)", i + 1, *ptr as usize, size);
         }
     }
 

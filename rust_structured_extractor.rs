@@ -1,7 +1,7 @@
+use crossbeam::thread;
 use std::collections::HashMap;
 use std::fs;
 use std::process::Command;
-use crossbeam::thread;
 
 struct RustStructuredExtractor {
     rustc_path: String,
@@ -51,7 +51,8 @@ impl RustStructuredExtractor {
                     self.extract_dump_type_parallel(dump_type, files_ref);
                 });
             }
-        }).unwrap();
+        })
+        .unwrap();
 
         Ok(())
     }
@@ -70,14 +71,20 @@ impl RustStructuredExtractor {
                     for (i, file_path) in chunk.iter().enumerate() {
                         if let Ok(dump_content) = self.get_dump_for_file(file_path, dump_type) {
                             let filename = file_path.split('/').last().unwrap_or("unknown");
-                            let dump_file = format!("{}/{}_{}.dump", dump_dir, chunk_idx * chunk_size + i, filename);
+                            let dump_file = format!(
+                                "{}/{}_{}.dump",
+                                dump_dir,
+                                chunk_idx * chunk_size + i,
+                                filename
+                            );
                             let _ = fs::write(dump_file, dump_content);
                         }
                     }
                     println!("✅ Chunk {} complete for {}", chunk_idx, dump_type);
                 });
             }
-        }).unwrap();
+        })
+        .unwrap();
     }
 
     fn process_dumps_to_models(&self) -> Result<(), String> {
@@ -89,7 +96,8 @@ impl RustStructuredExtractor {
                     self.process_dump_type_to_models(dump_type);
                 });
             }
-        }).unwrap();
+        })
+        .unwrap();
 
         Ok(())
     }
@@ -111,14 +119,18 @@ impl RustStructuredExtractor {
                             let path = entry.path();
                             if let Ok(content) = fs::read_to_string(&path) {
                                 let model = self.build_markov_model(&content);
-                                let model_name = format!("{}/{}.bin", model_dir,
-                                    path.file_stem().unwrap().to_string_lossy());
+                                let model_name = format!(
+                                    "{}/{}.bin",
+                                    model_dir,
+                                    path.file_stem().unwrap().to_string_lossy()
+                                );
                                 self.save_model(&model, &model_name);
                             }
                         }
                     });
                 }
-            }).unwrap();
+            })
+            .unwrap();
         }
 
         println!("✅ Processed {} dumps to models", dump_type);
@@ -154,7 +166,8 @@ impl RustStructuredExtractor {
                     self.process_dump_type_to_models(dump_type);
                 });
             }
-        }).unwrap();
+        })
+        .unwrap();
 
         Ok(())
     }
@@ -176,14 +189,18 @@ impl RustStructuredExtractor {
                             let path = entry.path();
                             if let Ok(content) = fs::read_to_string(&path) {
                                 let model = self.build_markov_model(&content);
-                                let model_name = format!("{}/{}.bin", model_dir,
-                                    path.file_stem().unwrap().to_string_lossy());
+                                let model_name = format!(
+                                    "{}/{}.bin",
+                                    model_dir,
+                                    path.file_stem().unwrap().to_string_lossy()
+                                );
                                 self.save_model(&model, &model_name);
                             }
                         }
                     });
                 }
-            }).unwrap();
+            })
+            .unwrap();
         }
 
         println!("✅ Processed {} dumps to models", dump_type);
@@ -197,7 +214,8 @@ impl RustStructuredExtractor {
             let from = window[0];
             let to = window[1];
 
-            model.entry(from)
+            model
+                .entry(from)
                 .or_insert_with(HashMap::new)
                 .entry(to)
                 .and_modify(|count| *count += 1)
@@ -212,7 +230,8 @@ impl RustStructuredExtractor {
         use std::io::Write;
 
         let total_transitions: usize = model.values().map(|m| m.len()).sum();
-        file.write_all(&(total_transitions as u32).to_le_bytes()).unwrap();
+        file.write_all(&(total_transitions as u32).to_le_bytes())
+            .unwrap();
 
         for (from, to_map) in model {
             for (to, count) in to_map {
@@ -251,31 +270,52 @@ impl RustStructuredExtractor {
         Ok(())
     }
 
-    fn load_model(&self, path: &std::path::Path) -> Result<HashMap<char, HashMap<char, u32>>, String> {
+    fn load_model(
+        &self,
+        path: &std::path::Path,
+    ) -> Result<HashMap<char, HashMap<char, u32>>, String> {
         let data = fs::read(path).map_err(|e| e.to_string())?;
         let mut model = HashMap::new();
 
-        if data.len() < 4 { return Ok(model); }
+        if data.len() < 4 {
+            return Ok(model);
+        }
 
         let total_transitions = u32::from_le_bytes([data[0], data[1], data[2], data[3]]) as usize;
         let mut offset = 4;
 
         for _ in 0..total_transitions {
-            if offset + 12 > data.len() { break; }
+            if offset + 12 > data.len() {
+                break;
+            }
 
             let from_char = char::from_u32(u32::from_le_bytes([
-                data[offset], data[offset + 1], data[offset + 2], data[offset + 3]
-            ])).unwrap_or('\0');
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
+            ]))
+            .unwrap_or('\0');
 
             let to_char = char::from_u32(u32::from_le_bytes([
-                data[offset + 4], data[offset + 5], data[offset + 6], data[offset + 7]
-            ])).unwrap_or('\0');
+                data[offset + 4],
+                data[offset + 5],
+                data[offset + 6],
+                data[offset + 7],
+            ]))
+            .unwrap_or('\0');
 
             let count = u32::from_le_bytes([
-                data[offset + 8], data[offset + 9], data[offset + 10], data[offset + 11]
+                data[offset + 8],
+                data[offset + 9],
+                data[offset + 10],
+                data[offset + 11],
             ]);
 
-            model.entry(from_char).or_insert_with(HashMap::new).insert(to_char, count);
+            model
+                .entry(from_char)
+                .or_insert_with(HashMap::new)
+                .insert(to_char, count);
             offset += 12;
         }
 

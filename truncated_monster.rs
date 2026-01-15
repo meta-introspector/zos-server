@@ -20,21 +20,96 @@ impl TruncatedMonster {
 
         // Monster Group = 2^46 × 3^20 × 5^9 × 7^6 × 11^2 × 13^3 × 17 × 19 × 23 × 29 × 31 × 41 × 47 × 59 × 71
         let components = vec![
-            MonsterComponent { prime: 2, power: 46, gpu_chunk_id: 0, partial_result: 0.0 },
-            MonsterComponent { prime: 3, power: 20, gpu_chunk_id: 1, partial_result: 0.0 },
-            MonsterComponent { prime: 5, power: 9, gpu_chunk_id: 2, partial_result: 0.0 },
-            MonsterComponent { prime: 7, power: 6, gpu_chunk_id: 3, partial_result: 0.0 },
-            MonsterComponent { prime: 11, power: 2, gpu_chunk_id: 4, partial_result: 0.0 },
-            MonsterComponent { prime: 13, power: 3, gpu_chunk_id: 5, partial_result: 0.0 },
-            MonsterComponent { prime: 17, power: 1, gpu_chunk_id: 6, partial_result: 0.0 },
-            MonsterComponent { prime: 19, power: 1, gpu_chunk_id: 7, partial_result: 0.0 },
-            MonsterComponent { prime: 23, power: 1, gpu_chunk_id: 8, partial_result: 0.0 },
-            MonsterComponent { prime: 29, power: 1, gpu_chunk_id: 9, partial_result: 0.0 },
-            MonsterComponent { prime: 31, power: 1, gpu_chunk_id: 10, partial_result: 0.0 },
-            MonsterComponent { prime: 41, power: 1, gpu_chunk_id: 11, partial_result: 0.0 },
-            MonsterComponent { prime: 47, power: 1, gpu_chunk_id: 12, partial_result: 0.0 },
-            MonsterComponent { prime: 59, power: 1, gpu_chunk_id: 13, partial_result: 0.0 },
-            MonsterComponent { prime: 71, power: 1, gpu_chunk_id: 14, partial_result: 0.0 },
+            MonsterComponent {
+                prime: 2,
+                power: 46,
+                gpu_chunk_id: 0,
+                partial_result: 0.0,
+            },
+            MonsterComponent {
+                prime: 3,
+                power: 20,
+                gpu_chunk_id: 1,
+                partial_result: 0.0,
+            },
+            MonsterComponent {
+                prime: 5,
+                power: 9,
+                gpu_chunk_id: 2,
+                partial_result: 0.0,
+            },
+            MonsterComponent {
+                prime: 7,
+                power: 6,
+                gpu_chunk_id: 3,
+                partial_result: 0.0,
+            },
+            MonsterComponent {
+                prime: 11,
+                power: 2,
+                gpu_chunk_id: 4,
+                partial_result: 0.0,
+            },
+            MonsterComponent {
+                prime: 13,
+                power: 3,
+                gpu_chunk_id: 5,
+                partial_result: 0.0,
+            },
+            MonsterComponent {
+                prime: 17,
+                power: 1,
+                gpu_chunk_id: 6,
+                partial_result: 0.0,
+            },
+            MonsterComponent {
+                prime: 19,
+                power: 1,
+                gpu_chunk_id: 7,
+                partial_result: 0.0,
+            },
+            MonsterComponent {
+                prime: 23,
+                power: 1,
+                gpu_chunk_id: 8,
+                partial_result: 0.0,
+            },
+            MonsterComponent {
+                prime: 29,
+                power: 1,
+                gpu_chunk_id: 9,
+                partial_result: 0.0,
+            },
+            MonsterComponent {
+                prime: 31,
+                power: 1,
+                gpu_chunk_id: 10,
+                partial_result: 0.0,
+            },
+            MonsterComponent {
+                prime: 41,
+                power: 1,
+                gpu_chunk_id: 11,
+                partial_result: 0.0,
+            },
+            MonsterComponent {
+                prime: 47,
+                power: 1,
+                gpu_chunk_id: 12,
+                partial_result: 0.0,
+            },
+            MonsterComponent {
+                prime: 59,
+                power: 1,
+                gpu_chunk_id: 13,
+                partial_result: 0.0,
+            },
+            MonsterComponent {
+                prime: 71,
+                power: 1,
+                gpu_chunk_id: 14,
+                partial_result: 0.0,
+            },
         ];
 
         Self {
@@ -51,9 +126,13 @@ impl TruncatedMonster {
             let chunk_data = self.generate_component_data(comp);
             self.gpu_chunks.push(chunk_data);
 
-            println!("   Chunk {}: Prime {}^{} → {} elements",
-                comp.gpu_chunk_id, comp.prime, comp.power,
-                self.gpu_chunks[comp.gpu_chunk_id].len());
+            println!(
+                "   Chunk {}: Prime {}^{} → {} elements",
+                comp.gpu_chunk_id,
+                comp.prime,
+                comp.power,
+                self.gpu_chunks[comp.gpu_chunk_id].len()
+            );
         }
 
         println!("✅ {} components loaded to GPU", self.components.len());
@@ -80,10 +159,14 @@ impl TruncatedMonster {
         let comp = &self.components[component_id];
         let chunk = &self.gpu_chunks[comp.gpu_chunk_id];
 
-        println!("⚡ Computing component {} (prime {}) on GPU...", component_id, comp.prime);
+        println!(
+            "⚡ Computing component {} (prime {}) on GPU...",
+            component_id, comp.prime
+        );
 
         // Simulate GPU kernel execution
-        let result = chunk.iter()
+        let result = chunk
+            .iter()
             .enumerate()
             .map(|(i, &value)| {
                 if i % comp.prime as usize == 0 {
@@ -92,7 +175,8 @@ impl TruncatedMonster {
                     value * comp.prime as f64
                 }
             })
-            .sum::<f64>() / chunk.len() as f64;
+            .sum::<f64>()
+            / chunk.len() as f64;
 
         println!("   ✅ Component {} result: {:.2}", component_id, result);
         result
@@ -111,9 +195,13 @@ impl TruncatedMonster {
 
         // Store composition mapping
         let composition_id = self.composition_map.len();
-        self.composition_map.insert(composition_id, part_indices.to_vec());
+        self.composition_map
+            .insert(composition_id, part_indices.to_vec());
 
-        println!("   🎯 Composition {}: {:.2}", composition_id, composition_result);
+        println!(
+            "   🎯 Composition {}: {:.2}",
+            composition_id, composition_result
+        );
         composition_result
     }
 
@@ -150,9 +238,7 @@ impl TruncatedMonster {
     fn show_composition_map(&self) {
         println!("\n🗺️ COMPOSITION MAP:");
         for (comp_id, indices) in &self.composition_map {
-            let primes: Vec<u64> = indices.iter()
-                .map(|&i| self.components[i].prime)
-                .collect();
+            let primes: Vec<u64> = indices.iter().map(|&i| self.components[i].prime).collect();
             println!("   Composition {}: primes {:?}", comp_id, primes);
         }
     }
@@ -168,8 +254,14 @@ fn main() {
     monster.demonstrate_truncated_composition();
 
     println!("\n🎯 TRUNCATED MONSTER COMPLETE:");
-    println!("   ✅ Monster Group factorized into {} components", monster.components.len());
-    println!("   ✅ Components loaded to {} GPU chunks", monster.gpu_chunks.len());
+    println!(
+        "   ✅ Monster Group factorized into {} components",
+        monster.components.len()
+    );
+    println!(
+        "   ✅ Components loaded to {} GPU chunks",
+        monster.gpu_chunks.len()
+    );
     println!("   ✅ Partial compositions computed on GPU");
     println!("   ✅ Full Monster reconstructed from parts");
     println!("   🔮 Monster Group now computable in manageable chunks!");

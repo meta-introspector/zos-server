@@ -42,7 +42,8 @@ impl RustRepoGenerator {
         // Train transitions on path characters
         let chars: Vec<char> = path.chars().collect();
         for window in chars.windows(2) {
-            *self.path_transitions
+            *self
+                .path_transitions
                 .entry(window[0])
                 .or_insert_with(HashMap::new)
                 .entry(window[1])
@@ -58,7 +59,8 @@ impl RustRepoGenerator {
         for _ in 0..max_len {
             if let Some(next_chars) = self.path_transitions.get(&current) {
                 // Pick most likely next character
-                let next = next_chars.iter()
+                let next = next_chars
+                    .iter()
                     .max_by_key(|(_, count)| *count)
                     .map(|(c, _)| *c);
 

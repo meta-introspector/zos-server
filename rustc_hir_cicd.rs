@@ -143,7 +143,11 @@ impl RustcHIRExtractor {
             self.process_rust_file(file_path)?;
         }
 
-        println!("\r    ✅ Processed {}/{} files", rs_files.len(), rs_files.len());
+        println!(
+            "\r    ✅ Processed {}/{} files",
+            rs_files.len(),
+            rs_files.len()
+        );
         Ok(())
     }
 
@@ -151,7 +155,9 @@ impl RustcHIRExtractor {
         let mut rust_files = Vec::new();
 
         fn walk_dir(dir: &str, files: &mut Vec<String>, depth: u32) -> Result<(), String> {
-            if depth > 10 { return Ok(()); } // Prevent infinite recursion
+            if depth > 10 {
+                return Ok(());
+            } // Prevent infinite recursion
 
             if let Ok(entries) = fs::read_dir(dir) {
                 for entry in entries.flatten() {
@@ -182,7 +188,8 @@ impl RustcHIRExtractor {
         // Create source artifact
         let source_artifact = self.create_source_artifact(file_path, &source_content);
         let artifact_key = self.get_artifact_key(file_path);
-        self.source_artifacts.insert(artifact_key.clone(), source_artifact);
+        self.source_artifacts
+            .insert(artifact_key.clone(), source_artifact);
 
         // Generate HIR
         let hir_artifact = self.generate_hir_artifact(file_path, &source_content);
@@ -307,14 +314,18 @@ impl RustcHIRExtractor {
             .map_err(|e| format!("HIR serialization error: {}", e))?;
         fs::write("rustc_hir_artifacts.json", hir_json)
             .map_err(|e| format!("HIR write error: {}", e))?;
-        self.build_manifest.artifacts_generated.push("rustc_hir_artifacts.json".to_string());
+        self.build_manifest
+            .artifacts_generated
+            .push("rustc_hir_artifacts.json".to_string());
 
         // Save source artifacts as JSON
         let source_json = serde_json::to_string_pretty(&self.source_artifacts)
             .map_err(|e| format!("Source serialization error: {}", e))?;
         fs::write("rustc_source_artifacts.json", source_json)
             .map_err(|e| format!("Source write error: {}", e))?;
-        self.build_manifest.artifacts_generated.push("rustc_source_artifacts.json".to_string());
+        self.build_manifest
+            .artifacts_generated
+            .push("rustc_source_artifacts.json".to_string());
 
         // Save build manifest
         let manifest_json = serde_json::to_string_pretty(&self.build_manifest)
@@ -335,13 +346,20 @@ impl RustcHIRExtractor {
         println!("  Total files processed: {}", self.total_files);
         println!("  HIR generation successful: {}", self.successful_hir);
         println!("  HIR generation failed: {}", self.failed_hir);
-        println!("  Success rate: {:.2}%", self.build_manifest.hir_success_rate * 100.0);
+        println!(
+            "  Success rate: {:.2}%",
+            self.build_manifest.hir_success_rate * 100.0
+        );
 
         // Analyze artifacts
-        let total_hir_transitions: u64 = self.hir_artifacts.values()
+        let total_hir_transitions: u64 = self
+            .hir_artifacts
+            .values()
             .map(|a| a.transition_count)
             .sum();
-        let total_source_transitions: u64 = self.source_artifacts.values()
+        let total_source_transitions: u64 = self
+            .source_artifacts
+            .values()
             .map(|a| a.transition_count)
             .sum();
 

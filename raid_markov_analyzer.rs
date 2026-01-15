@@ -17,14 +17,18 @@ fn main() {
     // Parallel processing optimized for RAID5
     let fingerprints = Arc::new(Mutex::new(HashMap::new()));
     let chunk_size = 1000; // Process in chunks for optimal RAID performance
-    let num_threads = 8;   // Match CPU cores
+    let num_threads = 8; // Match CPU cores
 
     let chunks: Vec<Vec<String>> = rust_files
         .chunks(chunk_size)
         .map(|chunk| chunk.to_vec())
         .collect();
 
-    println!("🔧 Processing {} chunks with {} threads", chunks.len(), num_threads);
+    println!(
+        "🔧 Processing {} chunks with {} threads",
+        chunks.len(),
+        num_threads
+    );
 
     let mut handles = vec![];
 
@@ -67,7 +71,10 @@ fn main() {
     println!("✅ RAID Analysis Complete!");
     println!("   Files processed: {}", fps.len());
     println!("   Time elapsed: {:.2}s", elapsed.as_secs_f64());
-    println!("   Throughput: {:.0} files/sec", fps.len() as f64 / elapsed.as_secs_f64());
+    println!(
+        "   Throughput: {:.0} files/sec",
+        fps.len() as f64 / elapsed.as_secs_f64()
+    );
 
     // Analyze conformal folding
     analyze_conformal_folding(&fps);
@@ -75,10 +82,7 @@ fn main() {
 
 fn find_rust_files_raid() -> Vec<String> {
     // Focus on RAID-mounted directories for maximum bandwidth
-    let raid_paths = vec![
-        "/mnt/data1/nix",
-        "/opt/compiler",
-    ];
+    let raid_paths = vec!["/mnt/data1/nix", "/opt/compiler"];
 
     let mut files = Vec::new();
 
@@ -115,7 +119,11 @@ fn analyze_markov_raid_optimized(content: &str) -> RaidFingerprint {
     let chars: Vec<char> = content.chars().take(sample_size).collect();
 
     if chars.len() < 2 {
-        return RaidFingerprint { entropy: 0.0, signature: 0, char_density: 0.0 };
+        return RaidFingerprint {
+            entropy: 0.0,
+            signature: 0,
+            char_density: 0.0,
+        };
     }
 
     let mut transitions = HashMap::new();
@@ -128,21 +136,29 @@ fn analyze_markov_raid_optimized(content: &str) -> RaidFingerprint {
     }
 
     let entropy = if total > 0 {
-        -transitions.values()
+        -transitions
+            .values()
             .map(|&count| {
                 let p = count as f64 / total as f64;
                 p * p.log2()
             })
             .sum::<f64>()
-    } else { 0.0 };
+    } else {
+        0.0
+    };
 
-    let signature = transitions.keys()
+    let signature = transitions
+        .keys()
         .map(|(a, b)| (*a as u64) ^ (*b as u64))
         .fold(0, |acc, x| acc ^ x);
 
     let char_density = chars.len() as f64 / content.len() as f64;
 
-    RaidFingerprint { entropy, signature, char_density }
+    RaidFingerprint {
+        entropy,
+        signature,
+        char_density,
+    }
 }
 
 fn analyze_conformal_folding(fingerprints: &HashMap<String, RaidFingerprint>) {
@@ -150,10 +166,14 @@ fn analyze_conformal_folding(fingerprints: &HashMap<String, RaidFingerprint>) {
 
     let mut signature_groups: HashMap<u64, Vec<String>> = HashMap::new();
     for (path, fp) in fingerprints {
-        signature_groups.entry(fp.signature).or_insert(Vec::new()).push(path.clone());
+        signature_groups
+            .entry(fp.signature)
+            .or_insert(Vec::new())
+            .push(path.clone());
     }
 
-    let mut large_groups: Vec<_> = signature_groups.iter()
+    let mut large_groups: Vec<_> = signature_groups
+        .iter()
         .filter(|(_, files)| files.len() > 1)
         .collect();
     large_groups.sort_by_key(|(_, files)| files.len());

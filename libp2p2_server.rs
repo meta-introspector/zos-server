@@ -1,6 +1,6 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PeerInfo {
@@ -44,14 +44,23 @@ impl LibP2P2Server {
 
     /// 🌐 Register peer with mathematical capabilities
     pub fn register_peer(&mut self, peer: PeerInfo) {
-        println!("🤝 Registering peer: {} with capabilities: {:?}",
-                 peer.peer_id, peer.mathematical_capabilities);
+        println!(
+            "🤝 Registering peer: {} with capabilities: {:?}",
+            peer.peer_id, peer.mathematical_capabilities
+        );
         self.peers.insert(peer.peer_id.clone(), peer);
     }
 
     /// 📊 Publish dataset with peer seeds
-    pub fn publish_dataset(&mut self, dataset_name: &str, framework: &str) -> Result<(), Box<dyn std::error::Error>> {
-        println!("📦 Publishing dataset: {} with framework: {}", dataset_name, framework);
+    pub fn publish_dataset(
+        &mut self,
+        dataset_name: &str,
+        framework: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        println!(
+            "📦 Publishing dataset: {} with framework: {}",
+            dataset_name, framework
+        );
 
         // Get current peer list as seeds
         let peer_seeds: Vec<PeerInfo> = self.peers.values().cloned().collect();
@@ -81,7 +90,10 @@ impl LibP2P2Server {
     }
 
     /// 🔍 Discover peers from dataset seeds
-    pub fn discover_peers_from_dataset(&mut self, dataset_name: &str) -> Result<usize, Box<dyn std::error::Error>> {
+    pub fn discover_peers_from_dataset(
+        &mut self,
+        dataset_name: &str,
+    ) -> Result<usize, Box<dyn std::error::Error>> {
         println!("🔍 Discovering peers from dataset: {}", dataset_name);
 
         let mut discovered = 0;
@@ -126,7 +138,10 @@ impl LibP2P2Server {
         self.start_mathematical_verification_service()?;
         self.start_dataset_sync_service()?;
 
-        println!("🌐 Mathematical P2P network active with {} peers", self.peers.len());
+        println!(
+            "🌐 Mathematical P2P network active with {} peers",
+            self.peers.len()
+        );
         Ok(())
     }
 
@@ -151,22 +166,32 @@ impl LibP2P2Server {
 
 struct GitManager;
 impl GitManager {
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
     fn get_current_refs(&self) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-        Ok(vec!["main".to_string(), "mathematical-compiler".to_string()])
+        Ok(vec![
+            "main".to_string(),
+            "mathematical-compiler".to_string(),
+        ])
     }
     fn push_dataset_info(&self, _dataset: &DatasetSeed) -> Result<(), Box<dyn std::error::Error>> {
         println!("📤 Pushing dataset info to git...");
         Ok(())
     }
-    fn fetch_peer_seeds(&self, _dataset: &str) -> Result<Vec<PeerInfo>, Box<dyn std::error::Error>> {
+    fn fetch_peer_seeds(
+        &self,
+        _dataset: &str,
+    ) -> Result<Vec<PeerInfo>, Box<dyn std::error::Error>> {
         Ok(vec![])
     }
 }
 
 struct HuggingFaceManager;
 impl HuggingFaceManager {
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
     fn get_recent_commits(&self) -> Result<Vec<String>, Box<dyn std::error::Error>> {
         Ok(vec!["commit1".to_string(), "commit2".to_string()])
     }
@@ -174,15 +199,23 @@ impl HuggingFaceManager {
         println!("🤗 Pushing dataset to Hugging Face...");
         Ok(())
     }
-    fn fetch_peer_seeds(&self, _dataset: &str) -> Result<Vec<PeerInfo>, Box<dyn std::error::Error>> {
+    fn fetch_peer_seeds(
+        &self,
+        _dataset: &str,
+    ) -> Result<Vec<PeerInfo>, Box<dyn std::error::Error>> {
         Ok(vec![])
     }
 }
 
 struct NixManager;
 impl NixManager {
-    fn new() -> Self { Self }
-    fn update_dataset_derivation(&self, _dataset: &DatasetSeed) -> Result<(), Box<dyn std::error::Error>> {
+    fn new() -> Self {
+        Self
+    }
+    fn update_dataset_derivation(
+        &self,
+        _dataset: &DatasetSeed,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         println!("❄️ Updating Nix derivation...");
         Ok(())
     }

@@ -50,7 +50,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(comparison) => {
             println!("🔄 Comparison Results:");
             println!("  Syscalls Removed: {}", comparison.syscalls_removed);
-            println!("  Risk Reduction: {:.2}%", comparison.risk_reduction * 100.0);
+            println!(
+                "  Risk Reduction: {:.2}%",
+                comparison.risk_reduction * 100.0
+            );
             println!("  Symbols Stripped: {}", comparison.symbols_stripped);
             println!("  Stripping Success: {}", comparison.stripping_successful);
 
@@ -87,11 +90,11 @@ fn demonstrate_pattern_detection() {
 
     // Simulate binary with syscalls
     let unsafe_binary = vec![
-        0x48, 0x89, 0xe5,  // mov rbp, rsp (safe)
-        0x0f, 0x05,        // syscall (DANGEROUS!)
+        0x48, 0x89, 0xe5, // mov rbp, rsp (safe)
+        0x0f, 0x05, // syscall (DANGEROUS!)
         0x48, 0xc7, 0xc0, 0x3b, // mov rax, 59 (execve - CRITICAL!)
-        0xff, 0xd0,        // call rax (suspicious)
-        0xc3,              // ret (safe)
+        0xff, 0xd0, // call rax (suspicious)
+        0xc3, // ret (safe)
     ];
 
     println!("🧬 Pattern Analysis:");
@@ -105,11 +108,11 @@ fn demonstrate_pattern_detection() {
 
     // Simulate safe binary (after stripping)
     let safe_binary = vec![
-        0x48, 0x89, 0xe5,  // mov rbp, rsp (safe)
-        0x90, 0x90,        // nop nop (syscalls replaced with nops)
+        0x48, 0x89, 0xe5, // mov rbp, rsp (safe)
+        0x90, 0x90, // nop nop (syscalls replaced with nops)
         0x90, 0x90, 0x90, 0x90, // nops (execve removed)
-        0x90, 0x90,        // nops (call removed)
-        0xc3,              // ret (safe)
+        0x90, 0x90, // nops (call removed)
+        0xc3, // ret (safe)
     ];
 
     let safe_patterns = classifier.analyze_patterns(&safe_binary);
@@ -119,8 +122,16 @@ fn demonstrate_pattern_detection() {
     println!("  Safe patterns: {}", safe_patterns.safe_patterns);
 
     println!("\n📈 Improvement:");
-    println!("  Syscalls removed: {}",
-        patterns.syscall_patterns.saturating_sub(safe_patterns.syscall_patterns));
-    println!("  Dangerous patterns removed: {}",
-        patterns.dangerous_patterns.saturating_sub(safe_patterns.dangerous_patterns));
+    println!(
+        "  Syscalls removed: {}",
+        patterns
+            .syscall_patterns
+            .saturating_sub(safe_patterns.syscall_patterns)
+    );
+    println!(
+        "  Dangerous patterns removed: {}",
+        patterns
+            .dangerous_patterns
+            .saturating_sub(safe_patterns.dangerous_patterns)
+    );
 }

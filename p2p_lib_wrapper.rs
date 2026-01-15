@@ -61,7 +61,8 @@ impl P2PLibWrapper {
             self.lib_path = Some(path.to_string());
 
             let result = format!("Loaded {} ({} bytes)", path, file_size);
-            self.results.insert("load_result".to_string(), result.as_bytes().to_vec());
+            self.results
+                .insert("load_result".to_string(), result.as_bytes().to_vec());
 
             println!("✅ Library loaded successfully");
             Ok(result.as_bytes().to_vec())
@@ -101,12 +102,13 @@ impl P2PLibWrapper {
                 }
 
                 let symbols_json = serde_json::to_vec(&symbols)?;
-                self.results.insert("elf_symbols".to_string(), symbols_json.clone());
+                self.results
+                    .insert("elf_symbols".to_string(), symbols_json.clone());
 
                 println!("Found {} ELF symbols", symbols.len());
                 Ok(symbols_json)
             }
-            Err(e) => Err(format!("Failed to parse ELF: {}", e).into())
+            Err(e) => Err(format!("Failed to parse ELF: {}", e).into()),
         }
     }
 
@@ -120,7 +122,8 @@ impl P2PLibWrapper {
                 let addr = symbol.into_raw().into_raw() as usize;
                 let addr_bytes = addr.to_le_bytes().to_vec();
 
-                self.results.insert(format!("symbol_{}", name), addr_bytes.clone());
+                self.results
+                    .insert(format!("symbol_{}", name), addr_bytes.clone());
 
                 println!("✅ Symbol {} at address: 0x{:x}", name, addr);
                 Ok(addr_bytes)
@@ -136,11 +139,14 @@ impl P2PLibWrapper {
         let library = self.library.as_ref().ok_or("No library loaded")?;
 
         unsafe {
-            if let Ok(symbol) = library.get::<Symbol<unsafe extern "C" fn() -> i32>>(name.as_bytes()) {
+            if let Ok(symbol) =
+                library.get::<Symbol<unsafe extern "C" fn() -> i32>>(name.as_bytes())
+            {
                 let result = symbol();
                 let result_bytes = result.to_le_bytes().to_vec();
 
-                self.results.insert(format!("invoke_{}", name), result_bytes.clone());
+                self.results
+                    .insert(format!("invoke_{}", name), result_bytes.clone());
 
                 println!("✅ Symbol {} returned: {}", name, result);
                 Ok(result_bytes)
@@ -165,7 +171,8 @@ impl P2PLibWrapper {
         });
 
         let info_bytes = serde_json::to_vec(&info)?;
-        self.results.insert("lib_info".to_string(), info_bytes.clone());
+        self.results
+            .insert("lib_info".to_string(), info_bytes.clone());
 
         Ok(info_bytes)
     }

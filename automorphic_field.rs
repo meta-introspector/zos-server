@@ -30,7 +30,8 @@ impl AutomorphicFieldAnalyzer {
         println!("🔑 Extracting the Key of Rust (HIR of rustc_hir)...");
 
         // Get rustc_hir source files with absolute path
-        let rustc_hir_file = "/mnt/data1/2024/01/27/coq-of-rust/rust/compiler/rustc_hir_analysis/src/lib.rs";
+        let rustc_hir_file =
+            "/mnt/data1/2024/01/27/coq-of-rust/rust/compiler/rustc_hir_analysis/src/lib.rs";
 
         println!("  Checking file: {}", rustc_hir_file);
         if !std::path::Path::new(rustc_hir_file).exists() {
@@ -44,7 +45,8 @@ impl AutomorphicFieldAnalyzer {
                 // Train on original source
                 let source_chars: Vec<char> = source_content.chars().collect();
                 for window in source_chars.windows(2) {
-                    *self.rustc_source_model
+                    *self
+                        .rustc_source_model
                         .entry(window[0])
                         .or_insert_with(HashMap::new)
                         .entry(window[1])
@@ -53,7 +55,10 @@ impl AutomorphicFieldAnalyzer {
                 }
 
                 // Generate HIR of the HIR analyzer itself
-                println!("  Generating HIR with: rustc -Z unpretty=hir {}", rustc_hir_file);
+                println!(
+                    "  Generating HIR with: rustc -Z unpretty=hir {}",
+                    rustc_hir_file
+                );
                 let output = Command::new("rustc")
                     .args(&["-Z", "unpretty=hir", rustc_hir_file])
                     .output()
@@ -69,7 +74,8 @@ impl AutomorphicFieldAnalyzer {
                     // Train on HIR of HIR analyzer (the key!)
                     let hir_chars: Vec<char> = hir_content.chars().collect();
                     for window in hir_chars.windows(2) {
-                        *self.rust_key_model
+                        *self
+                            .rust_key_model
                             .entry(window[0])
                             .or_insert_with(HashMap::new)
                             .entry(window[1])
@@ -77,14 +83,24 @@ impl AutomorphicFieldAnalyzer {
                         self.rust_key_total += 1;
                     }
 
-                    println!("  ✅ Rust Key extracted: {} transitions", self.rust_key_total);
+                    println!(
+                        "  ✅ Rust Key extracted: {} transitions",
+                        self.rust_key_total
+                    );
                 } else {
                     let stderr = String::from_utf8_lossy(&output.stderr);
-                    return Err(format!("rustc failed with exit code {:?}: {}", output.status.code(), stderr));
+                    return Err(format!(
+                        "rustc failed with exit code {:?}: {}",
+                        output.status.code(),
+                        stderr
+                    ));
                 }
             }
             Err(e) => {
-                return Err(format!("Could not read rustc_hir source file {}: {}", rustc_hir_file, e));
+                return Err(format!(
+                    "Could not read rustc_hir source file {}: {}",
+                    rustc_hir_file, e
+                ));
             }
         }
 
@@ -135,7 +151,8 @@ impl AutomorphicFieldAnalyzer {
                 };
 
                 kleene_patterns.push(kleene_pattern.clone());
-                self.kleene_mappings.insert(format!("{}->{}", from, to), kleene_pattern);
+                self.kleene_mappings
+                    .insert(format!("{}->{}", from, to), kleene_pattern);
             }
         }
 
@@ -183,7 +200,10 @@ impl AutomorphicFieldAnalyzer {
 
         let kleene_patterns = self.map_to_kleene_algebra();
         println!("\n🔤 Kleene Algebra Mapping:");
-        println!("  Generated {} Kleene patterns from Rust key", kleene_patterns.len());
+        println!(
+            "  Generated {} Kleene patterns from Rust key",
+            kleene_patterns.len()
+        );
 
         println!("  Sample Kleene patterns:");
         for pattern in kleene_patterns.iter().take(8) {

@@ -36,12 +36,20 @@ impl MultiFileMarkov {
             processed += 1;
 
             if processed % 50000 == 0 {
-                print!("\r🔍 Processed {} files, {} file types", processed, self.file_counts.len());
+                print!(
+                    "\r🔍 Processed {} files, {} file types",
+                    processed,
+                    self.file_counts.len()
+                );
                 std::io::stdout().flush().unwrap();
             }
         }
 
-        println!("\n✅ Analyzed {} files across {} file types", processed, self.file_counts.len());
+        println!(
+            "\n✅ Analyzed {} files across {} file types",
+            processed,
+            self.file_counts.len()
+        );
         Ok(())
     }
 
@@ -86,7 +94,8 @@ impl MultiFileMarkov {
             let to = window[1];
 
             // Forward model
-            *self.models
+            *self
+                .models
                 .entry(file_key.clone())
                 .or_insert_with(HashMap::new)
                 .entry(from)
@@ -95,7 +104,8 @@ impl MultiFileMarkov {
                 .or_insert(0) += 1;
 
             // Reverse model
-            *self.reverse_models
+            *self
+                .reverse_models
                 .entry(file_key.clone())
                 .or_insert_with(HashMap::new)
                 .entry(to)
@@ -107,12 +117,18 @@ impl MultiFileMarkov {
 
     fn save_all_models(&self) -> Result<(), String> {
         for (file_type, model) in &self.models {
-            let filename = format!("{}_forward.bin", file_type.replace("/", "_").replace(".", "_"));
+            let filename = format!(
+                "{}_forward.bin",
+                file_type.replace("/", "_").replace(".", "_")
+            );
             self.save_binary_model(&filename, model)?;
         }
 
         for (file_type, model) in &self.reverse_models {
-            let filename = format!("{}_reverse.bin", file_type.replace("/", "_").replace(".", "_"));
+            let filename = format!(
+                "{}_reverse.bin",
+                file_type.replace("/", "_").replace(".", "_")
+            );
             self.save_binary_model(&filename, model)?;
         }
 
@@ -120,24 +136,35 @@ impl MultiFileMarkov {
         let mut file = fs::File::create("file_counts.bin")
             .map_err(|e| format!("Create file_counts error: {}", e))?;
 
-        file.write_all(&(self.file_counts.len() as u32).to_le_bytes()).unwrap();
+        file.write_all(&(self.file_counts.len() as u32).to_le_bytes())
+            .unwrap();
         for (file_type, count) in &self.file_counts {
-            file.write_all(&(file_type.len() as u32).to_le_bytes()).unwrap();
+            file.write_all(&(file_type.len() as u32).to_le_bytes())
+                .unwrap();
             file.write_all(file_type.as_bytes()).unwrap();
             file.write_all(&count.to_le_bytes()).unwrap();
         }
 
-        println!("💾 Saved {} forward models, {} reverse models", self.models.len(), self.reverse_models.len());
+        println!(
+            "💾 Saved {} forward models, {} reverse models",
+            self.models.len(),
+            self.reverse_models.len()
+        );
         Ok(())
     }
 
-    fn save_binary_model(&self, filename: &str, model: &HashMap<char, HashMap<char, u32>>) -> Result<(), String> {
-        let mut file = fs::File::create(filename)
-            .map_err(|e| format!("Create {} error: {}", filename, e))?;
+    fn save_binary_model(
+        &self,
+        filename: &str,
+        model: &HashMap<char, HashMap<char, u32>>,
+    ) -> Result<(), String> {
+        let mut file =
+            fs::File::create(filename).map_err(|e| format!("Create {} error: {}", filename, e))?;
 
         // Count total transitions
         let total_transitions: usize = model.values().map(|m| m.len()).sum();
-        file.write_all(&(total_transitions as u32).to_le_bytes()).unwrap();
+        file.write_all(&(total_transitions as u32).to_le_bytes())
+            .unwrap();
 
         for (from, to_map) in model {
             for (to, count) in to_map {
@@ -150,7 +177,12 @@ impl MultiFileMarkov {
         Ok(())
     }
 
-    fn generate_forward(&self, model: &HashMap<char, HashMap<char, u32>>, start: char, len: usize) -> String {
+    fn generate_forward(
+        &self,
+        model: &HashMap<char, HashMap<char, u32>>,
+        start: char,
+        len: usize,
+    ) -> String {
         let mut result = String::new();
         let mut current = start;
         result.push(current);
@@ -171,7 +203,12 @@ impl MultiFileMarkov {
         result
     }
 
-    fn generate_reverse(&self, model: &HashMap<char, HashMap<char, u32>>, end: char, len: usize) -> String {
+    fn generate_reverse(
+        &self,
+        model: &HashMap<char, HashMap<char, u32>>,
+        end: char,
+        len: usize,
+    ) -> String {
         let mut result = String::new();
         let mut current = end;
         result.push(current);
@@ -206,13 +243,22 @@ impl MultiFileMarkov {
 
         println!("\n🎯 Generation examples:");
         if let Some(rs_model) = self.models.get("rs") {
-            println!("  Rust forward from 's': {}", self.generate_forward(rs_model, 's', 15));
+            println!(
+                "  Rust forward from 's': {}",
+                self.generate_forward(rs_model, 's', 15)
+            );
         }
         if let Some(rs_reverse) = self.reverse_models.get("rs") {
-            println!("  Rust reverse to 's': {}", self.generate_reverse(rs_reverse, 's', 15));
+            println!(
+                "  Rust reverse to 's': {}",
+                self.generate_reverse(rs_reverse, 's', 15)
+            );
         }
         if let Some(cargo_model) = self.models.get("Cargo.toml") {
-            println!("  Cargo.toml forward from 'C': {}", self.generate_forward(cargo_model, 'C', 15));
+            println!(
+                "  Cargo.toml forward from 'C': {}",
+                self.generate_forward(cargo_model, 'C', 15)
+            );
         }
     }
 }

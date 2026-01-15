@@ -37,7 +37,9 @@ impl FilenameMarkov {
     }
 
     fn walk_directory(&mut self, dir: &Path, depth: u32) -> Result<(), String> {
-        if depth > 20 { return Ok(()); } // Prevent infinite recursion
+        if depth > 20 {
+            return Ok(());
+        } // Prevent infinite recursion
 
         if let Ok(entries) = fs::read_dir(dir) {
             for entry in entries.flatten() {
@@ -58,7 +60,13 @@ impl FilenameMarkov {
                 self.total_files += 1;
 
                 // Recurse into directories
-                if path.is_dir() && !path.file_name().unwrap_or_default().to_string_lossy().starts_with('.') {
+                if path.is_dir()
+                    && !path
+                        .file_name()
+                        .unwrap_or_default()
+                        .to_string_lossy()
+                        .starts_with('.')
+                {
                     self.walk_directory(&path, depth + 1)?;
                 }
             }
@@ -74,7 +82,8 @@ impl FilenameMarkov {
             let from = window[0];
             let to = window[1];
 
-            *self.path_transitions
+            *self
+                .path_transitions
                 .entry(from)
                 .or_insert_with(HashMap::new)
                 .entry(to)
@@ -101,7 +110,10 @@ impl FilenameMarkov {
         println!("📁 Filename Markov Analysis:");
         println!("  Total files: {}", self.total_files);
         println!("  Total path characters: {}", self.total_path_chars);
-        println!("  Average path length: {:.1}", self.total_path_chars as f64 / self.total_files as f64);
+        println!(
+            "  Average path length: {:.1}",
+            self.total_path_chars as f64 / self.total_files as f64
+        );
 
         // Top extensions
         let mut ext_vec: Vec<_> = self.extension_counts.iter().collect();
@@ -120,17 +132,25 @@ impl FilenameMarkov {
         }
 
         // Path character patterns
-        let mut path_transitions: Vec<_> = self.path_transitions.iter()
-            .flat_map(|(from, to_map)| {
-                to_map.iter().map(move |(to, count)| ((*from, *to), *count))
-            })
+        let mut path_transitions: Vec<_> = self
+            .path_transitions
+            .iter()
+            .flat_map(|(from, to_map)| to_map.iter().map(move |(to, count)| ((*from, *to), *count)))
             .collect();
         path_transitions.sort_by_key(|(_, count)| std::cmp::Reverse(*count));
 
         println!("\n🔤 Top 10 path character transitions:");
         for ((from, to), count) in path_transitions.iter().take(10) {
-            let from_display = if *from == '/' { "'/'" } else { &format!("'{}'", from) };
-            let to_display = if *to == '/' { "'/'" } else { &format!("'{}'", to) };
+            let from_display = if *from == '/' {
+                "'/'"
+            } else {
+                &format!("'{}'", from)
+            };
+            let to_display = if *to == '/' {
+                "'/'"
+            } else {
+                &format!("'{}'", to)
+            };
             println!("    {} → {}: {} times", from_display, to_display, count);
         }
 

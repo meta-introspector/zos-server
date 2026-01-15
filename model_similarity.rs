@@ -1,6 +1,6 @@
+use std::collections::HashMap;
 use std::fs;
 use std::io::Read;
-use std::collections::HashMap;
 
 struct ModelSimilarityAnalyzer {
     models: Vec<ModelProfile>,
@@ -21,8 +21,7 @@ impl ModelSimilarityAnalyzer {
     fn load_model_profiles(&mut self) -> Result<(), String> {
         println!("🔍 Loading model profiles...");
 
-        let entries = fs::read_dir(".")
-            .map_err(|e| format!("Cannot read directory: {}", e))?;
+        let entries = fs::read_dir(".").map_err(|e| format!("Cannot read directory: {}", e))?;
 
         for entry in entries.flatten() {
             let path = entry.path();
@@ -44,11 +43,12 @@ impl ModelSimilarityAnalyzer {
     }
 
     fn create_model_profile(&self, filename: &str) -> Result<ModelProfile, String> {
-        let mut file = fs::File::open(filename)
-            .map_err(|e| format!("Cannot open {}: {}", filename, e))?;
+        let mut file =
+            fs::File::open(filename).map_err(|e| format!("Cannot open {}: {}", filename, e))?;
 
         let mut buffer = [0u8; 4];
-        file.read_exact(&mut buffer).map_err(|_| "Cannot read count")?;
+        file.read_exact(&mut buffer)
+            .map_err(|_| "Cannot read count")?;
         let total_transitions = u32::from_le_bytes(buffer);
 
         let mut signature = HashMap::new();
@@ -96,8 +96,9 @@ impl ModelSimilarityAnalyzer {
 
         // Count common transitions
         for transition in &all_transitions {
-            if model1.transition_signature.contains_key(transition) &&
-               model2.transition_signature.contains_key(transition) {
+            if model1.transition_signature.contains_key(transition)
+                && model2.transition_signature.contains_key(transition)
+            {
                 common_transitions += 1;
             }
         }
@@ -117,13 +118,14 @@ impl ModelSimilarityAnalyzer {
         let sample_size = std::cmp::min(self.models.len(), 100);
 
         for i in 0..sample_size {
-            for j in i+1..sample_size {
+            for j in i + 1..sample_size {
                 let similarity = self.compute_similarity(&self.models[i], &self.models[j]);
-                if similarity > 0.1 { // Only keep significant similarities
+                if similarity > 0.1 {
+                    // Only keep significant similarities
                     similarities.push((
                         self.models[i].filename.clone(),
                         self.models[j].filename.clone(),
-                        similarity
+                        similarity,
                     ));
                 }
             }
@@ -151,13 +153,20 @@ impl ModelSimilarityAnalyzer {
                 "reverse_models".to_string()
             } else if model.filename.contains("rustc") {
                 "compiler_models".to_string()
-            } else if model.filename.chars().all(|c| c.is_numeric() || c == '_' || c == '.') {
+            } else if model
+                .filename
+                .chars()
+                .all(|c| c.is_numeric() || c == '_' || c == '.')
+            {
                 "numeric_models".to_string()
             } else {
                 "other_models".to_string()
             };
 
-            clusters.entry(cluster_key).or_insert_with(Vec::new).push(model.filename.clone());
+            clusters
+                .entry(cluster_key)
+                .or_insert_with(Vec::new)
+                .push(model.filename.clone());
         }
 
         clusters
@@ -189,7 +198,8 @@ impl ModelSimilarityAnalyzer {
 
         println!("\n🎯 Top 10 Most Similar Model Pairs:");
         for (i, (model1, model2, similarity)) in similar_pairs.iter().take(10).enumerate() {
-            println!("  {}. {} ↔ {}: {:.3} similarity",
+            println!(
+                "  {}. {} ↔ {}: {:.3} similarity",
                 i + 1,
                 &model1[..std::cmp::min(20, model1.len())],
                 &model2[..std::cmp::min(20, model2.len())],
@@ -201,12 +211,24 @@ impl ModelSimilarityAnalyzer {
         self.analyze_cluster_similarities(&clusters);
 
         println!("\n📊 Similarity Statistics:");
-        println!("  High similarity pairs (>0.8): {}",
-            similar_pairs.iter().filter(|(_, _, s)| *s > 0.8).count());
-        println!("  Medium similarity pairs (0.5-0.8): {}",
-            similar_pairs.iter().filter(|(_, _, s)| *s > 0.5 && *s <= 0.8).count());
-        println!("  Low similarity pairs (0.1-0.5): {}",
-            similar_pairs.iter().filter(|(_, _, s)| *s > 0.1 && *s <= 0.5).count());
+        println!(
+            "  High similarity pairs (>0.8): {}",
+            similar_pairs.iter().filter(|(_, _, s)| *s > 0.8).count()
+        );
+        println!(
+            "  Medium similarity pairs (0.5-0.8): {}",
+            similar_pairs
+                .iter()
+                .filter(|(_, _, s)| *s > 0.5 && *s <= 0.8)
+                .count()
+        );
+        println!(
+            "  Low similarity pairs (0.1-0.5): {}",
+            similar_pairs
+                .iter()
+                .filter(|(_, _, s)| *s > 0.1 && *s <= 0.5)
+                .count()
+        );
 
         if let Some((_, _, max_sim)) = similar_pairs.first() {
             println!("  Maximum similarity found: {:.3}", max_sim);

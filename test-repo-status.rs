@@ -7,11 +7,11 @@
 //! shellexpand = "3.1"
 //! ```
 
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
 use std::process::Command;
-use serde::{Deserialize, Serialize};
-use chrono::{DateTime, Utc};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RepoStatus {
@@ -41,8 +41,10 @@ fn main() {
 
     for repo in &repos {
         println!("📁 {}", repo.path);
-        println!("   Branch: {} | Ahead: {} | Modified: {} | Untracked: {}",
-            repo.branch, repo.ahead, repo.modified, repo.untracked);
+        println!(
+            "   Branch: {} | Ahead: {} | Modified: {} | Untracked: {}",
+            repo.branch, repo.ahead, repo.modified, repo.untracked
+        );
         println!("   Last commit: {}", repo.last_commit_date);
         if !repo.unpushed_commits.is_empty() {
             println!("   Unpushed commits: {}", repo.unpushed_commits.len());
@@ -52,7 +54,8 @@ fn main() {
 
     println!("\n🚨 Unpushed Changes Summary");
     println!("===========================");
-    let unpushed: HashMap<String, u32> = repos.into_iter()
+    let unpushed: HashMap<String, u32> = repos
+        .into_iter()
         .filter(|r| r.ahead > 0 || r.modified > 0 || r.untracked > 0)
         .map(|r| (r.path, r.ahead + r.modified + r.untracked))
         .collect();
@@ -95,7 +98,8 @@ fn get_repo_status(path: &str) -> Option<RepoStatus> {
     let last_commit = git_cmd(&repo_path, &["log", "-1", "--format=%H"])?;
     let last_commit_date_str = git_cmd(&repo_path, &["log", "-1", "--format=%cI"])?;
     let last_commit_date = DateTime::parse_from_rfc3339(&last_commit_date_str)
-        .ok()?.with_timezone(&Utc);
+        .ok()?
+        .with_timezone(&Utc);
 
     let unpushed_commits = get_unpushed_commits(&repo_path);
 
@@ -134,14 +138,23 @@ fn parse_ahead_behind(status: &str) -> (u32, u32) {
                 if let Some(content) = bracket_content.split(']').next() {
                     if content.contains("ahead") && content.contains("behind") {
                         let parts: Vec<&str> = content.split(", ").collect();
-                        let ahead = parts[0].split_whitespace().nth(1)
-                            .and_then(|s| s.parse().ok()).unwrap_or(0);
-                        let behind = parts[1].split_whitespace().nth(1)
-                            .and_then(|s| s.parse().ok()).unwrap_or(0);
+                        let ahead = parts[0]
+                            .split_whitespace()
+                            .nth(1)
+                            .and_then(|s| s.parse().ok())
+                            .unwrap_or(0);
+                        let behind = parts[1]
+                            .split_whitespace()
+                            .nth(1)
+                            .and_then(|s| s.parse().ok())
+                            .unwrap_or(0);
                         return (ahead, behind);
                     } else if content.contains("ahead") {
-                        let ahead = content.split_whitespace().nth(1)
-                            .and_then(|s| s.parse().ok()).unwrap_or(0);
+                        let ahead = content
+                            .split_whitespace()
+                            .nth(1)
+                            .and_then(|s| s.parse().ok())
+                            .unwrap_or(0);
                         return (ahead, 0);
                     }
                 }
@@ -156,7 +169,9 @@ fn count_changes(status: &str) -> (u32, u32) {
     let mut untracked = 0;
 
     for line in status.lines() {
-        if line.starts_with("##") { continue; }
+        if line.starts_with("##") {
+            continue;
+        }
         if line.starts_with("??") {
             untracked += 1;
         } else if !line.trim().is_empty() {
@@ -168,15 +183,20 @@ fn count_changes(status: &str) -> (u32, u32) {
 }
 
 fn get_unpushed_commits(repo_path: &Path) -> Vec<CommitInfo> {
-    let output = git_cmd(repo_path, &["log", "--oneline", "@{u}..", "--format=%H|%cI|%s"]);
+    let output = git_cmd(
+        repo_path,
+        &["log", "--oneline", "@{u}..", "--format=%H|%cI|%s"],
+    );
 
     if let Some(output) = output {
-        output.lines()
+        output
+            .lines()
             .filter_map(|line| {
                 let parts: Vec<&str> = line.splitn(3, '|').collect();
                 if parts.len() == 3 {
                     let date = DateTime::parse_from_rfc3339(parts[1])
-                        .ok()?.with_timezone(&Utc);
+                        .ok()?
+                        .with_timezone(&Utc);
                     Some(CommitInfo {
                         hash: parts[0].to_string(),
                         date,

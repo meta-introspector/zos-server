@@ -28,7 +28,8 @@ impl MarkovAnalyzer {
             self.states.insert(from);
             self.states.insert(to);
 
-            *self.transitions
+            *self
+                .transitions
                 .entry(from)
                 .or_insert_with(HashMap::new)
                 .entry(to)
@@ -48,7 +49,8 @@ impl MarkovAnalyzer {
                 let total_from: u32 = to_map.values().sum();
                 let self_prob = *count as f64 / total_from as f64;
 
-                if self_prob > 0.5 { // Strong self-loop
+                if self_prob > 0.5 {
+                    // Strong self-loop
                     fixed_points.push(*from);
                 }
             }
@@ -67,7 +69,8 @@ impl MarkovAnalyzer {
             for (to, count) in to_map {
                 let prob = *count as f64 / total as f64;
 
-                if prob > 0.8 { // High probability transition
+                if prob > 0.8 {
+                    // High probability transition
                     // Check if this continues a pattern
                     if let Some(next_map) = self.transitions.get(to) {
                         let next_total: u32 = next_map.values().sum();
@@ -168,10 +171,23 @@ impl MarkovAnalyzer {
         let complexity = self.compute_state_complexity();
         for state in &self.states {
             let comp = complexity.get(state).unwrap_or(&0.0);
-            let color = if *comp > 2.0 { "red" } else if *comp > 1.0 { "orange" } else { "lightblue" };
+            let color = if *comp > 2.0 {
+                "red"
+            } else if *comp > 1.0 {
+                "orange"
+            } else {
+                "lightblue"
+            };
 
-            let state_str = if *state == ' ' { "SPACE".to_string() } else { state.to_string() };
-            dot.push_str(&format!("  \"{}\" [fillcolor={}, style=filled];\n", state_str, color));
+            let state_str = if *state == ' ' {
+                "SPACE".to_string()
+            } else {
+                state.to_string()
+            };
+            dot.push_str(&format!(
+                "  \"{}\" [fillcolor={}, style=filled];\n",
+                state_str, color
+            ));
         }
 
         // Add edges with weights
@@ -182,11 +198,17 @@ impl MarkovAnalyzer {
                 let prob = *count as f64 / total as f64;
                 let weight = if prob > 0.5 { "bold" } else { "normal" };
 
-                let from_label = if *from == ' ' { "SPACE" } else { &from.to_string() };
+                let from_label = if *from == ' ' {
+                    "SPACE"
+                } else {
+                    &from.to_string()
+                };
                 let to_label = if *to == ' ' { "SPACE" } else { &to.to_string() };
 
-                dot.push_str(&format!("  \"{}\" -> \"{}\" [label=\"{:.2}\", style={}];\n",
-                    from_label, to_label, prob, weight));
+                dot.push_str(&format!(
+                    "  \"{}\" -> \"{}\" [label=\"{:.2}\", style={}];\n",
+                    from_label, to_label, prob, weight
+                ));
             }
         }
 
@@ -198,8 +220,10 @@ impl MarkovAnalyzer {
         println!("🔍 Markov Model Analysis:");
         println!("  States: {}", self.states.len());
         println!("  Total transitions: {}", self.total_transitions);
-        println!("  Transition density: {:.2}",
-            self.total_transitions as f64 / (self.states.len() * self.states.len()) as f64);
+        println!(
+            "  Transition density: {:.2}",
+            self.total_transitions as f64 / (self.states.len() * self.states.len()) as f64
+        );
 
         let fixed_points = self.find_fixed_points();
         println!("\n🔄 Fixed Points (self-loops): {:?}", fixed_points);
@@ -216,7 +240,11 @@ impl MarkovAnalyzer {
 
         println!("\n🧠 State Complexity (entropy):");
         for (state, comp) in comp_sorted.iter().take(5) {
-            let state_display = if **state == ' ' { "SPACE" } else { &state.to_string() };
+            let state_display = if **state == ' ' {
+                "SPACE"
+            } else {
+                &state.to_string()
+            };
             println!("    {}: {:.2} bits", state_display, comp);
         }
 
@@ -229,8 +257,11 @@ impl MarkovAnalyzer {
         println!("\n🪞 Self-Reference: {}", self.check_self_reference());
 
         println!("\n📊 Graph Properties:");
-        println!("  Average out-degree: {:.2}",
-            self.transitions.values().map(|m| m.len()).sum::<usize>() as f64 / self.states.len() as f64);
+        println!(
+            "  Average out-degree: {:.2}",
+            self.transitions.values().map(|m| m.len()).sum::<usize>() as f64
+                / self.states.len() as f64
+        );
     }
 }
 

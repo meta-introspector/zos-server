@@ -1,5 +1,5 @@
-use std::fs;
 use std::collections::HashMap;
+use std::fs;
 
 struct ELFTargetAnalyzer {
     elf_model: HashMap<u8, HashMap<u8, u32>>,
@@ -27,12 +27,12 @@ impl ELFTargetAnalyzer {
     fn analyze_elf_binary(&mut self, elf_path: &str) -> Result<(), String> {
         println!("🔧 Analyzing ELF binary: {}", elf_path);
 
-        let elf_bytes = fs::read(elf_path)
-            .map_err(|e| format!("Failed to read ELF: {}", e))?;
+        let elf_bytes = fs::read(elf_path).map_err(|e| format!("Failed to read ELF: {}", e))?;
 
         // Build Markov model of ELF bytes
         for window in elf_bytes.windows(2) {
-            *self.elf_model
+            *self
+                .elf_model
                 .entry(window[0])
                 .or_insert_with(HashMap::new)
                 .entry(window[1])
@@ -60,7 +60,8 @@ impl ELFTargetAnalyzer {
             if let Ok(content) = fs::read_to_string(file_path) {
                 let chars: Vec<char> = content.chars().collect();
                 for window in chars.windows(2) {
-                    *self.target_model
+                    *self
+                        .target_model
                         .entry(window[0])
                         .or_insert_with(HashMap::new)
                         .entry(window[1])
@@ -88,7 +89,8 @@ impl ELFTargetAnalyzer {
             if let Ok(content) = fs::read_to_string(file_path) {
                 let chars: Vec<char> = content.chars().collect();
                 for window in chars.windows(2) {
-                    *self.codegen_model
+                    *self
+                        .codegen_model
                         .entry(window[0])
                         .or_insert_with(HashMap::new)
                         .entry(window[1])
@@ -166,14 +168,17 @@ impl ELFTargetAnalyzer {
         // Look for ELF magic and common patterns
         for (from, to_map) in &self.elf_model {
             for (to, count) in to_map {
-                if *count > 100 { // High frequency patterns
+                if *count > 100 {
+                    // High frequency patterns
                     elf_patterns.push(format!("{:02x}->{:02x} ({}x)", from, to, count));
                 }
 
                 // ELF magic and structure
-                if *from == 0x7f && *to == 0x45 { // ELF magic start
+                if *from == 0x7f && *to == 0x45 {
+                    // ELF magic start
                     magic_sequences.push("ELF_MAGIC".to_string());
-                } else if *from == 0x00 && *to == 0x00 { // Null padding
+                } else if *from == 0x00 && *to == 0x00 {
+                    // Null padding
                     magic_sequences.push("NULL_PADDING".to_string());
                 }
             }
@@ -192,22 +197,50 @@ impl ELFTargetAnalyzer {
 
         let target_correlations = self.find_elf_target_correlations();
         println!("\n🎯 ELF ↔ Target Code Correlations:");
-        println!("  Found {} significant correlations", target_correlations.len());
+        println!(
+            "  Found {} significant correlations",
+            target_correlations.len()
+        );
 
         for (from, to, corr) in target_correlations.iter().take(10) {
-            let from_char = if *from >= 32 && *from <= 126 { *from as char } else { '?' };
-            let to_char = if *to >= 32 && *to <= 126 { *to as char } else { '?' };
-            println!("    {:02x}({}) -> {:02x}({}) : {:.6}", from, from_char, to, to_char, corr);
+            let from_char = if *from >= 32 && *from <= 126 {
+                *from as char
+            } else {
+                '?'
+            };
+            let to_char = if *to >= 32 && *to <= 126 {
+                *to as char
+            } else {
+                '?'
+            };
+            println!(
+                "    {:02x}({}) -> {:02x}({}) : {:.6}",
+                from, from_char, to, to_char, corr
+            );
         }
 
         let codegen_correlations = self.find_elf_codegen_correlations();
         println!("\n⚙️ ELF ↔ Codegen Correlations:");
-        println!("  Found {} significant correlations", codegen_correlations.len());
+        println!(
+            "  Found {} significant correlations",
+            codegen_correlations.len()
+        );
 
         for (from, to, corr) in codegen_correlations.iter().take(10) {
-            let from_char = if *from >= 32 && *from <= 126 { *from as char } else { '?' };
-            let to_char = if *to >= 32 && *to <= 126 { *to as char } else { '?' };
-            println!("    {:02x}({}) -> {:02x}({}) : {:.6}", from, from_char, to, to_char, corr);
+            let from_char = if *from >= 32 && *from <= 126 {
+                *from as char
+            } else {
+                '?'
+            };
+            let to_char = if *to >= 32 && *to <= 126 {
+                *to as char
+            } else {
+                '?'
+            };
+            println!(
+                "    {:02x}({}) -> {:02x}({}) : {:.6}",
+                from, from_char, to, to_char, corr
+            );
         }
 
         let (elf_patterns, magic_sequences) = self.analyze_elf_structure();

@@ -30,7 +30,10 @@ fn trace_71_to_runtime() -> RuntimeTrace71 {
     trace.register_71_found = trace.runtime_registers.values().any(|&val| val == 71);
 
     if trace.register_71_found {
-        println!("✅ Fixed Point 71 FOUND in registers at time T={}", trace.execution_time_t);
+        println!(
+            "✅ Fixed Point 71 FOUND in registers at time T={}",
+            trace.execution_time_t
+        );
         for (reg, val) in &trace.runtime_registers {
             if *val == 71 {
                 println!("   Register {}: {}", reg, val);
@@ -55,13 +58,13 @@ fn execute_and_capture_registers(machine_code: Vec<u8>) -> HashMap<String, u64> 
     // Simulate CPU execution of machine code
     for (i, &byte) in machine_code.iter().enumerate() {
         match i {
-            0..=2 => {}, // Instruction prefix/opcode
+            0..=2 => {} // Instruction prefix/opcode
             3 => {
                 // This is our 71 value being loaded into RAX
                 registers.insert("RAX".to_string(), byte as u64);
                 println!("🎯 CPU Cycle {}: RAX ← {}", i, byte);
-            },
-            _ => {}, // Padding bytes
+            }
+            _ => {} // Padding bytes
         }
     }
 
@@ -93,7 +96,10 @@ fn prove_71_runtime_invariant() {
     println!("\n📐 MATHEMATICAL PROOF:");
     println!("   ∀ transformation T: 71 ∈ input → 71 ∈ T(input)");
     println!("   Source → Compile → Runtime → Registers");
-    println!("   71 → [machine_code] → RAX=71 at time T={}", trace.execution_time_t);
+    println!(
+        "   71 → [machine_code] → RAX=71 at time T={}",
+        trace.execution_time_t
+    );
 
     // Step 4: Verification
     if trace.register_71_found {

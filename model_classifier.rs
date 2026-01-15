@@ -1,5 +1,5 @@
-use std::fs;
 use std::collections::HashMap;
+use std::fs;
 use std::io::Read;
 
 struct ModelClassifier {
@@ -27,8 +27,7 @@ impl ModelClassifier {
     fn scan_binary_models(&mut self) -> Result<(), String> {
         println!("🔍 Scanning binary models...");
 
-        let entries = fs::read_dir(".")
-            .map_err(|e| format!("Cannot read directory: {}", e))?;
+        let entries = fs::read_dir(".").map_err(|e| format!("Cannot read directory: {}", e))?;
 
         for entry in entries.flatten() {
             let path = entry.path();
@@ -50,8 +49,8 @@ impl ModelClassifier {
     }
 
     fn analyze_binary_model(&self, filename: &str) -> Result<ModelInfo, String> {
-        let mut file = fs::File::open(filename)
-            .map_err(|e| format!("Cannot open {}: {}", filename, e))?;
+        let mut file =
+            fs::File::open(filename).map_err(|e| format!("Cannot open {}: {}", filename, e))?;
 
         let file_size = file.metadata().unwrap().len();
 
@@ -93,7 +92,12 @@ impl ModelClassifier {
         })
     }
 
-    fn classify_model(&self, filename: &str, total_transitions: u32, most_common: (u32, u32, u32)) -> String {
+    fn classify_model(
+        &self,
+        filename: &str,
+        total_transitions: u32,
+        most_common: (u32, u32, u32),
+    ) -> String {
         // Classify by filename patterns and characteristics
         if filename.contains("rustc") {
             "rustc_compiler".to_string()
@@ -121,7 +125,9 @@ impl ModelClassifier {
         }
 
         // Create a lookup map for transition counts
-        let count_map: HashMap<String, u32> = self.models.iter()
+        let count_map: HashMap<String, u32> = self
+            .models
+            .iter()
             .map(|m| (m.filename.clone(), m.total_transitions))
             .collect();
 
@@ -181,13 +187,18 @@ impl ModelClassifier {
             let (from_char, to_char) = (
                 if model.most_common_transition.0 <= 127 {
                     char::from(model.most_common_transition.0 as u8)
-                } else { '?' },
+                } else {
+                    '?'
+                },
                 if model.most_common_transition.1 <= 127 {
                     char::from(model.most_common_transition.1 as u8)
-                } else { '?' }
+                } else {
+                    '?'
+                },
             );
 
-            println!("  {}. {} ({}) - {} transitions, most common: '{}→{}' ({}x)",
+            println!(
+                "  {}. {} ({}) - {} transitions, most common: '{}→{}' ({}x)",
                 i + 1,
                 model.filename,
                 model.classification,
@@ -203,13 +214,18 @@ impl ModelClassifier {
         class_summary.sort_by(|a, b| b.1.len().cmp(&a.1.len()));
 
         for (classification, filenames) in class_summary {
-            let total_transitions: u32 = filenames.iter()
+            let total_transitions: u32 = filenames
+                .iter()
                 .filter_map(|f| self.models.iter().find(|m| &m.filename == f))
                 .map(|m| m.total_transitions)
                 .sum();
 
-            println!("  {}: {} models, {} total transitions",
-                classification, filenames.len(), total_transitions);
+            println!(
+                "  {}: {} models, {} total transitions",
+                classification,
+                filenames.len(),
+                total_transitions
+            );
         }
 
         println!("\n✅ Models organized in ./organized_models/ directory");

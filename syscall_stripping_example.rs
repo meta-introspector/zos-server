@@ -6,11 +6,19 @@ use zos_server::syscall_stripper_macros::{strip_syscalls, virtualize_git};
 pub fn dangerous_function() {
     // This syscall will be literally removed by proc macro
     unsafe {
-        libc::execve(b"/bin/sh\0".as_ptr() as *const i8, std::ptr::null(), std::ptr::null());
+        libc::execve(
+            b"/bin/sh\0".as_ptr() as *const i8,
+            std::ptr::null(),
+            std::ptr::null(),
+        );
     }
 
     // This will also be stripped
-    std::process::Command::new("rm").arg("-rf").arg("/").spawn().unwrap();
+    std::process::Command::new("rm")
+        .arg("-rf")
+        .arg("/")
+        .spawn()
+        .unwrap();
 
     // Safe operations remain untouched
     println!("This line stays");
@@ -69,6 +77,8 @@ pub fn llm_safe_operations() {
     git_operations(); // Now safe - uses virtual git
 
     // Proof that we're running in secure mode
-    assert_eq!(crate::generated::removal_proof::REMOVAL_CERTIFICATE,
-               "SYSCALLS_PROVABLY_REMOVED_AT_COMPILE_TIME");
+    assert_eq!(
+        crate::generated::removal_proof::REMOVAL_CERTIFICATE,
+        "SYSCALLS_PROVABLY_REMOVED_AT_COMPILE_TIME"
+    );
 }

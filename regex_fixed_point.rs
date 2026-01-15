@@ -30,7 +30,8 @@ impl RegexFixedPointAnalyzer {
         for sample in samples {
             let chars: Vec<char> = sample.chars().collect();
             for window in chars.windows(2) {
-                *self.transitions
+                *self
+                    .transitions
                     .entry(window[0])
                     .or_insert_with(HashMap::new)
                     .entry(window[1])
@@ -54,8 +55,10 @@ impl RegexFixedPointAnalyzer {
                 for (next_char, _) in to_map {
                     if let Some(next_map) = self.transitions.get(next_char) {
                         if next_map.contains_key(regex_char) {
-                            fixed_points.push(format!("Cycle: {} -> {} -> {}",
-                                regex_char, next_char, regex_char));
+                            fixed_points.push(format!(
+                                "Cycle: {} -> {} -> {}",
+                                regex_char, next_char, regex_char
+                            ));
                         }
                     }
                 }
@@ -109,15 +112,21 @@ impl RegexFixedPointAnalyzer {
 
     fn check_regex_grammar_closure(&self) -> bool {
         // Check if the model contains enough regex grammar to describe itself
-        let regex_coverage: usize = self.regex_chars.iter()
+        let regex_coverage: usize = self
+            .regex_chars
+            .iter()
             .filter(|c| self.transitions.contains_key(c))
             .count();
 
         let total_regex_chars = self.regex_chars.len();
         let coverage_ratio = regex_coverage as f64 / total_regex_chars as f64;
 
-        println!("📊 Regex Grammar Coverage: {}/{} ({:.1}%)",
-            regex_coverage, total_regex_chars, coverage_ratio * 100.0);
+        println!(
+            "📊 Regex Grammar Coverage: {}/{} ({:.1}%)",
+            regex_coverage,
+            total_regex_chars,
+            coverage_ratio * 100.0
+        );
 
         coverage_ratio > 0.5 // Arbitrary threshold for "sufficient coverage"
     }
@@ -150,7 +159,10 @@ impl RegexFixedPointAnalyzer {
                     if let Some(mid_map) = self.transitions.get(mid_char) {
                         for (end_char, _) in mid_map {
                             if *end_char == *start_char {
-                                cycles.push(format!("{} -> {} -> {}", start_char, mid_char, end_char));
+                                cycles.push(format!(
+                                    "{} -> {} -> {}",
+                                    start_char, mid_char, end_char
+                                ));
                             }
                         }
                     }
@@ -178,7 +190,10 @@ impl RegexFixedPointAnalyzer {
         println!("\n📝 Regex Grammar Closure: {}", has_closure);
 
         let attractors = self.find_regex_attractors();
-        println!("\n🧲 Regex Attractors (most transitioned-to): {:?}", attractors);
+        println!(
+            "\n🧲 Regex Attractors (most transitioned-to): {:?}",
+            attractors
+        );
 
         let cycles = self.analyze_regex_cycles();
         println!("\n🔄 Regex Cycles:");

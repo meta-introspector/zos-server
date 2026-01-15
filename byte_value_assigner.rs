@@ -33,7 +33,11 @@ impl ValueAssigner {
 
         for (i, &ch) in chars.iter().enumerate() {
             let context = self.get_context(&chars, i);
-            let markov_node = if i > 0 { (chars[i-1], ch) } else { ('\0', ch) };
+            let markov_node = if i > 0 {
+                (chars[i - 1], ch)
+            } else {
+                ('\0', ch)
+            };
 
             let byte_value = ByteValue {
                 used_by_rustc: self.is_used_by_rustc(&context),
@@ -62,11 +66,15 @@ impl ValueAssigner {
     }
 
     fn is_used_by_rustc(&self, context: &str) -> bool {
-        self.rustc_patterns.iter().any(|pattern| context.contains(pattern))
+        self.rustc_patterns
+            .iter()
+            .any(|pattern| context.contains(pattern))
     }
 
     fn is_used_by_system(&self, context: &str) -> bool {
-        self.system_patterns.iter().any(|pattern| context.contains(pattern))
+        self.system_patterns
+            .iter()
+            .any(|pattern| context.contains(pattern))
     }
 
     fn is_new_pattern(&self, context: &str) -> bool {
@@ -91,10 +99,18 @@ impl ValueAssigner {
     fn calculate_value_score(&self, value: &ByteValue) -> f64 {
         let mut score = 0.0;
 
-        if value.used_by_rustc { score += 10.0; }
-        if value.used_by_system { score += 5.0; }
-        if value.is_new { score += 3.0; }
-        if value.is_duplicate { score -= 2.0; }
+        if value.used_by_rustc {
+            score += 10.0;
+        }
+        if value.used_by_system {
+            score += 5.0;
+        }
+        if value.is_new {
+            score += 3.0;
+        }
+        if value.is_duplicate {
+            score -= 2.0;
+        }
 
         score += value.markov_score * 2.0;
         score
@@ -102,12 +118,16 @@ impl ValueAssigner {
 
     fn load_rustc_patterns() -> HashSet<String> {
         ["fn ", "struct ", "impl ", "use ", "mod ", "pub "]
-            .iter().map(|s| s.to_string()).collect()
+            .iter()
+            .map(|s| s.to_string())
+            .collect()
     }
 
     fn load_system_patterns() -> HashSet<String> {
         ["main(", "println!", "std::", "Vec<", "HashMap"]
-            .iter().map(|s| s.to_string()).collect()
+            .iter()
+            .map(|s| s.to_string())
+            .collect()
     }
 
     fn hash_context(&self, context: &str) -> u64 {
@@ -127,9 +147,10 @@ fn main() {
 
     println!("📊 Sample byte values:");
     for (i, value) in values.iter().take(10).enumerate() {
-        println!("  Byte {}: score={:.1}, rustc={}, sys={}, new={}",
-            i, value.value_score, value.used_by_rustc,
-            value.used_by_system, value.is_new);
+        println!(
+            "  Byte {}: score={:.1}, rustc={}, sys={}, new={}",
+            i, value.value_score, value.used_by_rustc, value.used_by_system, value.is_new
+        );
     }
 
     println!("\n🎯 Each Markov node now has usage value!");

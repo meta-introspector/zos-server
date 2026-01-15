@@ -47,7 +47,8 @@ mod example_before_after {
     // AFTER (safe - automatically patched):
     fn safe_git_access() {
         // Automatically becomes:
-        let container_id = crate::security::container::init_llm_git_container("/path/to/repo").unwrap();
+        let container_id =
+            crate::security::container::init_llm_git_container("/path/to/repo").unwrap();
         let log = crate::security::container::git::log(&container_id).unwrap();
         // All operations run in virtual filesystem - no syscalls!
     }

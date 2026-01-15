@@ -39,7 +39,8 @@ impl HIRComparisonAnalyzer {
 
         let chars: Vec<char> = hir_content.chars().collect();
         for window in chars.windows(2) {
-            *self.hir_model
+            *self
+                .hir_model
                 .entry(window[0])
                 .or_insert_with(HashMap::new)
                 .entry(window[1])
@@ -71,12 +72,15 @@ impl HIRComparisonAnalyzer {
         // Train on first 50 files
         let mut files_read = 0;
         for (i, file_path) in self.rustc_files.iter().enumerate() {
-            if i >= 50 { break; }
+            if i >= 50 {
+                break;
+            }
 
             // Train path model
             let path_chars: Vec<char> = file_path.chars().collect();
             for window in path_chars.windows(2) {
-                *self.rustc_path_model
+                *self
+                    .rustc_path_model
                     .entry(window[0])
                     .or_insert_with(HashMap::new)
                     .entry(window[1])
@@ -95,7 +99,8 @@ impl HIRComparisonAnalyzer {
                 if content.len() < 50000 {
                     let content_chars: Vec<char> = content.chars().collect();
                     for window in content_chars.windows(2) {
-                        *self.rustc_content_model
+                        *self
+                            .rustc_content_model
                             .entry(window[0])
                             .or_insert_with(HashMap::new)
                             .entry(window[1])
@@ -108,7 +113,10 @@ impl HIRComparisonAnalyzer {
         }
 
         println!("  Rustc path model: {} transitions", self.rustc_path_total);
-        println!("  Rustc content model: {} transitions from {} files", self.rustc_content_total, files_read);
+        println!(
+            "  Rustc content model: {} transitions from {} files",
+            self.rustc_content_total, files_read
+        );
 
         Ok(())
     }
@@ -144,8 +152,16 @@ impl HIRComparisonAnalyzer {
             }
         }
 
-        let hir_path_sim = if hir_path_total > 0 { hir_path_common as f64 / hir_path_total as f64 } else { 0.0 };
-        let hir_content_sim = if hir_content_total > 0 { hir_content_common as f64 / hir_content_total as f64 } else { 0.0 };
+        let hir_path_sim = if hir_path_total > 0 {
+            hir_path_common as f64 / hir_path_total as f64
+        } else {
+            0.0
+        };
+        let hir_content_sim = if hir_content_total > 0 {
+            hir_content_common as f64 / hir_content_total as f64
+        } else {
+            0.0
+        };
 
         (hir_path_sim, hir_content_sim)
     }
@@ -226,11 +242,15 @@ impl HIRComparisonAnalyzer {
         }
 
         if hir_content_sim > hir_path_sim {
-            println!("\n✨ HIR MAPS MORE TO CONTENT: Compilation output reflects source code structure!");
+            println!(
+                "\n✨ HIR MAPS MORE TO CONTENT: Compilation output reflects source code structure!"
+            );
         } else if hir_path_sim > hir_content_sim {
             println!("\n🗂️ HIR MAPS MORE TO PATHS: Compilation output reflects file organization!");
         } else {
-            println!("\n⚖️ BALANCED MAPPING: HIR reflects both source and organizational structure");
+            println!(
+                "\n⚖️ BALANCED MAPPING: HIR reflects both source and organizational structure"
+            );
         }
 
         println!("\n🧬 Self-Reference Analysis:");

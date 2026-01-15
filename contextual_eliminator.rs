@@ -41,7 +41,9 @@ impl ContextualUsageAnalyzer {
 
     fn is_cfg_active(&self, line: &str) -> bool {
         // Check if cfg condition matches current context
-        self.current_context.cfg_flags.iter()
+        self.current_context
+            .cfg_flags
+            .iter()
             .any(|flag| line.contains(flag))
     }
 

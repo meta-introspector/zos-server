@@ -18,12 +18,33 @@ struct MorphismId(u64);
 
 #[derive(Debug, Clone)]
 enum MorphismType {
-    SourceTransition { from: char, to: char, freq: f64 },
-    HIRTransition { from: char, to: char, freq: f64 },
-    ELFTransition { from: u8, to: u8, freq: f64 },
-    CrossDomain { source: MorphismId, target: MorphismId, strength: f64 },
-    Identity { point: String },
-    Composition { left: MorphismId, right: MorphismId },
+    SourceTransition {
+        from: char,
+        to: char,
+        freq: f64,
+    },
+    HIRTransition {
+        from: char,
+        to: char,
+        freq: f64,
+    },
+    ELFTransition {
+        from: u8,
+        to: u8,
+        freq: f64,
+    },
+    CrossDomain {
+        source: MorphismId,
+        target: MorphismId,
+        strength: f64,
+    },
+    Identity {
+        point: String,
+    },
+    Composition {
+        left: MorphismId,
+        right: MorphismId,
+    },
 }
 
 impl AutomorphicMorphismMap {
@@ -46,7 +67,11 @@ impl AutomorphicMorphismMap {
         id
     }
 
-    fn map_source_transitions(&mut self, transitions: &HashMap<char, HashMap<char, u32>>, total: u64) {
+    fn map_source_transitions(
+        &mut self,
+        transitions: &HashMap<char, HashMap<char, u32>>,
+        total: u64,
+    ) {
         println!("🔄 Mapping source transitions to morphisms...");
 
         for (from, to_map) in transitions {
@@ -154,15 +179,15 @@ impl AutomorphicMorphismMap {
     fn compute_morphism_strength(&self, id1: MorphismId, id2: MorphismId) -> f64 {
         // Compute strength based on frequency correlation
         match (self.morphism_types.get(&id1), self.morphism_types.get(&id2)) {
-            (Some(MorphismType::SourceTransition { freq: f1, .. }),
-             Some(MorphismType::HIRTransition { freq: f2, .. })) => {
-                (f1 * f2).sqrt()
-            }
-            (Some(MorphismType::HIRTransition { freq: f1, .. }),
-             Some(MorphismType::ELFTransition { freq: f2, .. })) => {
-                (f1 * f2).sqrt()
-            }
-            _ => 0.0
+            (
+                Some(MorphismType::SourceTransition { freq: f1, .. }),
+                Some(MorphismType::HIRTransition { freq: f2, .. }),
+            ) => (f1 * f2).sqrt(),
+            (
+                Some(MorphismType::HIRTransition { freq: f1, .. }),
+                Some(MorphismType::ELFTransition { freq: f2, .. }),
+            ) => (f1 * f2).sqrt(),
+            _ => 0.0,
         }
     }
 
@@ -175,12 +200,21 @@ impl AutomorphicMorphismMap {
         paths
     }
 
-    fn dfs_paths(&self, current: MorphismId, target: MorphismId,
-                 path: &mut Vec<MorphismId>, visited: &mut std::collections::HashSet<MorphismId>,
-                 paths: &mut Vec<Vec<MorphismId>>, max_depth: usize) {
-
-        if path.len() >= max_depth { return; }
-        if visited.contains(&current) { return; }
+    fn dfs_paths(
+        &self,
+        current: MorphismId,
+        target: MorphismId,
+        path: &mut Vec<MorphismId>,
+        visited: &mut std::collections::HashSet<MorphismId>,
+        paths: &mut Vec<Vec<MorphismId>>,
+        max_depth: usize,
+    ) {
+        if path.len() >= max_depth {
+            return;
+        }
+        if visited.contains(&current) {
+            return;
+        }
 
         path.push(current);
         visited.insert(current);
@@ -205,7 +239,9 @@ impl AutomorphicMorphismMap {
         println!("  ELF morphisms: {}", self.elf_morphisms.len());
 
         // Find strongest cross-domain morphisms
-        let mut cross_morphisms: Vec<_> = self.morphism_types.iter()
+        let mut cross_morphisms: Vec<_> = self
+            .morphism_types
+            .iter()
             .filter_map(|(id, morph_type)| {
                 if let MorphismType::CrossDomain { strength, .. } = morph_type {
                     Some((*id, *strength))
@@ -225,7 +261,7 @@ impl AutomorphicMorphismMap {
         // Sample morphism paths
         if let (Some(&first_src), Some(&first_elf)) = (
             self.source_morphisms.values().next(),
-            self.elf_morphisms.values().next()
+            self.elf_morphisms.values().next(),
         ) {
             let paths = self.find_morphism_paths(first_src, first_elf);
             println!("\n🛤️ Sample morphism paths (Source → ELF):");
@@ -259,9 +295,21 @@ fn main() {
     let mut sample_elf = HashMap::new();
 
     // Create sample transitions
-    sample_source.insert('s', {let mut m = HashMap::new(); m.insert('r', 100); m});
-    sample_hir.insert('s', {let mut m = HashMap::new(); m.insert('r', 50); m});
-    sample_elf.insert(115u8, {let mut m = HashMap::new(); m.insert(114u8, 25); m});
+    sample_source.insert('s', {
+        let mut m = HashMap::new();
+        m.insert('r', 100);
+        m
+    });
+    sample_hir.insert('s', {
+        let mut m = HashMap::new();
+        m.insert('r', 50);
+        m
+    });
+    sample_elf.insert(115u8, {
+        let mut m = HashMap::new();
+        m.insert(114u8, 25);
+        m
+    });
 
     morph_map.map_source_transitions(&sample_source, 1000);
     morph_map.map_hir_transitions(&sample_hir, 500);

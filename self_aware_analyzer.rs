@@ -40,7 +40,12 @@ impl SelfImage {
         println!("   Patterns: {}", self_knowledge.unique_patterns);
         println!("   Self-refs: {}", self_knowledge.self_reference_count);
 
-        Self { own_patterns, own_markov, own_signature, self_knowledge }
+        Self {
+            own_patterns,
+            own_markov,
+            own_signature,
+            self_knowledge,
+        }
     }
 
     fn compare_to_external(&self, external_code: &str) -> ComparisonResult {
@@ -52,7 +57,12 @@ impl SelfImage {
         let novelty = self.calculate_novelty(&ext_patterns);
         let value = self.calculate_value(similarity, novelty);
 
-        ComparisonResult { similarity, novelty, value, is_self_like: similarity > 0.7 }
+        ComparisonResult {
+            similarity,
+            novelty,
+            value,
+            is_self_like: similarity > 0.7,
+        }
     }
 
     fn extract_patterns(code: &str) -> HashMap<String, f64> {
@@ -85,21 +95,30 @@ impl SelfImage {
         code.chars().fold(0, |acc, c| acc ^ (c as u64))
     }
 
-    fn calculate_similarity(&self, ext_patterns: &HashMap<String, f64>,
-                           ext_markov: &HashMap<(char, char), f64>) -> f64 {
-        let pattern_overlap = self.own_patterns.keys()
+    fn calculate_similarity(
+        &self,
+        ext_patterns: &HashMap<String, f64>,
+        ext_markov: &HashMap<(char, char), f64>,
+    ) -> f64 {
+        let pattern_overlap = self
+            .own_patterns
+            .keys()
             .filter(|k| ext_patterns.contains_key(*k))
             .count() as f64;
 
-        let markov_overlap = self.own_markov.keys()
+        let markov_overlap = self
+            .own_markov
+            .keys()
             .filter(|k| ext_markov.contains_key(*k))
             .count() as f64;
 
-        (pattern_overlap + markov_overlap) / (self.own_patterns.len() + self.own_markov.len()) as f64
+        (pattern_overlap + markov_overlap)
+            / (self.own_patterns.len() + self.own_markov.len()) as f64
     }
 
     fn calculate_novelty(&self, ext_patterns: &HashMap<String, f64>) -> f64 {
-        let novel_patterns = ext_patterns.keys()
+        let novel_patterns = ext_patterns
+            .keys()
             .filter(|k| !self.own_patterns.contains_key(*k))
             .count() as f64;
 
@@ -137,8 +156,14 @@ fn main() {
     println!("\n🔍 Comparing external code to self:");
     for (i, sample) in samples.iter().enumerate() {
         let result = self_image.compare_to_external(sample);
-        println!("Sample {}: sim={:.2}, nov={:.2}, val={:.2}, self_like={}",
-            i+1, result.similarity, result.novelty, result.value, result.is_self_like);
+        println!(
+            "Sample {}: sim={:.2}, nov={:.2}, val={:.2}, self_like={}",
+            i + 1,
+            result.similarity,
+            result.novelty,
+            result.value,
+            result.is_self_like
+        );
     }
 
     println!("\n🎯 System now knows itself and can value other code!");

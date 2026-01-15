@@ -1,8 +1,8 @@
-use std::process::Command;
+use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, HashSet};
 use std::fs;
-use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
+use std::process::Command;
 
 struct GitObjectWrapper {
     object_id: String,
@@ -66,13 +66,15 @@ impl WrappingCostAnalyzer {
 
         let output_str = String::from_utf8_lossy(&output.stdout);
 
-        for line in output_str.lines().take(100) { // Sample first 100 objects
+        for line in output_str.lines().take(100) {
+            // Sample first 100 objects
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() >= 3 && parts[1] == "blob" {
                 let hash = parts[0];
                 let size = parts[2].parse::<u64>().unwrap_or(0);
 
-                if size > 0 && size < 100000 { // Reasonable file size
+                if size > 0 && size < 100000 {
+                    // Reasonable file size
                     if let Ok(wrapper) = self.create_object_wrapper(repo_path, hash) {
                         self.wrapped_objects.insert(hash.to_string(), wrapper);
                     }
@@ -83,7 +85,11 @@ impl WrappingCostAnalyzer {
         Ok(())
     }
 
-    fn create_object_wrapper(&mut self, repo_path: &std::path::Path, object_hash: &str) -> Result<GitObjectWrapper, String> {
+    fn create_object_wrapper(
+        &mut self,
+        repo_path: &std::path::Path,
+        object_hash: &str,
+    ) -> Result<GitObjectWrapper, String> {
         // Get object content
         let output = Command::new("git")
             .args(&["cat-file", "blob", object_hash])
@@ -118,8 +124,11 @@ impl WrappingCostAnalyzer {
             }
 
             // Type definitions
-            if trimmed.starts_with("struct ") || trimmed.starts_with("enum ") ||
-               trimmed.starts_with("trait ") || trimmed.starts_with("type ") {
+            if trimmed.starts_with("struct ")
+                || trimmed.starts_with("enum ")
+                || trimmed.starts_with("trait ")
+                || trimmed.starts_with("type ")
+            {
                 if let Some(type_name) = trimmed.split_whitespace().nth(1) {
                     required_types.insert(type_name.to_string());
                 }
@@ -136,7 +145,7 @@ impl WrappingCostAnalyzer {
             &required_macros,
             &required_types,
             &required_imports,
-            &compilation_deps
+            &compilation_deps,
         );
 
         // Update frequency maps
@@ -165,8 +174,13 @@ impl WrappingCostAnalyzer {
         })
     }
 
-    fn calculate_wrapping_cost(&self, macros: &HashSet<String>, types: &HashSet<String>,
-                              imports: &HashSet<String>, deps: &HashSet<String>) -> u32 {
+    fn calculate_wrapping_cost(
+        &self,
+        macros: &HashSet<String>,
+        types: &HashSet<String>,
+        imports: &HashSet<String>,
+        deps: &HashSet<String>,
+    ) -> u32 {
         // Cost function c(w(d)) = base_cost + macro_cost + type_cost + import_cost + dep_cost
         let base_cost = 1; // Every object has base wrapping cost
         let macro_cost = macros.len() as u32 * 2; // Macros are expensive
@@ -202,7 +216,10 @@ impl WrappingCostAnalyzer {
             signature_parts.sort();
             let signature = signature_parts.join("|");
 
-            groups.entry(signature).or_insert_with(Vec::new).push(obj_id.clone());
+            groups
+                .entry(signature)
+                .or_insert_with(Vec::new)
+                .push(obj_id.clone());
         }
 
         groups
@@ -212,8 +229,10 @@ impl WrappingCostAnalyzer {
         println!("🎁 Git Object Wrapping Cost Analysis c(w(d)):");
         println!("  Total wrapped objects: {}", self.wrapped_objects.len());
         println!("  Total wrapping cost: {}", self.total_wrapping_cost);
-        println!("  Average wrapping cost per object: {:.2}",
-            self.total_wrapping_cost as f64 / self.wrapped_objects.len() as f64);
+        println!(
+            "  Average wrapping cost per object: {:.2}",
+            self.total_wrapping_cost as f64 / self.wrapped_objects.len() as f64
+        );
 
         // Most expensive objects to wrap
         let mut cost_sorted: Vec<_> = self.wrapped_objects.iter().collect();
@@ -221,10 +240,14 @@ impl WrappingCostAnalyzer {
 
         println!("\n💰 Most expensive objects to wrap:");
         for (obj_id, wrapper) in cost_sorted.iter().take(5) {
-            println!("    {}: cost {} (macros: {}, types: {}, imports: {})",
-                &obj_id[..8], wrapper.wrapping_cost,
-                wrapper.required_macros.len(), wrapper.required_types.len(),
-                wrapper.required_imports.len());
+            println!(
+                "    {}: cost {} (macros: {}, types: {}, imports: {})",
+                &obj_id[..8],
+                wrapper.wrapping_cost,
+                wrapper.required_macros.len(),
+                wrapper.required_types.len(),
+                wrapper.required_imports.len()
+            );
         }
 
         // Most common macros (highest reuse potential)
@@ -250,14 +273,22 @@ impl WrappingCostAnalyzer {
         println!("\n🎯 Optimal wrapping groups (shared environments):");
         println!("  Total groups: {}", groups.len());
 
-        let mut group_sizes: Vec<_> = groups.iter()
+        let mut group_sizes: Vec<_> = groups
+            .iter()
             .map(|(sig, objects)| (sig, objects.len()))
             .collect();
         group_sizes.sort_by_key(|(_, size)| std::cmp::Reverse(*size));
 
         for (signature, size) in group_sizes.iter().take(3) {
-            println!("    Group with {} objects: {}", size,
-                if signature.len() > 50 { &signature[..50] } else { signature });
+            println!(
+                "    Group with {} objects: {}",
+                size,
+                if signature.len() > 50 {
+                    &signature[..50]
+                } else {
+                    signature
+                }
+            );
         }
 
         // Cost optimization potential
@@ -268,8 +299,11 @@ impl WrappingCostAnalyzer {
         println!("\n📊 Cost optimization potential:");
         println!("  Individual wrapping cost: {}", single_env_cost);
         println!("  Shared environment cost: {}", grouped_env_cost);
-        println!("  Potential savings: {} ({:.1}%)", savings,
-            savings as f64 / single_env_cost as f64 * 100.0);
+        println!(
+            "  Potential savings: {} ({:.1}%)",
+            savings,
+            savings as f64 / single_env_cost as f64 * 100.0
+        );
     }
 }
 

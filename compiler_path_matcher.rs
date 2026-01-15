@@ -1,7 +1,7 @@
-use std::process::Command;
+use std::collections::HashSet;
 use std::fs;
 use std::io::{BufRead, BufReader, Write};
-use std::collections::HashSet;
+use std::process::Command;
 
 struct CompilerPathMatcher {
     path_database: HashSet<String>,
@@ -40,7 +40,10 @@ impl CompilerPathMatcher {
             }
         }
 
-        println!("\n✅ Loaded {} paths into database", self.path_database.len());
+        println!(
+            "\n✅ Loaded {} paths into database",
+            self.path_database.len()
+        );
         Ok(())
     }
 
@@ -83,8 +86,12 @@ impl CompilerPathMatcher {
         self.extract_strings_from_output(&mir_content, &mut mir_strings);
         self.mir_strings = mir_strings;
 
-        println!("📊 Extracted {} AST, {} HIR, {} MIR strings",
-            self.ast_strings.len(), self.hir_strings.len(), self.mir_strings.len());
+        println!(
+            "📊 Extracted {} AST, {} HIR, {} MIR strings",
+            self.ast_strings.len(),
+            self.hir_strings.len(),
+            self.mir_strings.len()
+        );
 
         Ok(())
     }
@@ -102,9 +109,15 @@ impl CompilerPathMatcher {
             // Extract identifiers, paths, and meaningful tokens
             let words: Vec<&str> = trimmed.split_whitespace().collect();
             for word in words {
-                let clean_word = word.trim_matches(|c: char| !c.is_alphanumeric() && c != '/' && c != '.' && c != '_');
+                let clean_word = word.trim_matches(|c: char| {
+                    !c.is_alphanumeric() && c != '/' && c != '.' && c != '_'
+                });
 
-                if clean_word.len() > 2 && (clean_word.contains('/') || clean_word.contains('.') || clean_word.len() > 5) {
+                if clean_word.len() > 2
+                    && (clean_word.contains('/')
+                        || clean_word.contains('.')
+                        || clean_word.len() > 5)
+                {
                     strings.push(clean_word.to_string());
                 }
             }
@@ -171,18 +184,28 @@ impl CompilerPathMatcher {
         }
 
         let total_matches = ast_matches.len() + hir_matches.len() + mir_matches.len();
-        let total_strings = self.ast_strings.len() + self.hir_strings.len() + self.mir_strings.len();
+        let total_strings =
+            self.ast_strings.len() + self.hir_strings.len() + self.mir_strings.len();
 
         println!("\n📊 THEORY VALIDATION:");
         println!("  Total compiler strings: {}", total_strings);
         println!("  Total path matches: {}", total_matches);
-        println!("  Match rate: {:.2}%", (total_matches as f64 / total_strings as f64) * 100.0);
+        println!(
+            "  Match rate: {:.2}%",
+            (total_matches as f64 / total_strings as f64) * 100.0
+        );
 
         if total_matches > 0 {
-            println!("\n✨ THEORY CONFIRMED: Compiler output strings exist as paths in the database!");
-            println!("    The path structure DOES contain representations of the compiled program!");
+            println!(
+                "\n✨ THEORY CONFIRMED: Compiler output strings exist as paths in the database!"
+            );
+            println!(
+                "    The path structure DOES contain representations of the compiled program!"
+            );
         } else {
-            println!("\n❌ No direct matches found - may need fuzzy matching or substring analysis");
+            println!(
+                "\n❌ No direct matches found - may need fuzzy matching or substring analysis"
+            );
         }
     }
 }

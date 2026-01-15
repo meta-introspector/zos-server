@@ -1,7 +1,7 @@
+use crossbeam::thread;
 use std::collections::HashMap;
 use std::fs;
 use std::process::Command;
-use crossbeam::thread;
 
 struct MultiRepoExtractor {
     sources: Vec<String>,
@@ -33,7 +33,8 @@ impl MultiRepoExtractor {
                     self.scan_source_parallel(source);
                 });
             }
-        }).unwrap();
+        })
+        .unwrap();
 
         Ok(())
     }
@@ -71,7 +72,8 @@ impl MultiRepoExtractor {
                         self.process_extension_type(&output_subdir, &ext, &files);
                     });
                 }
-            }).unwrap();
+            })
+            .unwrap();
         }
     }
 
@@ -91,14 +93,19 @@ impl MultiRepoExtractor {
                     for (i, file_path) in chunk.iter().enumerate() {
                         if let Ok(content) = fs::read_to_string(file_path) {
                             let model = self.build_markov_model(&content);
-                            let model_file = format!("{}/{}_{}.bin", ext_dir, chunk_idx * chunk_size + i,
-                                file_path.split('/').last().unwrap_or("unknown"));
+                            let model_file = format!(
+                                "{}/{}_{}.bin",
+                                ext_dir,
+                                chunk_idx * chunk_size + i,
+                                file_path.split('/').last().unwrap_or("unknown")
+                            );
                             self.save_model(&model, &model_file);
                         }
                     }
                 });
             }
-        }).unwrap();
+        })
+        .unwrap();
 
         println!("✅ Completed {} files for {}", files.len(), extension);
     }
@@ -111,7 +118,8 @@ impl MultiRepoExtractor {
             let from = window[0];
             let to = window[1];
 
-            model.entry(from)
+            model
+                .entry(from)
                 .or_insert_with(HashMap::new)
                 .entry(to)
                 .and_modify(|count| *count += 1)

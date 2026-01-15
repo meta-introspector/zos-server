@@ -50,8 +50,15 @@ impl Kleene2Markov2Godel {
             let prime = if i < primes.len() { primes[i] } else { 2 };
             let exponent = char_code % 10;
 
-            println!("    [{}] '{}' (ASCII {}) → {}^{} = {}",
-                i, c, char_code, prime, exponent, prime.pow(exponent));
+            println!(
+                "    [{}] '{}' (ASCII {}) → {}^{} = {}",
+                i,
+                c,
+                char_code,
+                prime,
+                exponent,
+                prime.pow(exponent)
+            );
         }
 
         // Show the mathematical construction

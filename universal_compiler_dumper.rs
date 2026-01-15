@@ -112,13 +112,17 @@ impl UniversalCompilerDumper {
 
     // AUDITED: Universal dump generator
     fn generate_all_representations(&mut self, source_file: &str) -> Result<(), String> {
-        println!("🔧 Generating all compiler representations for: {}", source_file);
+        println!(
+            "🔧 Generating all compiler representations for: {}",
+            source_file
+        );
 
         for config in &self.dump_configurations.clone() {
             match self.generate_representation(source_file, config) {
                 Ok(content) => {
                     let model = self.build_representation_model(&content, &config.name);
-                    self.representation_models.insert(config.name.clone(), model);
+                    self.representation_models
+                        .insert(config.name.clone(), model);
                     println!("  ✅ Generated: {}", config.name);
                 }
                 Err(e) => {
@@ -131,7 +135,11 @@ impl UniversalCompilerDumper {
     }
 
     // AUDITED: Single representation generator
-    fn generate_representation(&self, source_file: &str, config: &DumpConfig) -> Result<String, String> {
+    fn generate_representation(
+        &self,
+        source_file: &str,
+        config: &DumpConfig,
+    ) -> Result<String, String> {
         // Execute rustc with specific flags
         let mut cmd = Command::new("rustc");
         for flag in &config.rustc_flags {
@@ -139,7 +147,8 @@ impl UniversalCompilerDumper {
         }
         cmd.arg(source_file);
 
-        let output = cmd.output()
+        let output = cmd
+            .output()
             .map_err(|e| format!("Failed to execute rustc: {}", e))?;
 
         let mut content = if output.status.success() {
@@ -181,7 +190,8 @@ impl UniversalCompilerDumper {
             stdin.write_all(input.as_bytes()).ok();
         }
 
-        let output = child.wait_with_output()
+        let output = child
+            .wait_with_output()
             .map_err(|e| format!("Post-process failed: {}", e))?;
 
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
@@ -194,18 +204,18 @@ impl UniversalCompilerDumper {
 
         // Build n-gram transitions based on representation type
         let n_gram_size = match repr_type {
-            "ast" | "hir" | "mir" => 3, // Structural representations
+            "ast" | "hir" | "mir" => 3,  // Structural representations
             "llvm_ir" | "assembly" => 4, // Instruction-based
-            "object" | "binary" => 2, // Binary data
-            _ => 2, // Default
+            "object" | "binary" => 2,    // Binary data
+            _ => 2,                      // Default
         };
 
         // Create n-gram transitions
         let tokens: Vec<String> = self.tokenize_content(content, repr_type);
         for window in tokens.windows(n_gram_size) {
             if window.len() == n_gram_size {
-                let from = window[..n_gram_size-1].join(" ");
-                let to = window[n_gram_size-1].clone();
+                let from = window[..n_gram_size - 1].join(" ");
+                let to = window[n_gram_size - 1].clone();
 
                 *transitions
                     .entry(from)
@@ -228,14 +238,16 @@ impl UniversalCompilerDumper {
         match repr_type {
             "object" | "binary" => {
                 // Tokenize binary/hex content
-                content.split_whitespace()
+                content
+                    .split_whitespace()
                     .filter(|s| s.len() <= 8) // Reasonable token size
                     .map(|s| s.to_string())
                     .collect()
             }
             "assembly" | "llvm_ir" => {
                 // Tokenize by instructions and operands
-                content.lines()
+                content
+                    .lines()
                     .flat_map(|line| line.split_whitespace())
                     .filter(|s| !s.is_empty())
                     .map(|s| s.to_string())
@@ -243,9 +255,7 @@ impl UniversalCompilerDumper {
             }
             _ => {
                 // Default: split by whitespace and punctuation
-                content.split_whitespace()
-                    .map(|s| s.to_string())
-                    .collect()
+                content.split_whitespace().map(|s| s.to_string()).collect()
             }
         }
     }
@@ -273,13 +283,13 @@ impl UniversalCompilerDumper {
         let repr_names: Vec<String> = self.representation_models.keys().cloned().collect();
 
         for i in 0..repr_names.len() {
-            for j in i+1..repr_names.len() {
+            for j in i + 1..repr_names.len() {
                 let name1 = &repr_names[i];
                 let name2 = &repr_names[j];
 
                 if let (Some(model1), Some(model2)) = (
                     self.representation_models.get(name1),
-                    self.representation_models.get(name2)
+                    self.representation_models.get(name2),
                 ) {
                     let correlation = self.compute_model_correlation(model1, model2);
                     correlations.push((name1.clone(), name2.clone(), correlation));
@@ -292,7 +302,11 @@ impl UniversalCompilerDumper {
     }
 
     // AUDITED: Model correlation computer
-    fn compute_model_correlation(&self, model1: &RepresentationModel, model2: &RepresentationModel) -> f64 {
+    fn compute_model_correlation(
+        &self,
+        model1: &RepresentationModel,
+        model2: &RepresentationModel,
+    ) -> f64 {
         let mut common_transitions = 0;
         let mut total_comparisons = 0;
 
@@ -317,7 +331,10 @@ impl UniversalCompilerDumper {
     // AUDITED: Analysis reporter
     fn print_universal_analysis(&self) {
         println!("\n🌌 Universal Compiler Representation Analysis:");
-        println!("  Total representations: {}", self.representation_models.len());
+        println!(
+            "  Total representations: {}",
+            self.representation_models.len()
+        );
 
         for (name, model) in &self.representation_models {
             println!("  {}: {} transitions", name, model.total_transitions);

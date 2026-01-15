@@ -45,17 +45,20 @@ impl HierarchicalMarkov {
             // Status update every 5%
             if self.processed_files % (self.total_files / 20) == 0 {
                 let percent = (self.processed_files * 100) / self.total_files;
-                print!("\r📁 {}% - {} files - {}",
+                print!(
+                    "\r📁 {}% - {} files - {}",
                     percent,
                     self.processed_files,
-                    path.chars().take(60).collect::<String>());
+                    path.chars().take(60).collect::<String>()
+                );
                 use std::io::{self, Write};
                 io::stdout().flush().unwrap();
 
                 // Checkpoint: save binary model
                 if percent >= 10 && percent % 10 == 0 {
                     println!("\n💾 Checkpoint at {}% - saving binary model...", percent);
-                    self.save_binary_checkpoint(&format!("markov_checkpoint_{}.bin", percent)).ok();
+                    self.save_binary_checkpoint(&format!("markov_checkpoint_{}.bin", percent))
+                        .ok();
                 }
             }
         }
@@ -73,7 +76,8 @@ impl HierarchicalMarkov {
         // Train Markov on path characters
         let chars: Vec<char> = path.chars().collect();
         for window in chars.windows(2) {
-            *self.path_transitions
+            *self
+                .path_transitions
                 .entry(window[0])
                 .or_insert_with(HashMap::new)
                 .entry(window[1])
@@ -86,14 +90,15 @@ impl HierarchicalMarkov {
 
     fn save_binary_checkpoint(&self, filename: &str) -> Result<(), String> {
         use std::io::Write;
-        let mut file = fs::File::create(filename)
-            .map_err(|e| format!("Create file error: {}", e))?;
+        let mut file =
+            fs::File::create(filename).map_err(|e| format!("Create file error: {}", e))?;
 
         // Write processed files count
         file.write_all(&self.processed_files.to_le_bytes()).unwrap();
 
         // Write extensions count and data
-        file.write_all(&(self.extensions.len() as u32).to_le_bytes()).unwrap();
+        file.write_all(&(self.extensions.len() as u32).to_le_bytes())
+            .unwrap();
         for (ext, count) in &self.extensions {
             file.write_all(&(ext.len() as u32).to_le_bytes()).unwrap();
             file.write_all(ext.as_bytes()).unwrap();
@@ -101,22 +106,27 @@ impl HierarchicalMarkov {
         }
 
         // Write top 100 transitions only (to keep size manageable)
-        let mut transitions: Vec<_> = self.path_transitions.iter()
-            .flat_map(|(from, to_map)| {
-                to_map.iter().map(move |(to, count)| ((*from, *to), *count))
-            })
+        let mut transitions: Vec<_> = self
+            .path_transitions
+            .iter()
+            .flat_map(|(from, to_map)| to_map.iter().map(move |(to, count)| ((*from, *to), *count)))
             .collect();
         transitions.sort_by_key(|(_, count)| std::cmp::Reverse(*count));
         transitions.truncate(100);
 
-        file.write_all(&(transitions.len() as u32).to_le_bytes()).unwrap();
+        file.write_all(&(transitions.len() as u32).to_le_bytes())
+            .unwrap();
         for ((from, to), count) in transitions {
             file.write_all(&(from as u32).to_le_bytes()).unwrap();
             file.write_all(&(to as u32).to_le_bytes()).unwrap();
             file.write_all(&count.to_le_bytes()).unwrap();
         }
 
-        println!("  Saved {} bytes to {}", file.metadata().unwrap().len(), filename);
+        println!(
+            "  Saved {} bytes to {}",
+            file.metadata().unwrap().len(),
+            filename
+        );
         Ok(())
     }
 
@@ -146,17 +156,25 @@ impl HierarchicalMarkov {
         }
 
         // Top path character transitions
-        let mut transitions: Vec<_> = self.path_transitions.iter()
-            .flat_map(|(from, to_map)| {
-                to_map.iter().map(move |(to, count)| ((*from, *to), *count))
-            })
+        let mut transitions: Vec<_> = self
+            .path_transitions
+            .iter()
+            .flat_map(|(from, to_map)| to_map.iter().map(move |(to, count)| ((*from, *to), *count)))
             .collect();
         transitions.sort_by_key(|(_, count)| std::cmp::Reverse(*count));
 
         println!("\n🔤 Top 10 path character patterns:");
         for ((from, to), count) in transitions.iter().take(10) {
-            let from_display = if *from == '/' { "'/' " } else { &format!("'{}' ", from) };
-            let to_display = if *to == '/' { " '/'" } else { &format!(" '{}'", to) };
+            let from_display = if *from == '/' {
+                "'/' "
+            } else {
+                &format!("'{}' ", from)
+            };
+            let to_display = if *to == '/' {
+                " '/'"
+            } else {
+                &format!(" '{}'", to)
+            };
             println!("    {} →{}: {} times", from_display, to_display, count);
         }
 

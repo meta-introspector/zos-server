@@ -1,6 +1,6 @@
-use std::process::Command;
 use std::collections::HashMap;
 use std::fs;
+use std::process::Command;
 
 struct GitPackAnalyzer {
     pack_stats: HashMap<String, PackInfo>,
@@ -67,17 +67,29 @@ impl GitPackAnalyzer {
 
         for line in output_str.lines() {
             if line.starts_with("count ") {
-                objects += line.split_whitespace().nth(1)
-                    .and_then(|s| s.parse::<u32>().ok()).unwrap_or(0);
+                objects += line
+                    .split_whitespace()
+                    .nth(1)
+                    .and_then(|s| s.parse::<u32>().ok())
+                    .unwrap_or(0);
             } else if line.starts_with("in-pack ") {
-                objects += line.split_whitespace().nth(1)
-                    .and_then(|s| s.parse::<u32>().ok()).unwrap_or(0);
+                objects += line
+                    .split_whitespace()
+                    .nth(1)
+                    .and_then(|s| s.parse::<u32>().ok())
+                    .unwrap_or(0);
             } else if line.starts_with("size-pack ") {
-                size_pack = line.split_whitespace().nth(1)
-                    .and_then(|s| s.parse::<u64>().ok()).unwrap_or(0);
+                size_pack = line
+                    .split_whitespace()
+                    .nth(1)
+                    .and_then(|s| s.parse::<u64>().ok())
+                    .unwrap_or(0);
             } else if line.starts_with("size ") {
-                size += line.split_whitespace().nth(1)
-                    .and_then(|s| s.parse::<u64>().ok()).unwrap_or(0);
+                size += line
+                    .split_whitespace()
+                    .nth(1)
+                    .and_then(|s| s.parse::<u64>().ok())
+                    .unwrap_or(0);
             }
         }
 
@@ -86,7 +98,9 @@ impl GitPackAnalyzer {
 
         let compression_ratio = if uncompressed > 0 {
             size_pack as f64 / uncompressed as f64
-        } else { 1.0 };
+        } else {
+            1.0
+        };
 
         let pack_info = PackInfo {
             objects,
@@ -142,14 +156,15 @@ impl GitPackAnalyzer {
                 let output_str = String::from_utf8_lossy(&out.stdout);
                 let mut patterns = Vec::new();
 
-                for line in output_str.lines().take(10) { // Sample first 10
+                for line in output_str.lines().take(10) {
+                    // Sample first 10
                     if line.contains("chain") {
                         patterns.push(line.to_string());
                     }
                 }
                 Ok(patterns)
             }
-            _ => Ok(vec![])
+            _ => Ok(vec![]),
         }
     }
 
@@ -157,33 +172,56 @@ impl GitPackAnalyzer {
         println!("📦 Git Pack Compression Analysis:");
         println!("  Total repositories analyzed: {}", self.pack_stats.len());
         println!("  Total objects: {}", self.total_objects);
-        println!("  Total compressed size: {} MB", self.total_compressed_size / 1024 / 1024);
-        println!("  Total uncompressed size: {} MB", self.total_uncompressed_size / 1024 / 1024);
+        println!(
+            "  Total compressed size: {} MB",
+            self.total_compressed_size / 1024 / 1024
+        );
+        println!(
+            "  Total uncompressed size: {} MB",
+            self.total_uncompressed_size / 1024 / 1024
+        );
 
         let overall_ratio = if self.total_uncompressed_size > 0 {
             self.total_compressed_size as f64 / self.total_uncompressed_size as f64
-        } else { 1.0 };
+        } else {
+            1.0
+        };
 
         println!("  Overall compression ratio: {:.3}", overall_ratio);
-        println!("  Space saved: {} MB ({:.1}%)",
+        println!(
+            "  Space saved: {} MB ({:.1}%)",
             (self.total_uncompressed_size - self.total_compressed_size) / 1024 / 1024,
-            (1.0 - overall_ratio) * 100.0);
+            (1.0 - overall_ratio) * 100.0
+        );
 
         // Top compressed repos
         let mut repos: Vec<_> = self.pack_stats.iter().collect();
-        repos.sort_by(|a, b| a.1.compression_ratio.partial_cmp(&b.1.compression_ratio).unwrap());
+        repos.sort_by(|a, b| {
+            a.1.compression_ratio
+                .partial_cmp(&b.1.compression_ratio)
+                .unwrap()
+        });
 
         println!("\n🏆 Best compression ratios:");
         for (name, info) in repos.iter().take(5) {
-            println!("    {}: {:.3} ({} objects, {} KB compressed)",
-                name, info.compression_ratio, info.objects, info.compressed_size / 1024);
+            println!(
+                "    {}: {:.3} ({} objects, {} KB compressed)",
+                name,
+                info.compression_ratio,
+                info.objects,
+                info.compressed_size / 1024
+            );
         }
 
         println!("\n📈 Largest repositories by compressed size:");
         repos.sort_by_key(|(_, info)| std::cmp::Reverse(info.compressed_size));
         for (name, info) in repos.iter().take(5) {
-            println!("    {}: {} MB compressed ({} objects)",
-                name, info.compressed_size / 1024 / 1024, info.objects);
+            println!(
+                "    {}: {} MB compressed ({} objects)",
+                name,
+                info.compressed_size / 1024 / 1024,
+                info.objects
+            );
         }
 
         // Estimate indexing value from compression
@@ -191,7 +229,10 @@ impl GitPackAnalyzer {
         let indexing_value = compression_efficiency * self.total_objects as f64;
 
         println!("\n💡 Compression-based indexing insights:");
-        println!("    Compression efficiency: {:.1}%", compression_efficiency * 100.0);
+        println!(
+            "    Compression efficiency: {:.1}%",
+            compression_efficiency * 100.0
+        );
         println!("    Estimated unique patterns: {:.0}", indexing_value);
         println!("    Delta compression potential: High (git packs already optimized)");
     }

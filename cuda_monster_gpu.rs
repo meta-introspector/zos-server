@@ -13,13 +13,19 @@ impl MonsterGroupGPU {
         println!("🔥 Initializing CUDA/IREE Monster Group GPU Driver...");
 
         let mut kernels = HashMap::new();
-        kernels.insert("monster_71_kernel".to_string(), Self::create_monster_71_kernel());
-        kernels.insert("clifford_algebra_kernel".to_string(), Self::create_clifford_kernel());
+        kernels.insert(
+            "monster_71_kernel".to_string(),
+            Self::create_monster_71_kernel(),
+        );
+        kernels.insert(
+            "clifford_algebra_kernel".to_string(),
+            Self::create_clifford_kernel(),
+        );
 
         Self {
             device_id: 0,
             memory_size: 12 * 1024 * 1024 * 1024, // 12GB RTX 3080 Ti
-            compute_units: 10240, // CUDA cores
+            compute_units: 10240,                 // CUDA cores
             monster_kernels: kernels,
         }
     }
@@ -40,7 +46,8 @@ __global__ void monster_71_kernel(float* input, float* output, int n) {
         }
     }
 }
-"#.to_string()
+"#
+        .to_string()
     }
 
     fn create_clifford_kernel() -> String {
@@ -60,7 +67,8 @@ __global__ void clifford_algebra_kernel(float4* vectors, float4* result, int n) 
         );
     }
 }
-"#.to_string()
+"#
+        .to_string()
     }
 
     fn compile_kernels(&self) -> bool {
@@ -92,7 +100,10 @@ __global__ void clifford_algebra_kernel(float4* vectors, float4* result, int n) 
         println!("🚀 Launching Monster Group computation on GPU...");
         println!("   📊 Data size: {} elements", data_size);
         println!("   🎮 Device: CUDA Device {}", self.device_id);
-        println!("   💾 GPU Memory: {}GB", self.memory_size / (1024*1024*1024));
+        println!(
+            "   💾 GPU Memory: {}GB",
+            self.memory_size / (1024 * 1024 * 1024)
+        );
 
         // Simulate GPU computation
         let mut results = Vec::new();
@@ -120,10 +131,14 @@ __global__ void clifford_algebra_kernel(float4* vectors, float4* result, int n) 
         results
     }
 
-    fn run_clifford_computation(&self, vectors: &[(f32, f32, f32, f32)]) -> Vec<(f32, f32, f32, f32)> {
+    fn run_clifford_computation(
+        &self,
+        vectors: &[(f32, f32, f32, f32)],
+    ) -> Vec<(f32, f32, f32, f32)> {
         println!("🌀 Running Clifford Algebra computation...");
 
-        let results: Vec<(f32, f32, f32, f32)> = vectors.iter()
+        let results: Vec<(f32, f32, f32, f32)> = vectors
+            .iter()
             .map(|(x, y, z, w)| {
                 (
                     x * 71.0, // e0 * Monster prime 71
@@ -134,7 +149,10 @@ __global__ void clifford_algebra_kernel(float4* vectors, float4* result, int n) 
             })
             .collect();
 
-        println!("   ✅ Clifford computation complete: {} vectors processed", results.len());
+        println!(
+            "   ✅ Clifford computation complete: {} vectors processed",
+            results.len()
+        );
         results
     }
 
@@ -152,8 +170,13 @@ __global__ void clifford_algebra_kernel(float4* vectors, float4* result, int n) 
             let throughput = size as f64 / duration.as_secs_f64();
             let monster_71_count = results.iter().filter(|&&x| x == 71.0).count();
 
-            println!("   Size {}: {:.2}ms, {:.0} ops/sec, {} Monster 71s",
-                size, duration.as_millis(), throughput, monster_71_count);
+            println!(
+                "   Size {}: {:.2}ms, {:.0} ops/sec, {} Monster 71s",
+                size,
+                duration.as_millis(),
+                throughput,
+                monster_71_count
+            );
         }
     }
 }

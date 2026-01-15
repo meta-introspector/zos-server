@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::fs;
+use std::io::Write;
 use std::path::Path;
 use std::process::Command;
-use std::io::Write;
 
 struct RustcHIRExtractor {
     hir_artifacts: Vec<HIRArtifact>,
@@ -47,7 +47,11 @@ impl RustcHIRExtractor {
 
         for (i, dir) in rustc_dirs.iter().enumerate() {
             let progress = (i + 1) as f64 / rustc_dirs.len() as f64 * 100.0;
-            println!("\n🔧 [{:.1}%] Processing module: {}", progress, Path::new(dir).file_name().unwrap().to_string_lossy());
+            println!(
+                "\n🔧 [{:.1}%] Processing module: {}",
+                progress,
+                Path::new(dir).file_name().unwrap().to_string_lossy()
+            );
 
             self.process_rustc_module(dir)?;
         }
@@ -97,7 +101,11 @@ impl RustcHIRExtractor {
             self.process_rust_file(file_path)?;
         }
 
-        println!("\r    ✅ Processed {}/{} files", rs_files.len(), rs_files.len());
+        println!(
+            "\r    ✅ Processed {}/{} files",
+            rs_files.len(),
+            rs_files.len()
+        );
         Ok(())
     }
 
@@ -105,7 +113,9 @@ impl RustcHIRExtractor {
         let mut rust_files = Vec::new();
 
         fn walk_dir(dir: &str, files: &mut Vec<String>, depth: u32) -> Result<(), String> {
-            if depth > 10 { return Ok(()); }
+            if depth > 10 {
+                return Ok(());
+            }
 
             if let Ok(entries) = fs::read_dir(dir) {
                 for entry in entries.flatten() {
@@ -150,7 +160,11 @@ impl RustcHIRExtractor {
             Ok(output) if output.status.success() => {
                 let hir_content = String::from_utf8_lossy(&output.stdout);
                 self.successful_hir += 1;
-                (hir_content.len(), true, self.count_transitions(&hir_content))
+                (
+                    hir_content.len(),
+                    true,
+                    self.count_transitions(&hir_content),
+                )
             }
             _ => {
                 self.failed_hir += 1;
@@ -186,14 +200,18 @@ impl RustcHIRExtractor {
         report.push_str(&format!("Total files: {}\n", self.total_files));
         report.push_str(&format!("HIR successful: {}\n", self.successful_hir));
         report.push_str(&format!("HIR failed: {}\n", self.failed_hir));
-        report.push_str(&format!("Success rate: {:.2}%\n\n",
-            self.successful_hir as f64 / self.total_files as f64 * 100.0));
+        report.push_str(&format!(
+            "Success rate: {:.2}%\n\n",
+            self.successful_hir as f64 / self.total_files as f64 * 100.0
+        ));
 
         report.push_str("## HIR Artifacts\n");
         for artifact in &self.hir_artifacts {
             if artifact.success {
-                report.push_str(&format!("{}: {} chars, {} transitions\n",
-                    artifact.source_path, artifact.hir_size, artifact.transition_count));
+                report.push_str(&format!(
+                    "{}: {} chars, {} transitions\n",
+                    artifact.source_path, artifact.hir_size, artifact.transition_count
+                ));
             }
         }
 
@@ -216,10 +234,14 @@ impl RustcHIRExtractor {
         }
 
         // Analyze transitions
-        let total_source_transitions: u64 = self.source_artifacts.iter()
+        let total_source_transitions: u64 = self
+            .source_artifacts
+            .iter()
             .map(|a| a.transition_count)
             .sum();
-        let total_hir_transitions: u64 = self.hir_artifacts.iter()
+        let total_hir_transitions: u64 = self
+            .hir_artifacts
+            .iter()
             .filter(|a| a.success)
             .map(|a| a.transition_count)
             .sum();
@@ -234,7 +256,10 @@ impl RustcHIRExtractor {
         }
 
         println!("\n🔑 Automorphic Field Theory Results:");
-        println!("  ✅ Extracted HIR from {} rustc modules", self.successful_hir);
+        println!(
+            "  ✅ Extracted HIR from {} rustc modules",
+            self.successful_hir
+        );
         println!("  🧬 Generated {} HIR transitions", total_hir_transitions);
         println!("  🌌 Created complete automorphic field of Rust's self-description");
         println!("  🔄 This IS the mathematical key to Rust's compiler structure");

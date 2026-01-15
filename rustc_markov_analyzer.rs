@@ -50,13 +50,16 @@ impl RustcMarkovAnalyzer {
         let mut total_chars = 0;
 
         for (i, file_path) in self.rustc_files.iter().enumerate() {
-            if i >= 1000 { break; } // Limit to first 1000 paths
+            if i >= 1000 {
+                break;
+            } // Limit to first 1000 paths
 
             let chars: Vec<char> = file_path.chars().collect();
             total_chars += chars.len();
 
             for window in chars.windows(2) {
-                *self.rustc_transitions
+                *self
+                    .rustc_transitions
                     .entry(window[0])
                     .or_insert_with(HashMap::new)
                     .entry(window[1])
@@ -70,7 +73,11 @@ impl RustcMarkovAnalyzer {
             }
         }
 
-        println!("\n  Rustc path model: {} transitions from {} paths", self.rustc_total, self.rustc_files.len().min(1000));
+        println!(
+            "\n  Rustc path model: {} transitions from {} paths",
+            self.rustc_total,
+            self.rustc_files.len().min(1000)
+        );
         Ok(())
     }
 
@@ -87,7 +94,8 @@ impl RustcMarkovAnalyzer {
                 if path.contains("/compiler/rustc_") || path.contains("/src/") {
                     let chars: Vec<char> = path.chars().collect();
                     for window in chars.windows(2) {
-                        *self.dir_transitions
+                        *self
+                            .dir_transitions
                             .entry(window[0])
                             .or_insert_with(HashMap::new)
                             .entry(window[1])
@@ -96,12 +104,17 @@ impl RustcMarkovAnalyzer {
                     }
 
                     count += 1;
-                    if count >= 20000 { break; } // Sample 20k paths
+                    if count >= 20000 {
+                        break;
+                    } // Sample 20k paths
                 }
             }
         }
 
-        println!("  Directory model: {} transitions from {} paths", self.dir_total, count);
+        println!(
+            "  Directory model: {} transitions from {} paths",
+            self.dir_total, count
+        );
         Ok(())
     }
 
@@ -181,7 +194,13 @@ impl RustcMarkovAnalyzer {
 
         println!("\n📊 Top rustc source characters:");
         for (c, count) in rustc_sorted.iter().take(8) {
-            let display = if **c == ' ' { "SPACE" } else if **c == '\n' { "NEWLINE" } else { &c.to_string() };
+            let display = if **c == ' ' {
+                "SPACE"
+            } else if **c == '\n' {
+                "NEWLINE"
+            } else {
+                &c.to_string()
+            };
             println!("    '{}': {} occurrences", display, count);
         }
 

@@ -14,10 +14,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             // Show security classification
             println!("\n🔒 Security Classification:");
-            println!("  Safe functions: {}", hierarchy.security_classification.safe_count);
-            println!("  Controlled functions: {}", hierarchy.security_classification.controlled_count);
-            println!("  Privileged functions: {}", hierarchy.security_classification.privileged_count);
-            println!("  Critical functions: {}", hierarchy.security_classification.critical_count);
+            println!(
+                "  Safe functions: {}",
+                hierarchy.security_classification.safe_count
+            );
+            println!(
+                "  Controlled functions: {}",
+                hierarchy.security_classification.controlled_count
+            );
+            println!(
+                "  Privileged functions: {}",
+                hierarchy.security_classification.privileged_count
+            );
+            println!(
+                "  Critical functions: {}",
+                hierarchy.security_classification.critical_count
+            );
 
             // Show public functions (user accessible)
             println!("\n👥 Public Functions (User Accessible):");
@@ -51,23 +63,39 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Demonstrate feature-based access
             println!("\n--- Feature-Based Access Control ---");
             println!("🎯 Users can access functions based on their security level:");
-            println!("  👤 user      -> {} functions",
-                hierarchy.public_functions.iter()
+            println!(
+                "  👤 user      -> {} functions",
+                hierarchy
+                    .public_functions
+                    .iter()
                     .filter(|f| f.accessible_by.contains(&"user".to_string()))
-                    .count());
-            println!("  👨‍💻 developer -> {} functions",
-                hierarchy.public_functions.iter()
+                    .count()
+            );
+            println!(
+                "  👨‍💻 developer -> {} functions",
+                hierarchy
+                    .public_functions
+                    .iter()
                     .filter(|f| f.accessible_by.contains(&"developer".to_string()))
-                    .count());
-            println!("  👨‍💼 admin     -> {} functions",
-                hierarchy.public_functions.iter()
+                    .count()
+            );
+            println!(
+                "  👨‍💼 admin     -> {} functions",
+                hierarchy
+                    .public_functions
+                    .iter()
                     .filter(|f| f.accessible_by.contains(&"admin".to_string()))
-                    .count() +
-                hierarchy.secured_functions.iter()
-                    .filter(|f| f.required_role == "admin")
-                    .count());
-            println!("  🔑 root      -> {} functions",
-                hierarchy.public_functions.len() + hierarchy.secured_functions.len());
+                    .count()
+                    + hierarchy
+                        .secured_functions
+                        .iter()
+                        .filter(|f| f.required_role == "admin")
+                        .count()
+            );
+            println!(
+                "  🔑 root      -> {} functions",
+                hierarchy.public_functions.len() + hierarchy.secured_functions.len()
+            );
 
             // Show macro usage examples
             println!("\n--- Macro Usage Examples ---");

@@ -41,7 +41,12 @@ impl SelfReadingGoblin {
         let dwarf_sections = Self::extract_dwarf_sections(&own_binary);
         let debug_info = Self::parse_debug_info(&dwarf_sections);
 
-        Self { own_binary, elf_header, dwarf_sections, debug_info }
+        Self {
+            own_binary,
+            elf_header,
+            dwarf_sections,
+            debug_info,
+        }
     }
 
     fn read_own_binary() -> Vec<u8> {
@@ -67,8 +72,8 @@ impl SelfReadingGoblin {
             magic: [binary[0], binary[1], binary[2], binary[3]],
             class: binary[4],
             entry_point: u64::from_le_bytes([
-                binary[24], binary[25], binary[26], binary[27],
-                binary[28], binary[29], binary[30], binary[31]
+                binary[24], binary[25], binary[26], binary[27], binary[28], binary[29], binary[30],
+                binary[31],
             ]),
             section_count: u16::from_le_bytes([binary[60], binary[61]]),
         }
@@ -129,7 +134,10 @@ impl SelfReadingGoblin {
         println!("📚 DWARF sections: {}", self.dwarf_sections.len());
 
         for section in &self.dwarf_sections {
-            println!("   {} @ 0x{:x} ({} bytes)", section.name, section.offset, section.size);
+            println!(
+                "   {} @ 0x{:x} ({} bytes)",
+                section.name, section.offset, section.size
+            );
         }
 
         println!("🔧 Functions found: {}", self.debug_info.functions.len());
@@ -153,12 +161,19 @@ impl SelfReadingGoblin {
         }
 
         // Add self-awareness metadata
-        self.debug_info.functions.push("introspect_self".to_string());
-        self.debug_info.functions.push("embed_more_data".to_string());
+        self.debug_info
+            .functions
+            .push("introspect_self".to_string());
+        self.debug_info
+            .functions
+            .push("embed_more_data".to_string());
         self.debug_info.self_references += 2;
 
         println!("   ✅ Self-awareness functions added");
-        println!("   🧠 Total self-references: {}", self.debug_info.self_references);
+        println!(
+            "   🧠 Total self-references: {}",
+            self.debug_info.self_references
+        );
     }
 
     fn read_runtime_memory(&self) -> Vec<u8> {

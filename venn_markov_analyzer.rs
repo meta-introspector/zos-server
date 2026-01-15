@@ -56,12 +56,15 @@ impl VennMarkovAnalyzer {
         let mut files_processed = 0;
 
         for (i, file_path) in self.rustc_files.iter().enumerate() {
-            if i >= 100 { break; } // Limit to first 100 files
+            if i >= 100 {
+                break;
+            } // Limit to first 100 files
 
             // Model A: Train on file path
             let path_chars: Vec<char> = file_path.chars().collect();
             for window in path_chars.windows(2) {
-                *self.path_model
+                *self
+                    .path_model
                     .entry(window[0])
                     .or_insert_with(HashMap::new)
                     .entry(window[1])
@@ -69,7 +72,8 @@ impl VennMarkovAnalyzer {
                 self.path_total += 1;
 
                 // Model C: Also add to combined
-                *self.combined_model
+                *self
+                    .combined_model
                     .entry(window[0])
                     .or_insert_with(HashMap::new)
                     .entry(window[1])
@@ -85,10 +89,12 @@ impl VennMarkovAnalyzer {
             };
 
             if let Ok(content) = fs::read_to_string(&full_path) {
-                if content.len() < 50000 { // Reasonable size limit
+                if content.len() < 50000 {
+                    // Reasonable size limit
                     let content_chars: Vec<char> = content.chars().collect();
                     for window in content_chars.windows(2) {
-                        *self.content_model
+                        *self
+                            .content_model
                             .entry(window[0])
                             .or_insert_with(HashMap::new)
                             .entry(window[1])
@@ -96,7 +102,8 @@ impl VennMarkovAnalyzer {
                         self.content_total += 1;
 
                         // Model C: Also add to combined
-                        *self.combined_model
+                        *self
+                            .combined_model
                             .entry(window[0])
                             .or_insert_with(HashMap::new)
                             .entry(window[1])
@@ -114,7 +121,10 @@ impl VennMarkovAnalyzer {
         }
 
         println!("\n  Path model: {} transitions", self.path_total);
-        println!("  Content model: {} transitions from {} files", self.content_total, files_processed);
+        println!(
+            "  Content model: {} transitions from {} files",
+            self.content_total, files_processed
+        );
         println!("  Combined model: {} transitions", self.combined_total);
 
         // Save models
@@ -130,7 +140,8 @@ impl VennMarkovAnalyzer {
         let mut file = fs::File::create("rustc_path_model.bin")
             .map_err(|e| format!("Create path model error: {}", e))?;
 
-        file.write_all(&(self.path_model.len() as u32).to_le_bytes()).unwrap();
+        file.write_all(&(self.path_model.len() as u32).to_le_bytes())
+            .unwrap();
         for (from, to_map) in &self.path_model {
             for (to, count) in to_map {
                 file.write_all(&(*from as u32).to_le_bytes()).unwrap();
@@ -143,7 +154,8 @@ impl VennMarkovAnalyzer {
         let mut file = fs::File::create("rustc_content_model.bin")
             .map_err(|e| format!("Create content model error: {}", e))?;
 
-        file.write_all(&(self.content_model.len() as u32).to_le_bytes()).unwrap();
+        file.write_all(&(self.content_model.len() as u32).to_le_bytes())
+            .unwrap();
         for (from, to_map) in &self.content_model {
             for (to, count) in to_map {
                 file.write_all(&(*from as u32).to_le_bytes()).unwrap();
@@ -170,7 +182,12 @@ impl VennMarkovAnalyzer {
                 let transition = (*from, *to);
                 union_set.insert(transition);
 
-                if self.content_model.get(from).and_then(|m| m.get(to)).is_some() {
+                if self
+                    .content_model
+                    .get(from)
+                    .and_then(|m| m.get(to))
+                    .is_some()
+                {
                     intersection += 1;
                 } else {
                     a_only += 1;
@@ -205,7 +222,9 @@ impl VennMarkovAnalyzer {
                         let pattern = format!("{}{}{}", from, to, next);
 
                         // Check if this pattern exists in content model
-                        let in_content = self.content_model.get(from)
+                        let in_content = self
+                            .content_model
+                            .get(from)
                             .and_then(|m| m.get(to))
                             .and_then(|_| self.content_model.get(to))
                             .and_then(|m| m.get(next))
@@ -228,7 +247,9 @@ impl VennMarkovAnalyzer {
                     for (next, _) in content_next_map {
                         let pattern = format!("{}{}{}", from, to, next);
 
-                        let in_path = self.path_model.get(from)
+                        let in_path = self
+                            .path_model
+                            .get(from)
                             .and_then(|m| m.get(to))
                             .and_then(|_| self.path_model.get(to))
                             .and_then(|m| m.get(next))
@@ -266,7 +287,8 @@ impl VennMarkovAnalyzer {
         let overlap_ratio = intersection as f64 / union_size as f64;
         println!("  Overlap ratio: {:.2}%", overlap_ratio * 100.0);
 
-        let (path_patterns, content_patterns, shared_patterns) = self.find_model_specific_patterns();
+        let (path_patterns, content_patterns, shared_patterns) =
+            self.find_model_specific_patterns();
 
         println!("\n🎯 Pattern Analysis:");
         println!("  Path-only patterns: {}", path_patterns.len());

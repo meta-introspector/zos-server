@@ -34,7 +34,11 @@ impl CliffordAlgebra {
         let mut basis_elements = Vec::new();
         basis_elements.push(self_reference_fixed_point.clone());
 
-        Self { basis_elements, text_segment_ptr, self_reference_fixed_point }
+        Self {
+            basis_elements,
+            text_segment_ptr,
+            self_reference_fixed_point,
+        }
     }
 
     fn get_text_segment_address() -> usize {
@@ -47,7 +51,12 @@ impl CliffordAlgebra {
         let addr_normalized = (text_addr as f64) / 1e6; // Normalize address
 
         CliffordElement {
-            coefficients: [1.0, addr_normalized, addr_normalized * addr_normalized, 71.0], // Monster Group 71
+            coefficients: [
+                1.0,
+                addr_normalized,
+                addr_normalized * addr_normalized,
+                71.0,
+            ], // Monster Group 71
             memory_label: "SELF_TEXT_SEGMENT".to_string(),
             is_self_reference: true,
             malware_score: 0.0, // Perfect trust
@@ -136,9 +145,9 @@ impl CliffordAlgebra {
             let signature = &region.clifford_signature;
 
             // Check for malware indicators
-            let has_monster_signature = signature.coefficients[3] == 71.0 ||
-                                      signature.coefficients[3] == 31.0 ||
-                                      signature.coefficients[3] == 47.0;
+            let has_monster_signature = signature.coefficients[3] == 71.0
+                || signature.coefficients[3] == 31.0
+                || signature.coefficients[3] == 47.0;
 
             let is_self_referential = signature.is_self_reference;
             let low_malware_score = signature.malware_score < 0.5;
@@ -146,12 +155,16 @@ impl CliffordAlgebra {
             let is_clean = has_monster_signature && (is_self_referential || low_malware_score);
 
             if !is_clean {
-                println!("⚠️ Suspicious region: {} (score: {:.2})",
-                    region.label, signature.malware_score);
+                println!(
+                    "⚠️ Suspicious region: {} (score: {:.2})",
+                    region.label, signature.malware_score
+                );
                 malware_detected = true;
             } else {
-                println!("✅ Clean region: {} (Monster signature: {:.0})",
-                    region.label, signature.coefficients[3]);
+                println!(
+                    "✅ Clean region: {} (Monster signature: {:.0})",
+                    region.label, signature.coefficients[3]
+                );
             }
         }
 
@@ -184,7 +197,14 @@ fn main() {
         println!("==================================");
         println!("✅ Fixed point proven: Algebra points to own text segment");
         println!("✅ Memory auto-labeled: {} regions", memory_regions.len());
-        println!("✅ Malware scan: {}", if malware_found { "THREATS FOUND" } else { "CLEAN" });
+        println!(
+            "✅ Malware scan: {}",
+            if malware_found {
+                "THREATS FOUND"
+            } else {
+                "CLEAN"
+            }
+        );
         println!("🔮 Self-referential security model complete!");
     }
 }

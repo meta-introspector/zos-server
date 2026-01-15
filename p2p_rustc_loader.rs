@@ -40,7 +40,10 @@ impl RustcDriverWrapper {
 
         for symbol_name in symbols {
             unsafe {
-                if let Ok(_symbol) = self.library.get::<Symbol<unsafe extern fn()>>(symbol_name.as_bytes()) {
+                if let Ok(_symbol) = self
+                    .library
+                    .get::<Symbol<unsafe extern "C" fn()>>(symbol_name.as_bytes())
+                {
                     found_symbols.push(symbol_name.to_string());
                     println!("✅ Found symbol: {}", symbol_name);
                 }
@@ -65,7 +68,10 @@ impl RustcDriverWrapper {
 
         unsafe {
             // Try to call rustc main function if available
-            if let Ok(main_fn) = self.library.get::<Symbol<unsafe extern fn() -> i32>>(b"main") {
+            if let Ok(main_fn) = self
+                .library
+                .get::<Symbol<unsafe extern "C" fn() -> i32>>(b"main")
+            {
                 println!("🚀 Calling rustc main function...");
                 let result = main_fn();
                 return Ok(format!("Rustc returned: {}", result));
@@ -73,7 +79,10 @@ impl RustcDriverWrapper {
         }
 
         // Fallback: simulate compilation
-        Ok(format!("Compiled {} bytes via P2P rustc wrapper", source_code.len()))
+        Ok(format!(
+            "Compiled {} bytes via P2P rustc wrapper",
+            source_code.len()
+        ))
     }
 }
 
@@ -84,7 +93,9 @@ pub struct P2PRustcLoader {
 
 impl P2PRustcLoader {
     pub fn new() -> Self {
-        Self { wrappers: Vec::new() }
+        Self {
+            wrappers: Vec::new(),
+        }
     }
 
     pub fn load_rustc_driver(&mut self, so_path: &str) -> Result<(), Box<dyn std::error::Error>> {

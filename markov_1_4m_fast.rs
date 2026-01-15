@@ -41,13 +41,17 @@ fn main() {
     // Find similarity clusters
     let mut signature_groups: HashMap<u64, Vec<String>> = HashMap::new();
     for (path, fp) in &fingerprints {
-        signature_groups.entry(fp.signature).or_insert(Vec::new()).push(path.clone());
+        signature_groups
+            .entry(fp.signature)
+            .or_insert(Vec::new())
+            .push(path.clone());
     }
 
     println!("🎯 Similarity clusters: {}", signature_groups.len());
 
     // Show conformal folding evidence
-    let mut large_groups: Vec<_> = signature_groups.iter()
+    let mut large_groups: Vec<_> = signature_groups
+        .iter()
         .filter(|(_, files)| files.len() > 1)
         .collect();
     large_groups.sort_by_key(|(_, files)| files.len());
@@ -58,7 +62,8 @@ fn main() {
         println!("📁 Signature {:x}: {} similar files", sig, files.len());
 
         // Show entropy distribution
-        let entropies: Vec<f64> = files.iter()
+        let entropies: Vec<f64> = files
+            .iter()
             .filter_map(|f| fingerprints.get(f))
             .map(|fp| fp.entropy)
             .collect();
@@ -66,7 +71,15 @@ fn main() {
         if !entropies.is_empty() {
             let avg_entropy = entropies.iter().sum::<f64>() / entropies.len() as f64;
             println!("   Average entropy: {:.3}", avg_entropy);
-            println!("   Files: {}", files.iter().take(3).map(|f| f.split('/').last().unwrap()).collect::<Vec<_>>().join(", "));
+            println!(
+                "   Files: {}",
+                files
+                    .iter()
+                    .take(3)
+                    .map(|f| f.split('/').last().unwrap())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            );
         }
     }
 
@@ -92,17 +105,22 @@ fn analyze_markov_fast(content: &str) -> FastFingerprint {
     }
 
     if total == 0 {
-        return FastFingerprint { entropy: 0.0, signature: 0 };
+        return FastFingerprint {
+            entropy: 0.0,
+            signature: 0,
+        };
     }
 
-    let entropy = -transitions.values()
+    let entropy = -transitions
+        .values()
         .map(|&count| {
             let p = count as f64 / total as f64;
             p * p.log2()
         })
         .sum::<f64>();
 
-    let signature = transitions.keys()
+    let signature = transitions
+        .keys()
         .map(|(a, b)| (*a as u64) ^ (*b as u64))
         .fold(0, |acc, x| acc ^ x);
 

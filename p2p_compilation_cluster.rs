@@ -1,11 +1,11 @@
 // 🧟 ENHANCED SHIM WITH P2P FEEDERS: Distributed compilation cluster
-use std::env;
-use std::process::Command;
-use std::fs::{OpenOptions, read_to_string};
-use std::io::Write;
 use libloading::Library;
-use std::net::TcpStream;
 use serde_json::json;
+use std::env;
+use std::fs::{read_to_string, OpenOptions};
+use std::io::Write;
+use std::net::TcpStream;
+use std::process::Command;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
@@ -91,7 +91,11 @@ fn run_analysis_feeders(source_file: &str) -> Result<AnalysisData, Box<dyn std::
     })
 }
 
-fn send_to_p2p_cluster(source_file: &str, target_arch: &str, analysis: &AnalysisData) -> Result<(), Box<dyn std::error::Error>> {
+fn send_to_p2p_cluster(
+    source_file: &str,
+    target_arch: &str,
+    analysis: &AnalysisData,
+) -> Result<(), Box<dyn std::error::Error>> {
     // Connect to P2P cluster coordinator
     let mut stream = TcpStream::connect("127.0.0.1:8080")?;
 
@@ -120,16 +124,17 @@ fn cross_compile_arm64(args: &[String]) -> Result<(), Box<dyn std::error::Error>
 
     // Load ARM64 cross-compiler driver
     let arm_driver = unsafe {
-        Library::new("rustc_driver_arm64.so")
-            .or_else(|_| Library::new("rustc_driver_self.so"))?
+        Library::new("rustc_driver_arm64.so").or_else(|_| Library::new("rustc_driver_self.so"))?
     };
 
     let rustc_main = unsafe {
-        arm_driver.get::<unsafe extern "C" fn(i32, *const *const i8) -> i32>(b"rustc_driver_main")?
+        arm_driver
+            .get::<unsafe extern "C" fn(i32, *const *const i8) -> i32>(b"rustc_driver_main")?
     };
 
     // Convert args to C
-    let c_args: Vec<std::ffi::CString> = args.iter()
+    let c_args: Vec<std::ffi::CString> = args
+        .iter()
         .map(|s| std::ffi::CString::new(s.as_str()).unwrap())
         .collect();
     let c_ptrs: Vec<*const i8> = c_args.iter().map(|s| s.as_ptr()).collect();
@@ -167,8 +172,8 @@ struct AnalysisData {
 
 // P2P Cluster Coordinator
 fn start_p2p_cluster_coordinator() -> Result<(), Box<dyn std::error::Error>> {
-    use std::net::{TcpListener, TcpStream};
     use std::io::Read;
+    use std::net::{TcpListener, TcpStream};
     use std::thread;
 
     println!("🌐 Starting P2P compilation cluster coordinator...");
@@ -214,15 +219,24 @@ fn handle_cluster_node(mut stream: TcpStream, mut cluster_nodes: Vec<String>) {
 }
 
 fn distribute_compilation_task(task: &serde_json::Value, target_arch: &str, nodes: &[String]) {
-    println!("🔄 Distributing {} compilation task to {} nodes", target_arch, nodes.len());
+    println!(
+        "🔄 Distributing {} compilation task to {} nodes",
+        target_arch,
+        nodes.len()
+    );
 
     // Find nodes capable of target architecture
-    let capable_nodes: Vec<_> = nodes.iter()
+    let capable_nodes: Vec<_> = nodes
+        .iter()
         .filter(|node| node.contains("arm64") || target_arch.contains("x86_64"))
         .collect();
 
     if !capable_nodes.is_empty() {
-        println!("✅ Found {} capable nodes for {}", capable_nodes.len(), target_arch);
+        println!(
+            "✅ Found {} capable nodes for {}",
+            capable_nodes.len(),
+            target_arch
+        );
     } else {
         println!("⚠️ No capable nodes found for {}", target_arch);
     }

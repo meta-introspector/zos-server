@@ -133,8 +133,10 @@ fn main() {
         println!("   Preserved: {}", fp71.is_preserved);
 
         for step in &fp71.proof_chain {
-            println!("   Step {}: pos {} → {} (71={})",
-                step.step, step.input_pos, step.output_pos, step.invariant_71);
+            println!(
+                "   Step {}: pos {} → {} (71={})",
+                step.step, step.input_pos, step.output_pos, step.invariant_71
+            );
         }
     }
 

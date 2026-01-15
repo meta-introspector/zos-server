@@ -1,6 +1,6 @@
-use std::path::Path;
-use std::fs;
 use goblin::elf::Elf;
+use std::fs;
+use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub enum LibVerb {
