@@ -139,9 +139,6 @@ name = "cuda_monster_gpu"
 path = "cuda_monster_gpu.rs"
 
 [[bin]]
-name = "dead_code_eliminator"
-path = "dead_code_eliminator.rs"
-
 [[bin]]
 name = "dynamic_memory_bitmap"
 path = "dynamic_memory_bitmap.rs"
