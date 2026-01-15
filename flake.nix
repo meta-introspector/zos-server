@@ -5,14 +5,19 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
+    cargo-watch.url = "github:meta-introspector/cargo-watch/8.x";
   };
 
-  outputs = { self, nixpkgs, rust-overlay, flake-utils }:
+  outputs = { self, nixpkgs, rust-overlay, flake-utils, cargo-watch }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs { inherit system overlays; };
+        
+        zos-server = pkgs.callPackage ./default.nix {};
       in {
+        packages.default = zos-server;
+        
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             (rust-bin.nightly.latest.default.override {

@@ -87,7 +87,6 @@ proc-macro2 = "1.0"
 
 [workspace]
 members = [
-    "cargo-watch",
     "zos-macros",
     "zos-traits",
     "zos-types",

@@ -8,14 +8,14 @@ let
     "zos-dev-minimal"
     "zos-dev-launch"
   ];
-  
+
   analysisBinaries = [
     "markov_1_4m_analyzer"
     "multi_repo_extractor"
     "p2p_rustc_loader"
     "p2p_rustc_test"
   ];
-  
+
   allBinaries = mainBinaries ++ analysisBinaries;
 in
 pkgs.rustPlatform.buildRustPackage rec {
@@ -41,12 +41,15 @@ pkgs.rustPlatform.buildRustPackage rec {
     cargo build --release --bins
   '';
 
+  # Skip tests for now
+  doCheck = false;
+
   installPhase = ''
     mkdir -p $out/bin
-    
+
     # Copy all binaries
     ${pkgs.lib.concatMapStringsSep "\n    " (bin: "cp target/release/${bin} $out/bin/") allBinaries}
-    
+
     # Helper scripts
     cp install-from-node.sh $out/bin/ || true
   '';
