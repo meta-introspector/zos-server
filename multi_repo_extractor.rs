@@ -26,9 +26,9 @@ impl MultiRepoExtractor {
 
         println!("🔍 Scanning all source repositories...");
 
-        thread::scope(|s| {
+        thread::scope(|s: &thread::Scope<'_, '_>| {
             for source in &self.sources {
-                s.spawn(move |_| {
+                s.spawn(move |_: &thread::Scope<'_, '_>| {
                     println!("📂 Processing: {}", source);
                     self.scan_source_parallel(source);
                 });

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 
+#[derive(Serialize, Deserialize)]
 pub struct SimpleMarkovModel {
     transitions: HashMap<char, HashMap<char, u32>>,
     total_chars: u64,
