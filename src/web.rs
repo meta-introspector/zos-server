@@ -3,6 +3,8 @@ pub mod handlers;
 use crate::core::{User, ZOSCore};
 use crate::plugin_registry::{PluginRegistry, WebPlugin};
 use crate::process_monitor::ProcessMonitor;
+use crate::static_server;
+use crate::client_telemetry;
 use axum::{
     extract::{Path, Query, State},
     http::{header, StatusCode},
@@ -20,13 +22,15 @@ pub fn create_router(core: AppState) -> Router {
     let registry = setup_plugins();
 
     Router::new()
-        .route("/", get(root_handler))
+        .route("/api", get(root_handler))
         .route(
-            "/dashboard",
+            "/api/dashboard",
             get(move || dashboard_handler(registry.clone())),
         )
-        .route("/health", get(health_handler))
+        .route("/api/health", get(health_handler))
         .merge(create_plugin_routes())
+        .merge(client_telemetry::create_telemetry_routes())
+        .fallback_service(static_server::create_static_routes())
 }
 
 fn setup_plugins() -> Arc<PluginRegistry> {
