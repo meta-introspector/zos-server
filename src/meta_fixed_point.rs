@@ -128,7 +128,7 @@ impl MultiDomainFixedPointEngine {
             let meta_interaction = self.compute_cross_domain_interaction(&new_states);
 
             // Apply meta-interaction to all domains
-            for (name, state) in &mut new_states {
+            for (_name, state) in &mut new_states {
                 for (i, val) in state.iter_mut().enumerate() {
                     *val += meta_interaction.get(i).unwrap_or(&0.0) * 0.1;
                 }
@@ -199,7 +199,7 @@ impl MultiDomainFixedPointEngine {
         println!("\n🌌 META-FIXED-POINT ANALYSIS");
         println!("{}", "=".repeat(50));
 
-        for (name, domain) in &self.domains {
+        for (_name, domain) in &self.domains {
             println!("🔬 Domain: {}", domain.name);
             println!("   State: {:?}", domain.state_vector);
         }

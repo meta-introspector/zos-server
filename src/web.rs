@@ -1,24 +1,22 @@
 pub mod handlers;
 
-use crate::core::{User, ZOSCore};
+use crate::client_telemetry;
+use crate::core::ZOSCore;
 use crate::plugin_registry::{PluginRegistry, WebPlugin};
 use crate::process_monitor::ProcessMonitor;
 use crate::static_server;
-use crate::client_telemetry;
 use axum::{
-    extract::{Path, Query, State},
     http::{header, StatusCode},
     response::Response,
     routing::get,
     Router,
 };
 use handlers::{create_plugin_routes, dashboard_handler};
-use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 pub type AppState = Arc<Mutex<ZOSCore>>;
 
-pub fn create_router(core: AppState) -> Router {
+pub fn create_router(_core: AppState) -> Router {
     let registry = setup_plugins();
 
     Router::new()

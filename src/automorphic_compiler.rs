@@ -1,6 +1,3 @@
-use std::collections::HashMap;
-use std::process::Command;
-
 #[derive(Debug, Clone)]
 pub struct AutomorphicOrbit {
     pub orbit_id: usize,
@@ -90,7 +87,7 @@ impl RustCompilerOrbit {
         new_state
     }
 
-    pub fn compile_in_orbit(&self, source_code: &str) -> Result<String, String> {
+    pub fn compile_in_orbit(&self, _source_code: &str) -> Result<String, String> {
         let orbit = &self.orbits[self.current_orbit];
 
         println!(

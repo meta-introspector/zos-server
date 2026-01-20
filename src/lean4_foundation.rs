@@ -106,7 +106,7 @@ theorem AllDataHasMathMirror (M : FoundationM) :
     pub fn compile_lean4_to_llvm(&mut self) -> Result<String, String> {
         println!("🔧 Compiling Lean4 mathematical foundation to LLVM IR...");
 
-        let lean4_code = self.generate_lean4_foundation();
+        let _lean4_code = self.generate_lean4_foundation();
 
         // Simulate Lean4 → LLVM compilation
         let llvm_ir = format!(

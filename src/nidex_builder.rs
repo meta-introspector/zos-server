@@ -68,7 +68,7 @@ impl NidexBuilder {
             chunk.par_iter().for_each(|&file_path| {
                 if let Ok(metadata) = fs::metadata(file_path) {
                     let file_type = self.classify_file_type(file_path);
-                    let index_entry = FileIndex {
+                    let _index_entry = FileIndex {
                         path: file_path.to_string(),
                         size: metadata.len(),
                         content_hash: format!("{:x}", metadata.len()), // Simplified hash

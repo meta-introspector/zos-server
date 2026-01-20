@@ -1,4 +1,4 @@
-use crate::cicd_dashboard::{CICDDashboard, ProjectStatus};
+use crate::cicd_dashboard::CICDDashboard;
 use crate::git_analyzer::GitAnalyzer;
 use crate::github_importer::GitHubDataImporter;
 use crate::meta_introspector::MetaIntrospectorManager;

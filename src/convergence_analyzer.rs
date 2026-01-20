@@ -8,9 +8,8 @@ use crate::lean4_foundation::Lean4LLVMCompiler;
 use crate::nvidia_kleene::NvidiaKleeneAccelerator;
 use rayon::prelude::*;
 use sha2::{Digest, Sha256};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub struct FileFingerprint {
@@ -273,17 +272,17 @@ impl ConvergenceAnalyzer {
         println!("🔄 Compiler evolved to state: {:?}", new_state);
 
         // Generate IREE MLIR for current orbital state
-        let mlir_code = self.iree_backend.generate_kleene_mlir("sample_rust_code");
+        let _mlir_code = self.iree_backend.generate_kleene_mlir("sample_rust_code");
         println!("🔧 Generated Kleene MLIR for IREE compilation");
 
         // Generate GPU kernel for current orbit
-        let gpu_kernel = self.iree_backend.generate_gpu_kernel(&new_state);
+        let _gpu_kernel = self.iree_backend.generate_gpu_kernel(&new_state);
         println!("🎮 Generated GPU kernel for orbital state");
 
         // Prove fixed point between LLM and Compiler models
         println!("🔬 Proving fixed point between LLM and Compiler...");
         if let Some(fixed_point) = self.dual_model_prover.prove_fixed_point(100) {
-            let proof_code = self.dual_model_prover.generate_proof_code(&fixed_point);
+            let _proof_code = self.dual_model_prover.generate_proof_code(&fixed_point);
             println!("✅ Fixed point proven! Generated proof code.");
         }
 

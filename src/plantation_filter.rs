@@ -1,6 +1,5 @@
 use rayon::prelude::*;
 use std::fs;
-use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub struct SecurityFrequency {

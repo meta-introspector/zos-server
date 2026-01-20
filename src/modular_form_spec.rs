@@ -159,7 +159,7 @@ Each form represents a mathematical structure that can be:
         println!("{}", "=".repeat(50));
         println!("🔷 Forms Defined: {}", self.forms.len());
 
-        for (name, form) in &self.forms {
+        for (_name, form) in &self.forms {
             println!("   📋 {}: {:?}", form.name, form.shape_signature);
         }
 

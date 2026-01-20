@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 #[derive(Debug, Clone)]
 pub struct LLMModel {
     pub name: String,
@@ -76,8 +74,8 @@ impl DualModelFixedPointProver {
         let iteration = self.fixed_points.len();
 
         // Start with current states
-        let mut llm_state = self.llm_model.state_vector.clone();
-        let mut compiler_state = self.compiler_model.optimization_state.clone();
+        let llm_state = self.llm_model.state_vector.clone();
+        let compiler_state = self.compiler_model.optimization_state.clone();
 
         // Apply transformations: x_{n+1} = g(f(x_n))
         let llm_transformed = self.llm_transform(&compiler_state);

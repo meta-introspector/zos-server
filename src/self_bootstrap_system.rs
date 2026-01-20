@@ -1,5 +1,4 @@
 use crate::code_transformation_graph::CodeTransformationGraph;
-use crate::value_lattice_processor::ValueLatticeProcessor;
 use std::collections::HashMap;
 
 pub struct SelfBootstrapSystem {

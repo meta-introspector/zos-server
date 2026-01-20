@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CharacterNode {
@@ -165,7 +164,7 @@ impl CodeTransformationGraph {
 
     fn parse_variable_declaration(&self, i: &mut usize) -> Option<ParseNode> {
         let mut tokens = Vec::new();
-        let start = *i;
+        let _start = *i;
 
         // Collect tokens until semicolon
         while *i < self.lexer_tokens.len() {

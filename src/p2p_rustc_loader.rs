@@ -1,8 +1,5 @@
 use libloading::{Library, Symbol};
 use libp2p::PeerId;
-use serde::{Deserialize, Serialize};
-use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
 
 #[derive(Debug)]
 pub struct RustcDriverWrapper {

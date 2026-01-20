@@ -43,7 +43,7 @@ impl KleeneMemoryHierarchy {
         }
     }
 
-    pub fn calculate_resonance(&self, file_path: &str, kleene_score: f64) -> usize {
+    pub fn calculate_resonance(&self, _file_path: &str, kleene_score: f64) -> usize {
         // Find which memory node resonates with this file's frequency
         for (i, node) in self.nodes.iter().enumerate() {
             let node_guard = node.lock().unwrap();

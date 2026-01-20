@@ -1,7 +1,5 @@
 use crate::meta_introspector::RepoOntology;
-use crate::value_lattice_manager::LatticeProcessStatus;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::process::Command;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -118,9 +116,9 @@ impl CICDDashboard {
         })
     }
 
-    fn analyze_ownership(&self, path: &str, repo_name: &str) -> Result<ProjectOwnership, String> {
+    fn analyze_ownership(&self, path: &str, _repo_name: &str) -> Result<ProjectOwnership, String> {
         // Get remote origin URL
-        let remote_url = Command::new("git")
+        let _remote_url = Command::new("git")
             .args(&["remote", "get-url", "origin"])
             .current_dir(path)
             .output()

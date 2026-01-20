@@ -2,7 +2,7 @@ use crate::project_watcher::FileChangeEvent;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use tracing::{error, info};
+use tracing::info;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ValueLatticeEntry {

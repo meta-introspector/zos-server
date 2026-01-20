@@ -1,5 +1,4 @@
 // Binary Classifier for Safe vs Unsafe .so Analysis
-use std::collections::HashMap;
 use std::process::Command;
 
 /// Binary classifier that analyzes .so files

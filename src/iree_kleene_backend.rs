@@ -1,5 +1,4 @@
 use std::path::Path;
-use std::process::Command;
 
 pub struct IREEKleeneBackend {
     pub iree_path: String,
@@ -24,7 +23,7 @@ impl IREEKleeneBackend {
         }
     }
 
-    pub fn generate_kleene_mlir(&self, rust_code: &str) -> String {
+    pub fn generate_kleene_mlir(&self, _rust_code: &str) -> String {
         format!(
             r#"
 // Kleene Algebra MLIR for automorphic compilation
@@ -46,7 +45,7 @@ module @kleene_orbit {{
         )
     }
 
-    pub fn compile_with_iree(&self, mlir_code: &str) -> Result<String, String> {
+    pub fn compile_with_iree(&self, _mlir_code: &str) -> Result<String, String> {
         let iree_compile = format!("{}/tools/iree-compile", self.iree_path);
 
         if !Path::new(&iree_compile).exists() {

@@ -1,7 +1,6 @@
 // Cargo to Plugin Loader - Automatic Plugin Hierarchy Generation
-use crate::binary_inspector::{FunctionClassification, SecurityLevel};
+use crate::binary_inspector::SecurityLevel;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// Plugin hierarchy generated from Cargo project
 #[derive(Debug, Clone, Serialize, Deserialize)]

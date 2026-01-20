@@ -1,10 +1,5 @@
 // Client telemetry API
-use axum::{
-    extract::Json,
-    http::StatusCode,
-    routing::post,
-    Router,
-};
+use axum::{extract::Json, http::StatusCode, routing::post, Router};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
@@ -17,8 +12,7 @@ pub struct ClientLog {
 }
 
 pub fn create_telemetry_routes() -> Router {
-    Router::new()
-        .route("/api/telemetry/log", post(log_handler))
+    Router::new().route("/api/telemetry/log", post(log_handler))
 }
 
 async fn log_handler(Json(log): Json<ClientLog>) -> StatusCode {

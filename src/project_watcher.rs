@@ -1,7 +1,6 @@
 use notify::{Event, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
 use tokio::sync::mpsc;
 
