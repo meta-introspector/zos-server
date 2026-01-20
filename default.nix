@@ -1,31 +1,13 @@
-{ pkgs ? import <nixpkgs> {} }:
+{ pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {} }:
 
-let
-  # Get all binary names from Cargo.toml
-  mainBinaries = [
-    "zos_server"
-    "zos-dev-server"
-    "zos-dev-minimal"
-    "zos-dev-launch"
-  ];
-
-  analysisBinaries = [
-    "markov_1_4m_analyzer"
-    "multi_repo_extractor"
-    "p2p_rustc_loader"
-    "p2p_rustc_test"
-  ];
-
-  allBinaries = mainBinaries ++ analysisBinaries;
-in
 pkgs.rustPlatform.buildRustPackage rec {
   pname = "zos-server";
   version = "1.0.0";
 
-  src = ./.;
+  src = pkgs.lib.cleanSource /home/mdupont/zos-server;
 
   cargoLock = {
-    lockFile = ./Cargo.lock;
+    lockFile = "${src}/Cargo.lock";
   };
 
   nativeBuildInputs = with pkgs; [
@@ -36,27 +18,24 @@ pkgs.rustPlatform.buildRustPackage rec {
     openssl
   ];
 
-  # Build all binaries
-  buildPhase = ''
-    cargo build --release --bins
-  '';
+  # Copy www directory to output
+  postInstall = ''
+    mkdir -p $out/www
+    cp -r ${src}/www/* $out/www/ || true
 
-  # Skip tests for now
-  doCheck = false;
-
-  installPhase = ''
-    mkdir -p $out/bin
-
-    # Copy all binaries
-    ${pkgs.lib.concatMapStringsSep "\n    " (bin: "cp target/release/${bin} $out/bin/") allBinaries}
-
-    # Helper scripts
-    cp install-from-node.sh $out/bin/ || true
+    # Create metadata with store path hash
+    cat > $out/metadata.json << EOF
+{
+  "name": "${pname}",
+  "version": "${version}",
+  "store_path": "$out",
+  "hash": "$(basename $out | cut -d'-' -f1)"
+}
+EOF
   '';
 
   meta = with pkgs.lib; {
-    description = "ZOS Server - Zero Ontology System with resource tracing";
-    license = licenses.agpl3Plus;
-    maintainers = [ ];
+    description = "ZOS Server with content-addressed plugin system";
+    license = licenses.gpl3;
   };
 }

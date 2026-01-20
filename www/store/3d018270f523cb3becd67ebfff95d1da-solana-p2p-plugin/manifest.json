@@ -1,0 +1,9 @@
+{
+  "name": "solana-p2p-plugin",
+  "hash": "3d018270f523cb3becd67ebfff95d1da",
+  "files": {
+    "wasm": "solana_p2p_plugin_bg.wasm",
+    "js": "solana_p2p_plugin.js"
+  },
+  "version": "b71a7eb5"
+}

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head><body>
+<script type="module">
+const { default: init, SolanaP2P } = await import('http://localhost:8080/solana_p2p_plugin.js');
+await init();
+const plugin = new SolanaP2P();
+console.log('Testing block fetch...');
+try {
+  const result = await plugin.get_block(12345);
+  console.log('✅ Success:', result);
+  document.body.innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+} catch (e) {
+  console.error('❌ Error:', e);
+  document.body.innerHTML = '<pre>Error: ' + e.message + '</pre>';
+}
+</script>
+</body></html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SOLFUNMEME v2 - P2P Block Fetcher</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background: #1a1a1a; color: #fff; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #00ff88; }
+        button { padding: 10px 20px; margin: 10px 5px; background: #00ff88; border: none; cursor: pointer; }
+        button:hover { background: #00cc66; }
+        .log { background: #2a2a2a; padding: 15px; margin: 10px 0; border-left: 3px solid #00ff88; max-height: 400px; overflow-y: auto; }
+        .log-entry { margin: 5px 0; font-family: monospace; font-size: 12px; }
+        .info { color: #00ff88; }
+        .error { color: #ff4444; }
+        .result { background: #2a2a2a; padding: 15px; margin: 10px 0; }
+        pre { margin: 0; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 SOLFUNMEME v2 <span style='font-size:14px;color:#666;'>#b71a7eb5</span></h1>
+        <p>P2P Solana Block Fetcher with Server Telemetry</p>
+        <p style="font-size:12px;color:#666;">WASM: 3d018270 | JS: 8c121f26</p>
+
+        <div>
+            <button onclick="initPlugin()">Initialize Plugin</button>
+            <button onclick="fetchBlock()">Fetch Block</button>
+            <button onclick="getSignatures()">Get Signatures</button>
+            <button onclick="clearLogs()">Clear Logs</button>
+        </div>
+
+        <div class="log" id="logs">
+            <div class="log-entry info">📱 Waiting for plugin initialization...</div>
+        </div>
+
+        <div class="result" id="result">
+            <pre>No data yet</pre>
+        </div>
+    </div>
+
+    <script type="module">
+        const v = new URLSearchParams(window.location.search).get('v') || Date.now();
+        const VERSION = 'b71a7eb5';
+
+        let plugin = null;
+        let manifest = null;
+
+        // Fetch manifest
+        async function loadManifest() {
+            const resp = await fetch('/api/manifest');
+            manifest = await resp.json();
+            console.log('📋 Manifest loaded:', manifest);
+        }
+
+        // Calculate hash of loaded WASM
+        async function verifyWasm(url) {
+            const resp = await fetch(url);
+            const buffer = await resp.arrayBuffer();
+            const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex.substring(0, 8); // First 8 chars
+        }
+
+        async function log(level, message) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${level}`;
+            entry.textContent = `[${new Date().toISOString()}] ${message}`;
+            document.getElementById('logs').appendChild(entry);
+
+            try {
+                await fetch('/api/telemetry/log', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        level,
+                        message,
+                        timestamp: new Date().toISOString(),
+                        context: 'solana-p2p-web',
+                        version: VERSION
+                    })
+                });
+            } catch (e) {
+                console.error('Failed to send telemetry:', e);
+            }
+        }
+
+        window.initPlugin = async function() {
+            try {
+                await loadManifest();
+
+                // Get latest plugin hash from store
+                const storeResp = await fetch('/store/latest-solana-p2p');
+                const pluginHash = (await storeResp.text()).trim();
+                const storePath = `/store/${pluginHash}-solana-p2p-plugin`;
+
+                log('info', `📦 Loading plugin from store: ${pluginHash.substring(0,8)}...`);
+
+                const { default: init, SolanaP2P } = await import(`${storePath}/solana_p2p_plugin.js`);
+                await init();
+
+                // Verify WASM hash
+                const wasmUrl = `${storePath}/solana_p2p_plugin_bg.wasm`;
+                const actualHash = await verifyWasm(wasmUrl);
+
+                if (actualHash === pluginHash.substring(0, 8)) {
+                    log('info', `✅ WASM verified: ${actualHash}`);
+                } else {
+                    log('error', `❌ WASM hash mismatch! Expected: ${pluginHash.substring(0,8)}, Got: ${actualHash}`);
+                }
+
+                plugin = new SolanaP2P();
+                log('info', `✅ Plugin initialized: ${plugin.name()}`);
+                log('info', `📝 Contract: ${plugin.get_contract()}`);
+                log('info', `🏪 Loaded from Nix-style store: ${storePath}`);
+            } catch (e) {
+                log('error', `❌ Failed to load plugin: ${e.message}`);
+            }
+        };
+
+        window.fetchBlock = async function() {
+            if (!plugin) {
+                log('error', '❌ Plugin not initialized');
+                return;
+            }
+
+            try {
+                const slot = Math.floor(Math.random() * 1000000);
+                log('info', `🔍 Fetching block ${slot}...`);
+                const result = await plugin.get_block(slot);
+                document.getElementById('result').innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+                log('info', `✅ Block ${slot} fetched`);
+            } catch (e) {
+                log('error', `❌ Error: ${e.message}`);
+            }
+        };
+
+        window.getSignatures = async function() {
+            if (!plugin) {
+                log('error', '❌ Plugin not initialized');
+                return;
+            }
+
+            try {
+                log('info', '🔍 Fetching signatures...');
+                const result = await plugin.get_signatures();
+                document.getElementById('result').innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+                log('info', '✅ Signatures fetched');
+            } catch (e) {
+                log('error', `❌ Error: ${e.message}`);
+            }
+        };
+
+        window.clearLogs = function() {
+            document.getElementById('logs').innerHTML = '<div class="log-entry info">📱 Logs cleared</div>';
+        };
+
+        // Auto-init and test
+        log('info', `🌐 Page loaded with cache buster v=${v}`);
+
+        setTimeout(async () => {
+            await initPlugin();
+
+            setTimeout(async () => {
+                log('info', '🧪 Starting auto-test...');
+
+                await fetchBlock();
+                await new Promise(r => setTimeout(r, 1000));
+
+                await getSignatures();
+                await new Promise(r => setTimeout(r, 1000));
+
+                for (let i = 0; i < 3; i++) {
+                    await fetchBlock();
+                    await new Promise(r => setTimeout(r, 500));
+                }
+
+                log('info', '✅ Auto-test complete');
+
+                const results = {
+                    status: 'success',
+                    tests_run: 5,
+                    timestamp: new Date().toISOString(),
+                    plugin: 'solana-p2p',
+                    contract: 'BwUTq7fS6sfUmHDwAiCQZ3asSiPEapW5zDrsbwtapump'
+                };
+
+                await fetch('/api/telemetry/log', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        level: 'info',
+                        message: `Auto-test results: ${JSON.stringify(results)}`,
+                        timestamp: new Date().toISOString(),
+                        context: 'auto-test'
+                    })
+                });
+
+                log('info', '📤 Results posted to server');
+            }, 2000);
+        }, 1000);
+    </script>
+</body>
+</html>

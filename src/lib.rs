@@ -59,4 +59,5 @@ pub mod version;
 // Test auto-reload Sat Jan 10 06:31:40 PM EST 2026
 // Auto-reload test Sat Jan 10 06:35:52 PM EST 2026
 pub mod client_telemetry;
+pub mod manifest;
 pub mod static_server;

@@ -9,6 +9,7 @@ pub struct ClientLog {
     pub message: String,
     pub timestamp: String,
     pub context: Option<String>,
+    pub version: Option<String>,
 }
 
 pub fn create_telemetry_routes() -> Router {
@@ -17,9 +18,10 @@ pub fn create_telemetry_routes() -> Router {
 
 async fn log_handler(Json(log): Json<ClientLog>) -> StatusCode {
     info!(
-        "📱 Client [{}] {}: {} {}",
+        "📱 Client [{}] {} v{}: {} {}",
         log.timestamp,
         log.level,
+        log.version.unwrap_or_else(|| "unknown".to_string()),
         log.message,
         log.context.unwrap_or_default()
     );

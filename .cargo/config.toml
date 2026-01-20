@@ -1,5 +1,2 @@
-[net]
-# offline = true
-
-[build]
-# offline = true
+[env]
+GIT_HASH = { value = "c697091b", relative = true }
