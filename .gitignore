@@ -22,3 +22,5 @@ Thumbs.db
 
 # Nix
 .direnv/
+
+# Generated artifacts\n__pycache__/\n*.pyc\n.pytest_cache/\ndist/\nbuild/\ntarget/\n*.swp\n*.kate-swp\n.DS_Store\n
