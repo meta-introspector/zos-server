@@ -3,4 +3,6 @@
 
 // Foundation library for ZOS server
 pub mod minimal_server_plugin;
+pub mod node_coordinator;
+pub mod sync_transport;
 pub mod traits;

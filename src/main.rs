@@ -6,9 +6,12 @@ use std::env;
 use tokio;
 
 mod minimal_server_plugin;
+mod node_coordinator;
+mod sync_transport;
 mod traits;
 
 use crate::minimal_server_plugin::MinimalServerPlugin;
+use crate::node_coordinator::ZosNode;
 use crate::traits::{ZOSPlugin, ZOSPluginRegistry};
 
 struct ZOSCore {
@@ -101,7 +104,6 @@ impl ZOSCore {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let core = ZOSCore::new();
-
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
@@ -109,10 +111,43 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
-    let command = &args[1];
+    let command = args[1].clone();
     let cmd_args = args[2..].to_vec();
 
-    match core.execute_command(command, cmd_args).await {
+    // Start the sync coordinator first, then bind transport if enabled.
+    let enable_sync_transport = env::var("ZOS_ENABLE_SYNC_TRANSPORT")
+        .map(|value| value != "0" && !value.eq_ignore_ascii_case("false"))
+        .unwrap_or(true);
+
+    let mut node = ZosNode::new().await?;
+    if enable_sync_transport {
+        eprintln!("sync runtime: initializing libp2p sync transport");
+        let (sync_tx, _out_handle, in_handle) =
+            sync_transport::start_libp2p_transport(node.message_sender());
+        node.with_transport_tx(sync_tx);
+        if in_handle.is_none() {
+            eprintln!(
+                "sync runtime: inbound transport listener unavailable; running outbound-only sync transport"
+            );
+        }
+    } else {
+        eprintln!("sync runtime: transport disabled by ZOS_ENABLE_SYNC_TRANSPORT");
+    }
+
+    let sync_task = tokio::spawn(async move {
+        eprintln!("sync runtime: node cooperation loop started");
+        if let Err(e) = node.start_cooperation().await {
+            eprintln!("🔁 sync loop ended: {e}");
+        }
+    });
+
+    let command_result = core.execute_command(&command, cmd_args).await;
+
+    if command != "serve" {
+        sync_task.abort();
+    }
+
+    match command_result {
         Ok(_) => Ok(()),
         Err(e) => {
             eprintln!("Error: {}", e);

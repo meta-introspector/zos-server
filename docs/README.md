@@ -48,3 +48,32 @@ To generate docs locally:
 ```bash
 cargo doc --all-features --no-deps --document-private-items --open
 ```
+
+## Distributed Convergence
+
+The current sync implementation seam lives in:
+
+- `src/node_coordinator.rs`
+- `crates/zos-experimental/src/node_coordinator.rs`
+- `src/extra_plugins/libp2p_c_interface.rs`
+- `zos-libp2p/src/server.rs`
+
+The intended implementation order is:
+
+1. compact inventory exchange and missing-object reconciliation in `sync_with_peers()`
+2. bind the serialized sync envelope to direct peer transport
+3. validate live announcement-aware convergence and object replay across multiple peers
+4. add transport refinements such as delta sync after convergence is proven
+5. later trust scoring and MDL-aware replication
+
+The current design authority for this work is:
+
+- `docs/sync_convergence_architecture.md`
+
+That note now carries:
+
+- ZKP framing
+- C4 and PlantUML views
+- ITIL service reading
+- ISO 9001 quality gates
+- Six Sigma defect and control language
