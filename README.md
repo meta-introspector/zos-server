@@ -82,6 +82,21 @@ cargo run --features all-plugins
 - **Rollup Aggregation**: Multi-chain transaction bundling
 - **Proof Marketplace**: ZK proof trading and verification
 
+### Sync Convergence Roadmap
+- `src/node_coordinator.rs` and `crates/zos-experimental/src/node_coordinator.rs` currently own the peer sync loop.
+- `sync_with_peers()` now builds compact local inventory, computes a reconciliation plan per peer, emits announcement frames, and emits a serialized wire envelope for reconciliation and inventory traffic.
+- The active coordinator now executes bounded replay recovery for canonical artifact and receipt gaps when acknowledged locators are present, verifies digest parity before admitting recovered items into local inventory, and keeps the recovered state ephemeral rather than ledger-like.
+- The active and experimental coordinator paths both record bounded replay intent for missing canonical artifact and receipt identities and carry replay locator metadata for recovery planning.
+- Replay in this repo is intended to follow the ITIR consumer pattern: acknowledged artifact identity plus bounded locator data should be enough for `objectRef`-style recovery and digest verification, but `zos-server` must not become a StatiBaker-style receipt or timeline ledger.
+- Existing libp2p and gossipsub scaffolding in `src/extra_plugins/libp2p_c_interface.rs` and `zos-libp2p/src/server.rs` remains the transport substrate; the current sync slice binds outbound/inbound envelopes into a live `ZosNode` instance via `src/sync_transport.rs` and `main.rs`.
+- The live bridge now accepts `ZOS_SYNC_LISTEN_ADDR` and `ZOS_SYNC_BOOTSTRAP_ADDRS` so separate local peers can actually listen and dial over libp2p instead of staying process-local.
+- Producer-facing identity parsing now normalizes common zkperf and erdfa-shaped fields on the bridge surface so artifact and receipt identities arrive in canonical form more often.
+- The live transport path now has bounded operational controls: startup visibility, duplicate inbound frame suppression, and clearer drop-path logging.
+- `scripts/smoke_two_peer_sync.sh` now proves a same-host two-process libp2p smoke run with connection establishment, reconciliation, and artifact recovery.
+- Full remote multi-operator convergence validation and full acknowledged-locator coverage across producer surfaces remain the next control gates before broader delta-sync claims.
+- Trust scoring and MDL-aware replication remain explicitly deferred until basic cross-node convergence is testable.
+- The governing architecture and release-gate note for this slice now lives in `docs/sync_convergence_architecture.md`.
+
 ### Enterprise Services
 - **LLM Routing & Proxy**: Vendor-agnostic AI model access and load balancing
 - **Vector Storage APIs**: Embeddings and semantic search infrastructure
