@@ -59,6 +59,14 @@ impl ZOSCore {
         let minimal_server = Box::new(MinimalServerPlugin::new());
         core.register_plugin(minimal_server);
 
+        // Social plugins (behind feature flag)
+        #[cfg(feature = "social")]
+        {
+            tracing::info!("Loading social plugins...");
+            // Plugins will be registered here once they implement ZOSPlugin trait
+            // See CRQ-ZOS-002 for integration plan
+        }
+
         core
     }
 
