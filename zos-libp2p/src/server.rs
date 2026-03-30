@@ -1,6 +1,5 @@
 // LibP2P server that compiles and loads plugins on the fly
-use crate::plugin_driver::{CompilerEvent, PluginDriver};
-use libp2p::{gossipsub, mdns, swarm::SwarmEvent, Swarm};
+use crate::{CompilerEvent, PluginDriver};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tokio::process::Command;
@@ -250,8 +249,26 @@ impl P2PPluginServer {
 
             P2PVerb::CompileFile(name, file_path) => {
                 let source = tokio::fs::read_to_string(&file_path).await?;
-                self.execute_verb(P2PVerb::CompileSource(name, source))
-                    .await
+                let so_path = format!("/tmp/{}.so", name);
+                let rs_path = format!("/tmp/{}.rs", name);
+
+                tokio::fs::write(&rs_path, source).await?;
+
+                let output = Command::new("rustc")
+                    .args(["--crate-type", "cdylib", "-o", &so_path, &rs_path])
+                    .output()
+                    .await?;
+
+                if output.status.success() {
+                    self.driver.load_plugin(&name, &so_path)?;
+                    Ok(format!("Compiled and loaded {}", name))
+                } else {
+                    Err(format!(
+                        "Compilation failed: {}",
+                        String::from_utf8_lossy(&output.stderr)
+                    )
+                    .into())
+                }
             }
 
             P2PVerb::InvokeFunction(plugin, func_name, param) => {

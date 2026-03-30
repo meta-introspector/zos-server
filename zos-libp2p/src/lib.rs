@@ -1110,12 +1110,34 @@ impl UnifiedP2PServer {
 // MANAGER STUBS (to be implemented)
 // ============================================================================
 
-struct PluginDriver;
+#[derive(Debug, Clone, Copy)]
+pub struct CompilerEvent {
+    pub event_type: u32,
+    pub data: *const u8,
+    pub size: usize,
+}
+
+#[derive(Default)]
+pub struct PluginDriver;
 impl PluginDriver {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self
     }
-    fn load_plugin(&mut self, _name: &str, _path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn load_plugin(
+        &mut self,
+        _name: &str,
+        _path: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        Ok(())
+    }
+    pub fn react(self, _event: CompilerEvent) -> Self {
+        self
+    }
+    pub fn execute_plugin(
+        &mut self,
+        _plugin: &str,
+        _function: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         Ok(())
     }
 }
