@@ -62,6 +62,26 @@ cargo build --release --features all-plugins
 cargo run --features all-plugins
 ```
 
+### mesh-sync-rs Compatibility Shim
+`zos-server` now exposes a narrow HTTP compatibility shim for the sibling `mesh-sync-rs` repo. This shim is intended for quick cooperation only; the canonical sync path in this repo remains the libp2p-backed coordinator flow.
+
+Supported endpoints on the `serve` surface:
+- `GET /mesh/peers`
+- `GET /mesh/logs`
+- `POST /mesh/logs`
+
+Environment contract:
+```bash
+export MESH_PEERS="10.0.0.12,peer.example.com,http://127.0.0.1:7780"
+export MESH_SELF_ADDR="127.0.0.1:7780"
+cargo run -- serve 7780
+```
+
+Notes:
+- `GET /mesh/peers` returns bare host-style addresses because `mesh-sync-rs` appends `:7780` itself.
+- `GET /mesh/logs` and `POST /mesh/logs` read and write JSON payloads under `~/.solfunmeme/mesh-logs/`.
+- This shim does not yet translate mesh log JSON into `ZosNode`, `SyncWireMessage`, or coordinator inventory state.
+
 ## 🗺️ Roadmap
 
 ### Server Infrastructure
