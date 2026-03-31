@@ -26,7 +26,11 @@ split_dir() {
     local OUT="$HOME/03-march/30/spinoffs/$name"
     mkdir -p "$OUT"
     cp -r "$ZOS/$dir/"* "$OUT/" 2>/dev/null || true
-    cp -r "$ZOS/$dir/".* "$OUT/" 2>/dev/null || true
+    # Security: copy dotfiles excluding sensitive ones (Qodo fix)
+    for f in "$ZOS/$dir"/.*; do
+      case "$(basename "$f")" in .|..|.git|.env|.ssh|.secrets|.token*) continue;; esac
+      cp -r "$f" "$OUT/" 2>/dev/null || true
+    done
     
     cd "$OUT"
     git init -q
