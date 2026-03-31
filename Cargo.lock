@@ -1070,6 +1070,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc0fef456e4baa96da950455cd02c081ca953b141298e41db3fc7e36b1da849c"
 
 [[package]]
+name = "hex"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
+
+[[package]]
 name = "hex_fmt"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4631,6 +4637,58 @@ name = "zos-plan"
 version = "0.1.0"
 
 [[package]]
+name = "zos-plugin-activitypub"
+version = "0.1.0"
+source = "git+https://github.com/meta-introspector/zos-plugin-activitypub#3bb1218ef85c0975add0c4598acb1cf5140b2376"
+dependencies = [
+ "hex",
+ "serde",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
+name = "zos-plugin-ipfs"
+version = "0.1.0"
+source = "git+https://github.com/meta-introspector/zos-plugin-ipfs#0f2299fbc51b2b136719090c2530929e32a18b36"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
+name = "zos-plugin-mesh"
+version = "0.1.0"
+source = "git+https://github.com/meta-introspector/zos-plugin-mesh#810f30005cde78a4f38e6b0e036fd8f4213a732f"
+dependencies = [
+ "hex",
+ "serde",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
+name = "zos-plugin-pastebin-threads"
+version = "0.1.0"
+source = "git+https://github.com/meta-introspector/zos-plugin-pastebin-threads#f6594ed1ea5e4d45f18e22e5dc6e99b85e8cf15d"
+dependencies = [
+ "hex",
+ "serde",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
+name = "zos-plugin-stego"
+version = "0.1.0"
+source = "git+https://github.com/meta-introspector/zos-plugin-stego#b1471be1ade87e139f7718ed1332d1f9aae437ab"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "zos-plugins"
 version = "0.1.0"
 dependencies = [
@@ -4673,6 +4731,11 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
+ "zos-plugin-activitypub",
+ "zos-plugin-ipfs",
+ "zos-plugin-mesh",
+ "zos-plugin-pastebin-threads",
+ "zos-plugin-stego",
  "zstd",
 ]
 
