@@ -1,0 +1,8 @@
+[package]
+name = "paste-home"
+version = "0.1.0"
+edition = "2021"
+description = "ZOS plugin: Home page and service status"
+
+[dependencies]
+serde_json = "1"

@@ -1,0 +1,8 @@
+[package]
+name = "paste-reply"
+version = "0.1.0"
+edition = "2021"
+description = "ZOS plugin: Thread management for paste replies"
+
+[dependencies]
+serde_json = "1"

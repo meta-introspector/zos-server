@@ -488,21 +488,18 @@ impl MinimalServerPlugin {
         print!("Passphrase: ");
         io::stdout().flush().unwrap();
 
-        loop {
+        {
             let mut input = String::new();
             match io::stdin().read_line(&mut input) {
                 Ok(_) => {
                     let input = input.trim();
-                    if input.is_empty() {
-                        break;
+                    if !input.is_empty() {
+                        for _ in input.chars() {
+                            print!("*");
+                            io::stdout().flush().unwrap();
+                        }
+                        password.push_str(input);
                     }
-
-                    for _ in input.chars() {
-                        print!("*");
-                        io::stdout().flush().unwrap();
-                    }
-                    password.push_str(input);
-                    break;
                 }
                 Err(e) => return Err(format!("Failed to read input: {}", e)),
             }

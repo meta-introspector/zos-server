@@ -1,0 +1,8 @@
+[package]
+name = "paste-stego"
+version = "0.1.0"
+edition = "2021"
+description = "ZOS plugin: Steganographic embed/extract for paste content"
+
+[dependencies]
+serde_json = "1"

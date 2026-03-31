@@ -1,0 +1,10 @@
+[package]
+name = "paste-qr"
+version = "0.1.0"
+edition = "2021"
+description = "ZOS plugin: QR code generation for paste URLs and content"
+
+[dependencies]
+qrcode = "0.14"
+image = { version = "0.25", default-features = false, features = ["png"] }
+serde_json = "1"

@@ -21,22 +21,24 @@ repos:
     rev: v1.0
     hooks:
       - id: fmt
+        entry: nix develop -c cargo fmt --
         pass_filenames: false
       - id: clippy
-        args: ['--all-targets', '--all-features']
+        entry: nix develop -c cargo clippy --all-targets --all-features --
+        args: []
 
   - repo: local
     hooks:
       - id: cargo-check
         name: cargo check
-        entry: cargo check --all-features
+        entry: nix develop -c cargo check --all-features
         language: system
         files: \.rs$
         pass_filenames: false
 
       - id: cargo-test
         name: cargo test
-        entry: cargo test --all-features
+        entry: nix develop -c cargo test --all-features
         language: system
         files: \.rs$
         pass_filenames: false

@@ -1,0 +1,8 @@
+[package]
+name = "paste-api"
+version = "0.1.0"
+edition = "2021"
+description = "ZOS plugin: OpenAPI spec and schema generation"
+
+[dependencies]
+serde_json = "1"

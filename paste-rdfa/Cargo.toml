@@ -1,0 +1,8 @@
+[package]
+name = "paste-rdfa"
+version = "0.1.0"
+edition = "2021"
+description = "ZOS plugin: Generate RDFa and eRDFa shard URLs"
+
+[dependencies]
+serde_json = "1"

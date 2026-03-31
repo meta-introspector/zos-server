@@ -1,0 +1,8 @@
+[package]
+name = "paste-browse"
+version = "0.1.0"
+edition = "2021"
+description = "ZOS plugin: Browse and search paste archive"
+
+[dependencies]
+serde_json = "1"
