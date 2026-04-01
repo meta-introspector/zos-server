@@ -1,8 +1,19 @@
-# ZOS Server - Zero Ontology System
+# ZOS Server
 
-A complete plugin-based computation platform with mathematical proofs, zero-knowledge verification, and universal architecture support.
+`zos-server` is the current peer-sync and bounded artifact-convergence runtime for the broader ZOS stack. In this repository, the active implementation focus is libp2p-backed inventory exchange, reconciliation, and bounded replay recovery rather than the whole conceptual platform.
 
 ## 🏗️ Architecture
+
+### Repo-Facing Stack
+- **Layer 4**: SL as truth and promotion boundary
+- **Layer 3**: ZOS plus DASHI plus MDL as the structure and selection layer
+- **Layer 2**: P2P as state movement, sync, and replication
+- **Layer 1**: Storage and transport
+
+Boundary notes:
+- `SL` remains the authority for promoted truth.
+- `ZOS` in this repo should be read as governed semantic state over promoted facts, not as a truth override layer.
+- Peer sync in `zos-server` moves and reconciles bounded artifact state; it does not define semantic promotion policy.
 
 ### Plugin Layers
 - **Layer -4**: Advanced ZK (Rollups, Lattice Folding, HME, MetaCoq, Lean4)
@@ -62,6 +73,26 @@ cargo build --release --features all-plugins
 cargo run --features all-plugins
 ```
 
+### mesh-sync-rs Compatibility Shim
+`zos-server` now exposes a narrow HTTP compatibility shim for the sibling `mesh-sync-rs` repo. This shim is intended for quick cooperation only; the canonical sync path in this repo remains the libp2p-backed coordinator flow.
+
+Supported endpoints on the `serve` surface:
+- `GET /mesh/peers`
+- `GET /mesh/logs`
+- `POST /mesh/logs`
+
+Environment contract:
+```bash
+export MESH_PEERS="10.0.0.12,peer.example.com,http://127.0.0.1:7780"
+export MESH_SELF_ADDR="127.0.0.1:7780"
+cargo run -- serve 7780
+```
+
+Notes:
+- `GET /mesh/peers` returns bare host-style addresses because `mesh-sync-rs` appends `:7780` itself.
+- `GET /mesh/logs` and `POST /mesh/logs` read and write JSON payloads under `~/.solfunmeme/mesh-logs/`.
+- This shim does not yet translate mesh log JSON into `ZosNode`, `SyncWireMessage`, or coordinator inventory state.
+
 ## 🗺️ Roadmap
 
 ### Server Infrastructure
@@ -83,6 +114,7 @@ cargo run --features all-plugins
 - **Proof Marketplace**: ZK proof trading and verification
 
 ### Sync Convergence Roadmap
+- The repo-facing semantic boundary is `SL -> ZOS -> downstream consumers`: `SL` promotes truth, `ZOS` organizes promoted facts as governed semantic state, and the peer-sync layer only moves bounded artifact state plus replay metadata.
 - `src/node_coordinator.rs` and `crates/zos-experimental/src/node_coordinator.rs` currently own the peer sync loop.
 - `sync_with_peers()` now builds compact local inventory, computes a reconciliation plan per peer, emits announcement frames, and emits a serialized wire envelope for reconciliation and inventory traffic.
 - The active coordinator now executes bounded replay recovery for canonical artifact and receipt gaps when acknowledged locators are present, verifies digest parity before admitting recovered items into local inventory, and keeps the recovered state ephemeral rather than ledger-like.
@@ -96,6 +128,7 @@ cargo run --features all-plugins
 - Full remote multi-operator convergence validation and full acknowledged-locator coverage across producer surfaces remain the next control gates before broader delta-sync claims.
 - Trust scoring and MDL-aware replication remain explicitly deferred until basic cross-node convergence is testable.
 - The governing architecture and release-gate note for this slice now lives in `docs/sync_convergence_architecture.md`.
+- That architecture note governs sync and replay behavior only; truth and semantic promotion remain outside the scope of this repository's transport layer.
 
 ### Enterprise Services
 - **LLM Routing & Proxy**: Vendor-agnostic AI model access and load balancing

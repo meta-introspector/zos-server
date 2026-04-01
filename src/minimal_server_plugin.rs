@@ -43,11 +43,17 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tokio::sync::RwLock;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 use tracing::info;
+
+// Compatibility shim for mesh-sync-rs's HTTP contract.
+// This is not the canonical ZOS sync path, which remains the libp2p-based coordinator flow.
+const MESH_LOGS_DIR: &str = ".solfunmeme/mesh-logs";
+const MESH_PEERS_ENV: &str = "MESH_PEERS";
+const MESH_SELF_ADDR_ENV: &str = "MESH_SELF_ADDR";
 
 pub struct MinimalServerPlugin {
     state: Arc<ServerState>,
@@ -190,6 +196,8 @@ impl MinimalServerPlugin {
         Router::new()
             .route("/", get(serve_root))
             .route("/health", get(serve_health))
+            .route("/mesh/peers", get(list_mesh_peers))
+            .route("/mesh/logs", get(list_mesh_logs).post(push_mesh_log))
             .route("/git-hash", get(serve_git_hash))
             .route("/binary-hash", get(serve_binary_hash))
             .route("/install", get(serve_installer))
@@ -859,6 +867,197 @@ async fn handle_install_log(Json(payload): Json<Value>) -> Json<Value> {
         serde_json::to_string_pretty(&payload).unwrap_or_default()
     );
     Json(serde_json::json!({"status": "logged"}))
+}
+
+#[derive(Debug, Serialize)]
+struct MeshPeersResponse {
+    peers: Vec<MeshPeer>,
+}
+
+#[derive(Debug, Serialize)]
+struct MeshPeer {
+    address: String,
+}
+
+#[derive(Debug, Serialize)]
+struct MeshLogsResponse {
+    logs: Vec<Value>,
+}
+
+fn mesh_home_dir() -> Option<std::path::PathBuf> {
+    std::env::var_os("HOME").map(std::path::PathBuf::from)
+}
+
+fn mesh_logs_dir() -> Option<std::path::PathBuf> {
+    mesh_home_dir().map(|home| home.join(MESH_LOGS_DIR))
+}
+
+fn mesh_peer_candidates() -> Vec<String> {
+    let mut peers = Vec::new();
+
+    if let Ok(raw) = std::env::var(MESH_PEERS_ENV) {
+        peers.extend(
+            raw.split(',')
+                .map(str::trim)
+                .filter(|raw| !raw.is_empty())
+                .map(|raw| raw.to_string()),
+        );
+    }
+
+    if let Ok(raw) = std::env::var(MESH_SELF_ADDR_ENV) {
+        let raw = raw.trim().to_string();
+        if !raw.is_empty() {
+            peers.push(raw);
+        }
+    }
+
+    peers
+}
+
+fn normalize_peer_address(raw: &str) -> String {
+    let trimmed = raw.trim();
+    let without_scheme = trimmed
+        .strip_prefix("http://")
+        .or_else(|| trimmed.strip_prefix("https://"))
+        .unwrap_or(trimmed);
+    let host_port = without_scheme.split('/').next().unwrap_or(without_scheme);
+
+    if host_port.starts_with('[') {
+        return host_port
+            .split(']')
+            .next()
+            .map(|value| format!("{value}]"))
+            .unwrap_or_else(|| host_port.to_string());
+    }
+
+    match host_port.split_once(':') {
+        Some((host, _port)) if !host.is_empty() => host.to_string(),
+        _ => host_port.to_string(),
+    }
+}
+
+fn load_mesh_logs(log_dir: &std::path::Path) -> Vec<Value> {
+    let mut logs = Vec::new();
+
+    let read = match std::fs::read_dir(log_dir) {
+        Ok(entries) => entries,
+        Err(_) => return logs,
+    };
+
+    for entry in read.flatten() {
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+        if path.extension().is_none() {
+            continue;
+        }
+        if path.extension().and_then(|ext| ext.to_str()) != Some("json") {
+            continue;
+        }
+
+        let Ok(text) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        if let Ok(value) = serde_json::from_str::<Value>(&text) {
+            logs.push(value);
+        }
+    }
+
+    logs
+}
+
+async fn list_mesh_peers() -> Json<MeshPeersResponse> {
+    let peers: Vec<MeshPeer> = mesh_peer_candidates()
+        .into_iter()
+        .map(|peer| MeshPeer {
+            address: normalize_peer_address(&peer),
+        })
+        .collect();
+    Json(MeshPeersResponse { peers })
+}
+
+async fn list_mesh_logs() -> Json<MeshLogsResponse> {
+    let logs = mesh_logs_dir()
+        .as_ref()
+        .map_or_else(Vec::new, |dir| load_mesh_logs(dir.as_path()));
+    Json(MeshLogsResponse { logs })
+}
+
+async fn push_mesh_log(Json(payload): Json<Value>) -> Json<Value> {
+    let Some(log_dir) = mesh_logs_dir() else {
+        return Json(serde_json::json!({"status": "error", "error": "HOME is not set"}));
+    };
+
+    if let Err(error) = std::fs::create_dir_all(&log_dir) {
+        return Json(serde_json::json!({
+            "status": "error",
+            "error": format!("failed to create mesh log dir: {error}")
+        }));
+    }
+
+    let nanos = match SystemTime::now().duration_since(UNIX_EPOCH) {
+        Ok(duration) => duration.as_nanos(),
+        Err(_) => 0,
+    };
+    let path = log_dir.join(format!("{nanos}.json"));
+
+    match std::fs::write(
+        path,
+        serde_json::to_string_pretty(&payload).unwrap_or_else(|_| "{}".to_string()),
+    ) {
+        Ok(_) => Json(serde_json::json!({"status": "stored"})),
+        Err(error) => {
+            Json(serde_json::json!({"status": "error", "error": format!("failed to write mesh log: {error}")}))
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{load_mesh_logs, normalize_peer_address};
+    use serde_json::json;
+    use std::fs;
+    use std::path::PathBuf;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn unique_temp_dir() -> PathBuf {
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system time before unix epoch")
+            .as_nanos();
+        std::env::temp_dir().join(format!("zos-server-mesh-test-{nanos}"))
+    }
+
+    #[test]
+    fn normalize_peer_address_strips_scheme_port_and_path() {
+        assert_eq!(normalize_peer_address("http://127.0.0.1:7780/mesh/logs"), "127.0.0.1");
+        assert_eq!(normalize_peer_address("https://mesh.example.com:8443/path"), "mesh.example.com");
+        assert_eq!(normalize_peer_address("peer.internal"), "peer.internal");
+        assert_eq!(normalize_peer_address("[2001:db8::1]:7780"), "[2001:db8::1]");
+    }
+
+    #[test]
+    fn load_mesh_logs_reads_only_json_files() {
+        let dir = unique_temp_dir();
+        fs::create_dir_all(&dir).expect("create temp log dir");
+
+        fs::write(
+            dir.join("one.json"),
+            serde_json::to_string(&json!({"id": 1, "kind": "mesh-log"})).expect("serialize"),
+        )
+        .expect("write first json");
+        fs::write(dir.join("two.txt"), "ignore me").expect("write text file");
+        fs::write(dir.join("three.json"), "{not-json").expect("write invalid json");
+
+        let logs = load_mesh_logs(&dir);
+
+        assert_eq!(logs.len(), 1);
+        assert_eq!(logs[0]["id"], 1);
+        assert_eq!(logs[0]["kind"], "mesh-log");
+
+        let _ = fs::remove_dir_all(&dir);
+    }
 }
 
 async fn serve_dashboard(

@@ -1,5 +1,27 @@
 # Compactified Context
 
+## 2026-04-01
+
+- External context source: ChatGPT thread `JMD FORMAL EXPLAIN - Meme System Explanation`.
+- Online UUID: `69c4a9b1-d014-83a0-8bb0-873e4eaa4098`.
+- Canonical thread ID: `c6e383233d0d7c4efde671be1432c825054cb222`.
+- Source used: `db` via `/home/c/chat_archive.sqlite` after resolving the referenced online thread in the canonical archive.
+- Main decision pulled from thread: `SL` remains the truth and promotion boundary; `ZOS` should be described as governed semantic state over promoted facts, not as a truth override layer.
+- Repo-facing consequence: `zos-server` should describe its live sync slice as transport, reconciliation, and bounded replay over artifact state, while keeping semantic promotion out of scope.
+
+- External context source: ChatGPT thread `Agda Haskell P2P Integration`.
+- Online UUID: `69cbe91f-e340-839a-8532-22153f7ac8dc`.
+- Canonical thread ID: `d339a0868d473d7e6421bb6bba132fe1dea7d59c`.
+- Source used: `db` via `/home/c/chat_archive.sqlite` after direct pull into the canonical archive.
+- Main decision pulled from thread: for repo-facing architecture, P2P is the state movement and replication layer below SL and below the ZOS/MDL structure layer; ZOS should not be described as a layer above SL.
+- Corrected stack wording for `zos-server` notes:
+  - Layer 5: interface and apps
+  - Layer 4: SL as truth and promotion boundary
+  - Layer 3: ZOS plus DASHI plus MDL as the structure and selection layer
+  - Layer 2: P2P as state movement, sync, and replication
+  - Layer 1: storage and transport
+- Workspace note: `mesh-sync-rs` exists at `/home/c/Documents/code/mesh-sync-rs` as a sibling repo and is not currently part of the `zos-server` git tree.
+
 ## 2026-03-30
 
 - Task focus: make `zos-server` the working project for node-to-node artifact sync rather than general ZOS platform work.

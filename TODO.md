@@ -3,6 +3,7 @@
 ## Sync Convergence
 
 - Keep `docs/sync_convergence_architecture.md` aligned with any transport or inventory behavior change.
+- Keep repo-facing docs aligned with the `SL -> ZOS -> sync` boundary: `SL` promotes truth, `ZOS` organizes promoted facts, and peer sync remains transport/replay only.
 - [x] Define `canonical sync identity v1` in `docs/sync_convergence_architecture.md` for artifact/receipt-backed reconciliation.
 - [x] Make reconciliation precedence explicit: artifact/receipt identity and digest first, plugin name as legacy fallback only.
 - [x] Mark plugin-name inventory as compatibility/debug metadata, not canonical convergence identity.
@@ -24,6 +25,7 @@
 
 - [x] Run a same-host two-process smoke validation over the live libp2p path and capture connection, reconciliation, and recovery traces.
 - `P0`: confirm the same flow in a remote multi-operator run so peer setup is no longer same-host-only.
+- `P1`: freeze a minimal `SL -> ZOS -> downstream consumer` contract in repo docs so future sync work does not drift into semantic-promotion claims.
 - [x] Carry bounded replay locator metadata in sync inventory so canonical artifact and receipt gaps can drive recovery planning against `objectRef`-style sources.
 - [x] Extend replay metadata beyond bare locator stubs so acknowledged revision, publish status, member count, etag/commit hints, replay token, and stream member-path locators are carried where present.
 - [x] Execute bounded object replay and recovery for canonical artifact and receipt gaps, including digest verification and tar-member extraction for receipt-shaped payloads.
@@ -32,3 +34,4 @@
 - `P1`: extend operational controls from bounded transport guards into replay-attempt visibility, duplicate semantic handling, and startup sequencing evidence.
 - `P2`: reduce duplication between `src/node_coordinator.rs` and `crates/zos-experimental/src/node_coordinator.rs` once the active path is proven.
 - `P2`: evaluate whether broader pubsub fanout or delta sync still adds value after direct convergence and replay are stable.
+- `P2`: only design semantic-overlay payload exchange after the sync layer is stable and the `SL` authority boundary is documented well enough to prevent truth override behavior.

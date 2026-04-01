@@ -51,6 +51,12 @@ cargo doc --all-features --no-deps --document-private-items --open
 
 ## Distributed Convergence
 
+This repository's current implementation scope is bounded peer sync. Repo-facing semantic authority stays outside the convergence slice:
+
+- `SL` is the truth and promotion boundary.
+- `ZOS` is governed semantic state over promoted facts.
+- `zos-server` sync moves inventory, reconciliation state, and bounded replay metadata; it must not claim semantic promotion authority.
+
 The current sync implementation seam lives in:
 
 - `src/node_coordinator.rs`
@@ -77,3 +83,5 @@ That note now carries:
 - ITIL service reading
 - ISO 9001 quality gates
 - Six Sigma defect and control language
+
+That note governs peer sync and replay behavior only; semantic promotion policy remains outside its scope.
