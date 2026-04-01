@@ -1,0 +1,8 @@
+[package]
+name = "paste-gallery"
+version = "0.1.0"
+edition = "2021"
+description = "ZOS plugin: NFT gallery with Wikidata enrichment"
+
+[dependencies]
+serde_json = "1"

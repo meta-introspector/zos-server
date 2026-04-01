@@ -26,4 +26,5 @@ pub mod storage_plugins;
 pub mod systemd_plugin;
 pub mod telemetry_plugin;
 pub mod wasm_plugin;
+pub mod erdfa_plugins;
 pub mod zk_plugins;

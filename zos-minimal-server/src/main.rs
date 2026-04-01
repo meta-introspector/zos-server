@@ -305,6 +305,7 @@ async fn serve_http(port: u16) -> Result<(), Box<dyn std::error::Error>> {
     let app = Router::new()
         .route("/", get(homepage))
         .route("/health", get(health))
+        .route("/setup", get(serve_setup_wizard))
         .route("/dashboard/:wallet", get(dashboard))
         .route("/api/allocate-port", post(allocate_port))
         .route("/api/status/:wallet", get(user_status))
@@ -347,6 +348,49 @@ async fn serve_http(port: u16) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+async fn serve_setup_wizard() -> Html<String> {
+    let home = std::env::var("HOME").unwrap_or_default();
+    let has_key = std::path::Path::new(&format!("{home}/.ssh/id_ed25519.pub")).exists()
+        || std::path::Path::new(&format!("{home}/.ssh/id_rsa.pub")).exists();
+
+    let wg_up = std::process::Command::new("wg")
+        .arg("show")
+        .output()
+        .map(|o| o.status.success() && !o.stdout.is_empty())
+        .unwrap_or(false);
+
+    let step = |done: bool, n: u8, title: &str, ok: &str, todo: &str| -> String {
+        let border = if done { "#0a0" } else { "#c80" };
+        let badge = if done {
+            r#"<span style="background:#0a0;color:#000;padding:2px 8px;border-radius:4px;font-size:.8em">✓</span>"#
+        } else {
+            r#"<span style="background:#c80;color:#000;padding:2px 8px;border-radius:4px;font-size:.8em">pending</span>"#
+        };
+        let body = if done { ok } else { todo };
+        format!(r#"<div style="background:#1e1e1e;padding:20px;border-radius:8px;margin:16px 0;border-left:4px solid {border}"><h2 style="color:#ccc;margin:0 0 8px">Step {n}: {title} {badge}</h2>{body}</div>"#)
+    };
+
+    let cmd = |c: &str| format!(r#"<code style="background:#000;color:#0f0;padding:8px 12px;border-radius:4px;font-family:monospace;display:block;margin:8px 0">{c}</code>"#);
+
+    let s1 = step(has_key, 1, "SSH Key",
+        "<p>✓ SSH key detected.</p>",
+        &format!("<p>Generate an ed25519 key:</p>{}", cmd("ssh-keygen -t ed25519 -C \"zos-mesh\"")));
+    let s2 = step(wg_up, 2, "WireGuard Tunnel",
+        "<p>✓ WireGuard tunnel is active.</p>",
+        &format!("<p>Start the ZOS tunnel:</p>{}", cmd("sudo wg-quick up zos0")));
+    let s3 = step(false, 3, "Register Key", "",
+        &format!("<p>Register your SSH pubkey for role-based access:</p>{}", cmd("./zos_server register-key ~/.ssh/id_ed25519.pub")));
+    let s4 = step(false, 4, "Pair Devices via libp2p", "",
+        &format!("<p>Connect phone or laptop through WireGuard using libp2p:</p>{}", cmd("./zos_server pair --peer &lt;PEER_ID&gt;")));
+    let s5 = step(false, 5, "Dashboard", "",
+        &format!("<p>Log in then open the <a href=\"/dashboard\" style=\"color:#4af\">dashboard</a>:</p>{}", cmd("./zos_server login")));
+
+    Html(format!(r#"<!DOCTYPE html><html><head><title>ZOS Setup</title><meta charset="UTF-8"></head>
+<body style="font-family:system-ui;max-width:700px;margin:40px auto;padding:20px;background:#111;color:#eee">
+<h1>🚀 ZOS Setup Wizard</h1><p>Welcome! This wizard helps you join the ZOS mesh securely.</p>
+{s1}{s2}{s3}{s4}{s5}</body></html>"#))
 }
 
 async fn homepage() -> Html<&'static str> {

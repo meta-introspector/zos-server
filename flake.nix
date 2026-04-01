@@ -13,6 +13,27 @@
         overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs { inherit system overlays; };
       in {
+        packages = {
+          zos-server = pkgs.rustPlatform.buildRustPackage {
+            pname = "zos-server";
+            version = "1.0.0";
+            src = ./.;
+            cargoLock.lockFile = ./Cargo.lock;
+            nativeBuildInputs = with pkgs; [ pkg-config ];
+            buildInputs = with pkgs; [ openssl ];
+          };
+          zos-minimal-server = pkgs.rustPlatform.buildRustPackage {
+            pname = "zos-minimal-server";
+            version = "1.0.0";
+            src = ./.;
+            cargoLock.lockFile = ./Cargo.lock;
+            cargoBuildFlags = [ "-p" "zos-minimal-server" ];
+            nativeBuildInputs = with pkgs; [ pkg-config ];
+            buildInputs = with pkgs; [ openssl ];
+          };
+          default = self.packages.${system}.zos-server;
+        };
+
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             (rust-bin.nightly.latest.default.override {

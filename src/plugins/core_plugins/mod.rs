@@ -4,6 +4,7 @@ use std::os::raw::{c_char, c_int};
 
 pub mod ssh_auth_plugin;
 pub mod syscall_security_plugin;
+pub mod seal_plugin;
 
 /// Macro to define core plugins with shared object attributes
 macro_rules! define_core_plugin {

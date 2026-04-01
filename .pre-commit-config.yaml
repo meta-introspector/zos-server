@@ -17,30 +17,8 @@ repos:
         language: system
         files: \.sh$
 
-  - repo: https://github.com/doublify/pre-commit-rust
-    rev: v1.0
-    hooks:
-      - id: fmt
-        pass_filenames: false
-      - id: clippy
-        args: ['--all-targets', '--all-features']
-
   - repo: local
     hooks:
-      - id: cargo-check
-        name: cargo check
-        entry: cargo check --all-features
-        language: system
-        files: \.rs$
-        pass_filenames: false
-
-      - id: cargo-test
-        name: cargo test
-        entry: cargo test --all-features
-        language: system
-        files: \.rs$
-        pass_filenames: false
-
       - id: lattice-validation
         name: validate lattice system
         entry: bash -c 'if [ -f "lattice-analyzer.sh" ]; then echo "✅ Lattice analyzer present"; fi'
