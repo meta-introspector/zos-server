@@ -1,8 +1,19 @@
-# ZOS Server - Zero Ontology System
+# ZOS Server
 
-A complete plugin-based computation platform with mathematical proofs, zero-knowledge verification, and universal architecture support.
+`zos-server` is the current peer-sync and bounded artifact-convergence runtime for the broader ZOS stack. In this repository, the active implementation focus is libp2p-backed inventory exchange, reconciliation, and bounded replay recovery rather than the whole conceptual platform.
 
 ## 🏗️ Architecture
+
+### Repo-Facing Stack
+- **Layer 4**: SL as truth and promotion boundary
+- **Layer 3**: ZOS plus DASHI plus MDL as the structure and selection layer
+- **Layer 2**: P2P as state movement, sync, and replication
+- **Layer 1**: Storage and transport
+
+Boundary notes:
+- `SL` remains the authority for promoted truth.
+- `ZOS` in this repo should be read as governed semantic state over promoted facts, not as a truth override layer.
+- Peer sync in `zos-server` moves and reconciles bounded artifact state; it does not define semantic promotion policy.
 
 ### Plugin Layers
 - **Layer -4**: Advanced ZK (Rollups, Lattice Folding, HME, MetaCoq, Lean4)
@@ -103,6 +114,7 @@ Notes:
 - **Proof Marketplace**: ZK proof trading and verification
 
 ### Sync Convergence Roadmap
+- The repo-facing semantic boundary is `SL -> ZOS -> downstream consumers`: `SL` promotes truth, `ZOS` organizes promoted facts as governed semantic state, and the peer-sync layer only moves bounded artifact state plus replay metadata.
 - `src/node_coordinator.rs` and `crates/zos-experimental/src/node_coordinator.rs` currently own the peer sync loop.
 - `sync_with_peers()` now builds compact local inventory, computes a reconciliation plan per peer, emits announcement frames, and emits a serialized wire envelope for reconciliation and inventory traffic.
 - The active coordinator now executes bounded replay recovery for canonical artifact and receipt gaps when acknowledged locators are present, verifies digest parity before admitting recovered items into local inventory, and keeps the recovered state ephemeral rather than ledger-like.
@@ -116,6 +128,7 @@ Notes:
 - Full remote multi-operator convergence validation and full acknowledged-locator coverage across producer surfaces remain the next control gates before broader delta-sync claims.
 - Trust scoring and MDL-aware replication remain explicitly deferred until basic cross-node convergence is testable.
 - The governing architecture and release-gate note for this slice now lives in `docs/sync_convergence_architecture.md`.
+- That architecture note governs sync and replay behavior only; truth and semantic promotion remain outside the scope of this repository's transport layer.
 
 ### Enterprise Services
 - **LLM Routing & Proxy**: Vendor-agnostic AI model access and load balancing

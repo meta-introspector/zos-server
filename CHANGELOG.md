@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-04-01
+
+- Pulled the ChatGPT thread `JMD FORMAL EXPLAIN - Meme System Explanation` into the canonical archive and aligned repo-facing wording with its sharper `ZOS <-> SL` boundary.
+- Clarified in `README.md` that `zos-server` is currently the bounded peer-sync and artifact-convergence runtime for the broader stack, not the whole conceptual platform.
+- Documented the current repo-facing stack as `SL` truth/promotion boundary, `ZOS` governed semantic state, `P2P` state movement and replication, then storage and transport.
+- Updated `docs/README.md` and `TODO.md` so the sync slice stays scoped to inventory, reconciliation, transport, and replay rather than semantic promotion.
+- No code changes were required for this alignment pass.
+
 ## 2026-03-30
 
 - Documented the sync convergence implementation plan for `zos-server`.
