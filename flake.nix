@@ -22,6 +22,15 @@
             nativeBuildInputs = with pkgs; [ pkg-config ];
             buildInputs = with pkgs; [ openssl ];
           };
+          zos-minimal-server = pkgs.rustPlatform.buildRustPackage {
+            pname = "zos-minimal-server";
+            version = "1.0.0";
+            src = ./.;
+            cargoLock.lockFile = ./Cargo.lock;
+            cargoBuildFlags = [ "-p" "zos-minimal-server" ];
+            nativeBuildInputs = with pkgs; [ pkg-config ];
+            buildInputs = with pkgs; [ openssl ];
+          };
           default = self.packages.${system}.zos-server;
         };
 
